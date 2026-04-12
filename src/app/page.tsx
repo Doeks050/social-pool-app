@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Container from "@/components/Container";
 
 export default function HomePage() {
@@ -21,13 +22,19 @@ export default function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <button className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200">
+              <Link
+                href="/auth"
+                className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200"
+              >
                 Poule maken
-              </button>
+              </Link>
 
-              <button className="rounded-xl border border-zinc-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-zinc-900">
+              <Link
+                href="/auth"
+                className="rounded-xl border border-zinc-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-zinc-900"
+              >
                 Inloggen
-              </button>
+              </Link>
             </div>
           </div>
 
