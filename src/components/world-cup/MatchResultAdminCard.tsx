@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 
 type MatchResultAdminCardProps = {
-  poolId: string;
   match: {
     id: string;
     stage: string;
@@ -20,7 +19,6 @@ type MatchResultAdminCardProps = {
 };
 
 export default function MatchResultAdminCard({
-  poolId,
   match,
 }: MatchResultAdminCardProps) {
   const router = useRouter();
@@ -56,9 +54,8 @@ export default function MatchResultAdminCard({
     setMessage(null);
 
     const { error: rpcError } = await supabase.rpc(
-      "submit_world_cup_match_result",
+      "submit_world_cup_match_result_admin",
       {
-        target_pool_id: poolId,
         target_match_id: match.id,
         new_home_score: parsedHome,
         new_away_score: parsedAway,
@@ -71,7 +68,7 @@ export default function MatchResultAdminCard({
       return;
     }
 
-    setMessage("Resultaat opgeslagen en scoring bijgewerkt.");
+    setMessage("Officiële uitslag opgeslagen en scoring bijgewerkt.");
     setLoading(false);
     router.refresh();
   }
@@ -161,7 +158,7 @@ export default function MatchResultAdminCard({
           disabled={loading}
           className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading ? "Opslaan..." : "Resultaat opslaan"}
+          {loading ? "Opslaan..." : "Officiële uitslag opslaan"}
         </button>
       </form>
     </div>

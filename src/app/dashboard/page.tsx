@@ -42,6 +42,12 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .maybeSingle();
 
+  const { data: appAdmin } = await supabase
+    .from("app_admins")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
   const { data: memberships } = await supabase
     .from("pool_members")
     .select(
@@ -124,6 +130,28 @@ export default async function DashboardPage() {
                 <SignOutButton />
               </div>
             </div>
+
+            {appAdmin ? (
+              <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight">
+                      App admin tools
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      Beheer hier de centrale WK-uitslagen voor alle pools.
+                    </p>
+                  </div>
+
+                  <Link
+                    href="/admin/world-cup/results"
+                    className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200"
+                  >
+                    WK resultaten beheren
+                  </Link>
+                </div>
+              </div>
+            ) : null}
 
             <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6">
               <div className="flex items-center justify-between gap-4">

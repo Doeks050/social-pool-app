@@ -4,17 +4,7 @@ import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
 import MatchResultAdminCard from "@/components/world-cup/MatchResultAdminCard";
 
-type PoolResultsPageProps = {
-  params: Promise<{
-    id: string;
-  }>;
-};
-
-export default async function PoolResultsPage({
-  params,
-}: PoolResultsPageProps) {
-  const { id } = await params;
-
+export default async function WorldCupResultsAdminPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -24,24 +14,13 @@ export default async function PoolResultsPage({
     redirect("/auth");
   }
 
-  const { data: membership } = await supabase
-    .from("pool_members")
-    .select("role")
-    .eq("pool_id", id)
+  const { data: appAdmin } = await supabase
+    .from("app_admins")
+    .select("user_id")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!membership || !["owner", "admin"].includes(membership.role)) {
-    notFound();
-  }
-
-  const { data: pool } = await supabase
-    .from("pools")
-    .select("id, name, game_type")
-    .eq("id", id)
-    .maybeSingle();
-
-  if (!pool || pool.game_type !== "world_cup") {
+  if (!appAdmin) {
     notFound();
   }
 
@@ -60,35 +39,31 @@ export default async function PoolResultsPage({
           <div className="flex flex-col gap-6">
             <div>
               <Link
-                href={`/pools/${pool.id}`}
+                href="/dashboard"
                 className="inline-flex text-sm text-zinc-400 transition hover:text-white"
               >
-                ← Terug naar pool
+                ← Terug naar dashboard
               </Link>
             </div>
 
             <div className="rounded-3xl border border-zinc-800 bg-zinc-900/70 p-6">
               <p className="text-sm uppercase tracking-[0.2em] text-zinc-400">
-                Resultaten beheren
+                App admin
               </p>
               <h1 className="mt-2 text-3xl font-bold tracking-tight">
-                {pool.name}
+                WK resultaten beheren
               </h1>
               <p className="mt-3 text-sm leading-6 text-zinc-400">
-                Vul hier eindstanden in. Zodra je een resultaat opslaat, wordt
-                de wedstrijd op finished gezet en worden predictions meteen
-                opnieuw gescoord.
+                Hier voer je de officiële WK-uitslagen centraal in. Zodra je een
+                uitslag opslaat, wordt de wedstrijd op finished gezet en worden
+                alle predictions automatisch opnieuw gescoord.
               </p>
             </div>
 
             {matches && matches.length > 0 ? (
               <div className="grid gap-4">
                 {matches.map((match) => (
-                  <MatchResultAdminCard
-                    key={match.id}
-                    poolId={pool.id}
-                    match={match}
-                  />
+                  <MatchResultAdminCard key={match.id} match={match} />
                 ))}
               </div>
             ) : (

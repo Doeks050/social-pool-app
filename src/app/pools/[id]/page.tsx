@@ -127,9 +127,10 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                   </Link>
 
                   <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 opacity-70">
-                    <h2 className="text-lg font-semibold">Voorspellingen</h2>
+                    <h2 className="text-lg font-semibold">Officiële uitslagen</h2>
                     <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      Deze zitten nu direct verwerkt op de wedstrijdenpagina.
+                      WK-uitslagen worden centraal beheerd door de app admin en
+                      gelden automatisch voor alle pools.
                     </p>
                   </div>
 
