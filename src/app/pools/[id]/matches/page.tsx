@@ -2,11 +2,18 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
+import MatchPredictionCard from "@/components/world-cup/MatchPredictionCard";
 
 type PoolMatchesPageProps = {
   params: Promise<{
     id: string;
   }>;
+};
+
+type PredictionRow = {
+  match_id: string;
+  predicted_home_score: number;
+  predicted_away_score: number;
 };
 
 export default async function PoolMatchesPage({
@@ -52,6 +59,19 @@ export default async function PoolMatchesPage({
     .eq("tournament", "world_cup_2026")
     .order("starts_at", { ascending: true });
 
+  const { data: predictions } = await supabase
+    .from("predictions")
+    .select("match_id, predicted_home_score, predicted_away_score")
+    .eq("pool_id", pool.id)
+    .eq("user_id", user.id);
+
+  const predictionMap = new Map(
+    ((predictions ?? []) as PredictionRow[]).map((prediction) => [
+      prediction.match_id,
+      prediction,
+    ])
+  );
+
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <section className="py-16">
@@ -74,57 +94,20 @@ export default async function PoolMatchesPage({
                 {pool.name}
               </h1>
               <p className="mt-3 text-sm leading-6 text-zinc-400">
-                Hier komen alle WK wedstrijden te staan. In de volgende stap
-                koppelen we hier scorevoorspellingen aan.
+                Vul per wedstrijd je scorevoorspelling in. Zodra een wedstrijd is
+                gestart, wordt die automatisch gelockt.
               </p>
             </div>
 
             {matches && matches.length > 0 ? (
               <div className="grid gap-4">
                 {matches.map((match) => (
-                  <div
+                  <MatchPredictionCard
                     key={match.id}
-                    className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5"
-                  >
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs uppercase tracking-wide text-zinc-300">
-                            {match.stage}
-                          </span>
-                          <span className="text-sm text-zinc-400">
-                            {match.round_name}
-                          </span>
-                        </div>
-
-                        <h2 className="mt-3 text-xl font-semibold">
-                          {match.home_team} vs {match.away_team}
-                        </h2>
-
-                        <p className="mt-2 text-sm text-zinc-400">
-                          Start:{" "}
-                          {new Date(match.starts_at).toLocaleString("nl-NL", {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          })}
-                        </p>
-                      </div>
-
-                      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 px-4 py-3 text-sm">
-                        {match.status === "finished" &&
-                        match.home_score !== null &&
-                        match.away_score !== null ? (
-                          <div className="font-semibold text-white">
-                            {match.home_score} - {match.away_score}
-                          </div>
-                        ) : (
-                          <div className="font-semibold capitalize text-white">
-                            {match.status}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                    poolId={pool.id}
+                    match={match}
+                    initialPrediction={predictionMap.get(match.id) ?? null}
+                  />
                 ))}
               </div>
             ) : (
@@ -133,8 +116,7 @@ export default async function PoolMatchesPage({
                   Er staan nog geen WK wedstrijden in de database
                 </h2>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
-                  Dat is normaal voor deze stap. Hierna voegen we wedstrijddata
-                  toe en daarna bouwen we predictions erbovenop.
+                  Voeg eerst wedstrijden toe aan de matches tabel.
                 </p>
               </div>
             )}

@@ -129,16 +129,19 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                   <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 opacity-70">
                     <h2 className="text-lg font-semibold">Voorspellingen</h2>
                     <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      Deze bouwen we in de volgende stap bovenop de wedstrijden.
+                      Deze zitten nu direct verwerkt op de wedstrijdenpagina.
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 opacity-70">
+                  <Link
+                    href={`/pools/${pool.id}/leaderboard`}
+                    className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition hover:border-zinc-600 hover:bg-zinc-900"
+                  >
                     <h2 className="text-lg font-semibold">Ranglijst</h2>
                     <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      De ranglijst volgt na predictions en scoring.
+                      Bekijk de huidige stand op basis van gescoorde predictions.
                     </p>
-                  </div>
+                  </Link>
                 </>
               ) : pool.game_type === "office_bingo" ? (
                 <>
