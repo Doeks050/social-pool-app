@@ -3,6 +3,7 @@ import Link from "next/link";
 import Container from "@/components/Container";
 import SignOutButton from "@/components/SignOutButton";
 import { createClient } from "@/lib/supabase";
+import { getPoolTypeMeta } from "@/lib/pool-types";
 
 type PoolMembershipRow = {
   role: string;
@@ -62,10 +63,14 @@ export default async function DashboardPage() {
         return null;
       }
 
+      const typeMeta = getPoolTypeMeta(pool.game_type);
+
       return {
         id: pool.id,
         name: pool.name,
         gameType: pool.game_type,
+        gameTypeLabel: typeMeta.label,
+        gameTypeShortLabel: typeMeta.shortLabel,
         inviteCode: pool.invite_code,
         createdAt: pool.created_at,
         role: membership.role,
@@ -75,6 +80,8 @@ export default async function DashboardPage() {
     id: string;
     name: string;
     gameType: string;
+    gameTypeLabel: string;
+    gameTypeShortLabel: string;
     inviteCode: string;
     createdAt: string;
     role: string;
@@ -95,7 +102,7 @@ export default async function DashboardPage() {
                 </h1>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
                   Hier zie je al je pools. Je kunt nu een nieuwe pool aanmaken
-                  of bestaande pools joinen via een invite code.
+                  en daarbij direct het juiste pooltype kiezen.
                 </p>
               </div>
 
@@ -153,8 +160,8 @@ export default async function DashboardPage() {
                     Je hebt nog geen pools
                   </h3>
                   <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-400">
-                    Maak je eerste WK pool aan of join een bestaande pool via
-                    invite code.
+                    Maak je eerste pool aan en kies direct of het een WK Poule,
+                    Office Bingo of F1 Poule moet worden.
                   </p>
 
                   <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -190,13 +197,13 @@ export default async function DashboardPage() {
                             <span className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs uppercase tracking-wide text-zinc-300">
                               {pool.role}
                             </span>
+                            <span className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs uppercase tracking-wide text-zinc-300">
+                              {pool.gameTypeShortLabel}
+                            </span>
                           </div>
 
                           <p className="mt-2 text-sm leading-6 text-zinc-400">
-                            Speltype:{" "}
-                            {pool.gameType === "world_cup"
-                              ? "WK Poule"
-                              : pool.gameType}
+                            Speltype: {pool.gameTypeLabel}
                           </p>
                         </div>
 

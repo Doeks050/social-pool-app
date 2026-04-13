@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
+import { getPoolTypeMeta } from "@/lib/pool-types";
 
 type PoolPageProps = {
   params: Promise<{
@@ -48,6 +49,8 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
     .eq("pool_id", id)
     .order("joined_at", { ascending: true });
 
+  const poolType = getPoolTypeMeta(pool.game_type);
+
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <section className="py-16">
@@ -72,10 +75,7 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                     {pool.name}
                   </h1>
                   <p className="mt-3 text-sm leading-6 text-zinc-400">
-                    Speltype:{" "}
-                    {pool.game_type === "world_cup"
-                      ? "WK Poule"
-                      : pool.game_type}
+                    Speltype: {poolType.label}
                   </p>
                 </div>
 
@@ -106,12 +106,87 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
               </div>
 
               <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-                <h2 className="text-lg font-semibold">Volgende stap</h2>
+                <h2 className="text-lg font-semibold">Pooltype</h2>
                 <p className="mt-2 text-sm leading-6 text-zinc-400">
-                  Hier bouwen we hierna de join flow, wedstrijden en
-                  voorspellingen op.
+                  {poolType.statusText}
                 </p>
               </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              {pool.game_type === "world_cup" ? (
+                <>
+                  <Link
+                    href={`/pools/${pool.id}/matches`}
+                    className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition hover:border-zinc-600 hover:bg-zinc-900"
+                  >
+                    <h2 className="text-lg font-semibold">Wedstrijden</h2>
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      Bekijk alle WK wedstrijden in deze pool.
+                    </p>
+                  </Link>
+
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 opacity-70">
+                    <h2 className="text-lg font-semibold">Voorspellingen</h2>
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      Deze bouwen we in de volgende stap bovenop de wedstrijden.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 opacity-70">
+                    <h2 className="text-lg font-semibold">Ranglijst</h2>
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      De ranglijst volgt na predictions en scoring.
+                    </p>
+                  </div>
+                </>
+              ) : pool.game_type === "office_bingo" ? (
+                <>
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+                    <h2 className="text-lg font-semibold">Bingo settings</h2>
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      Hier komt straks de setup voor board size, items en rules.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 opacity-70">
+                    <h2 className="text-lg font-semibold">Kaarten</h2>
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      Spelers krijgen later unieke bingo-kaarten binnen deze pool.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 opacity-70">
+                    <h2 className="text-lg font-semibold">Claims</h2>
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      Bingo claims en verificatie bouwen we later.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+                    <h2 className="text-lg font-semibold">Raceweekenden</h2>
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      Hier komt straks de F1-structuur met weekends en sessies.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 opacity-70">
+                    <h2 className="text-lg font-semibold">Predictions</h2>
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      De F1 voorspellingen bouwen we later.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 opacity-70">
+                    <h2 className="text-lg font-semibold">Stand</h2>
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      De F1-ranglijst volgt later.
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6">
