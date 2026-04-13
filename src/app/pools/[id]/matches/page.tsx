@@ -16,6 +16,33 @@ type PredictionRow = {
   predicted_away_score: number;
 };
 
+type MatchRow = {
+  id: string;
+  stage: string;
+  round_name: string;
+  home_team: string;
+  away_team: string;
+  starts_at: string;
+  status: string;
+  home_score: number | null;
+  away_score: number | null;
+};
+
+type MatchGroup = {
+  key: string;
+  label: string;
+  matches: MatchRow[];
+};
+
+function getGroupLabel(match: MatchRow) {
+  const round = match.round_name?.trim();
+  const stage = match.stage?.trim();
+
+  if (round) return round;
+  if (stage) return stage;
+  return "Overig";
+}
+
 export default async function PoolMatchesPage({
   params,
 }: PoolMatchesPageProps) {
@@ -65,11 +92,30 @@ export default async function PoolMatchesPage({
     .eq("pool_id", pool.id)
     .eq("user_id", user.id);
 
+  const typedMatches = (matches ?? []) as MatchRow[];
+
   const predictionMap = new Map(
     ((predictions ?? []) as PredictionRow[]).map((prediction) => [
       prediction.match_id,
       prediction,
     ])
+  );
+
+  const groupedMatchesMap = new Map<string, MatchRow[]>();
+
+  for (const match of typedMatches) {
+    const label = getGroupLabel(match);
+    const existing = groupedMatchesMap.get(label) ?? [];
+    existing.push(match);
+    groupedMatchesMap.set(label, existing);
+  }
+
+  const groupedMatches: MatchGroup[] = Array.from(groupedMatchesMap.entries()).map(
+    ([label, groupMatches]) => ({
+      key: label,
+      label,
+      matches: groupMatches,
+    })
   );
 
   return (
@@ -94,20 +140,41 @@ export default async function PoolMatchesPage({
                 {pool.name}
               </h1>
               <p className="mt-3 text-sm leading-6 text-zinc-400">
-                Vul per wedstrijd je scorevoorspelling in. Zodra een wedstrijd is
-                gestart, wordt die automatisch gelockt.
+                Wedstrijden zijn hieronder gegroepeerd per fase. Open matches kun
+                je nog voorspellen of aanpassen. Zodra een wedstrijd begint,
+                wordt die automatisch gelockt.
               </p>
             </div>
 
-            {matches && matches.length > 0 ? (
-              <div className="grid gap-4">
-                {matches.map((match) => (
-                  <MatchPredictionCard
-                    key={match.id}
-                    poolId={pool.id}
-                    match={match}
-                    initialPrediction={predictionMap.get(match.id) ?? null}
-                  />
+            {groupedMatches.length > 0 ? (
+              <div className="flex flex-col gap-8">
+                {groupedMatches.map((group) => (
+                  <section key={group.key} className="flex flex-col gap-4">
+                    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 px-5 py-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <h2 className="text-lg font-semibold">{group.label}</h2>
+                          <p className="mt-1 text-sm text-zinc-400">
+                            {group.matches.length}{" "}
+                            {group.matches.length === 1
+                              ? "wedstrijd"
+                              : "wedstrijden"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3">
+                      {group.matches.map((match) => (
+                        <MatchPredictionCard
+                          key={match.id}
+                          poolId={pool.id}
+                          match={match}
+                          initialPrediction={predictionMap.get(match.id) ?? null}
+                        />
+                      ))}
+                    </div>
+                  </section>
                 ))}
               </div>
             ) : (
