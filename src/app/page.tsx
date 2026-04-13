@@ -1,7 +1,18 @@
 import Link from "next/link";
 import Container from "@/components/Container";
+import { createClient } from "@/lib/supabase";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const primaryHref = user ? "/dashboard" : "/auth";
+  const primaryLabel = user ? "Naar dashboard" : "Poule maken";
+  const secondaryHref = user ? "/dashboard" : "/auth";
+  const secondaryLabel = user ? "Mijn account" : "Inloggen";
+
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <section className="flex min-h-screen items-center py-16">
@@ -23,17 +34,17 @@ export default function HomePage() {
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <Link
-                href="/auth"
+                href={primaryHref}
                 className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200"
               >
-                Poule maken
+                {primaryLabel}
               </Link>
 
               <Link
-                href="/auth"
+                href={secondaryHref}
                 className="rounded-xl border border-zinc-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-zinc-900"
               >
-                Inloggen
+                {secondaryLabel}
               </Link>
             </div>
           </div>
