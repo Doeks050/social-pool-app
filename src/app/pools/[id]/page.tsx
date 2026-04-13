@@ -10,6 +10,32 @@ type PoolPageProps = {
   }>;
 };
 
+type PoolMemberRow = {
+  user_id: string;
+  role: string;
+  joined_at: string;
+};
+
+type ProfileRow = {
+  id: string;
+  display_name: string | null;
+};
+
+function getDisplayName(
+  userId: string,
+  profilesMap: Map<string, string>,
+  currentUserId: string
+) {
+  const profileName = profilesMap.get(userId)?.trim();
+
+  if (profileName) {
+    return userId === currentUserId ? `${profileName} (jij)` : profileName;
+  }
+
+  const fallback = `Gebruiker ${userId.slice(0, 8)}`;
+  return userId === currentUserId ? `${fallback} (jij)` : fallback;
+}
+
 export default async function PoolDetailPage({ params }: PoolPageProps) {
   const { id } = await params;
 
@@ -48,6 +74,25 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
     .select("user_id, role, joined_at")
     .eq("pool_id", id)
     .order("joined_at", { ascending: true });
+
+  const typedMembers = (members ?? []) as PoolMemberRow[];
+  const memberUserIds = typedMembers.map((member) => member.user_id);
+
+  let profilesMap = new Map<string, string>();
+
+  if (memberUserIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", memberUserIds);
+
+    profilesMap = new Map(
+      ((profiles ?? []) as ProfileRow[]).map((profile) => [
+        profile.id,
+        profile.display_name ?? "",
+      ])
+    );
+  }
 
   const poolType = getPoolTypeMeta(pool.game_type);
 
@@ -100,8 +145,8 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
               <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
                 <h2 className="text-lg font-semibold">Leden</h2>
                 <p className="mt-2 text-sm leading-6 text-zinc-400">
-                  Deze pool heeft momenteel {members?.length ?? 0}{" "}
-                  {(members?.length ?? 0) === 1 ? "lid" : "leden"}.
+                  Deze pool heeft momenteel {typedMembers.length}{" "}
+                  {typedMembers.length === 1 ? "lid" : "leden"}.
                 </p>
               </div>
 
@@ -127,10 +172,9 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                   </Link>
 
                   <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 opacity-70">
-                    <h2 className="text-lg font-semibold">Officiële uitslagen</h2>
+                    <h2 className="text-lg font-semibold">Voorspellingen</h2>
                     <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      WK-uitslagen worden centraal beheerd door de app admin en
-                      gelden automatisch voor alle pools.
+                      Deze zitten nu direct verwerkt op de wedstrijdenpagina.
                     </p>
                   </div>
 
@@ -196,26 +240,38 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
             <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6">
               <h2 className="text-2xl font-bold tracking-tight">Pool leden</h2>
 
-              {members && members.length > 0 ? (
+              {typedMembers.length > 0 ? (
                 <div className="mt-6 grid gap-3">
-                  {members.map((member) => (
-                    <div
-                      key={member.user_id}
-                      className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4"
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="text-sm text-zinc-400">Gebruiker ID</p>
-                          <p className="mt-1 text-sm text-white">
-                            {member.user_id}
-                          </p>
+                  {typedMembers.map((member) => {
+                    const displayName = getDisplayName(
+                      member.user_id,
+                      profilesMap,
+                      user.id
+                    );
+
+                    return (
+                      <div
+                        key={member.user_id}
+                        className={`rounded-2xl border p-4 ${
+                          member.user_id === user.id
+                            ? "border-white bg-zinc-950"
+                            : "border-zinc-800 bg-zinc-950/60"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <p className="text-sm text-zinc-400">Deelnemer</p>
+                            <p className="mt-1 text-sm font-medium text-white">
+                              {displayName}
+                            </p>
+                          </div>
+                          <span className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs uppercase tracking-wide text-zinc-300">
+                            {member.role}
+                          </span>
                         </div>
-                        <span className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs uppercase tracking-wide text-zinc-300">
-                          {member.role}
-                        </span>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="mt-4 text-sm text-zinc-400">

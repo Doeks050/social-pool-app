@@ -14,6 +14,26 @@ type LeaderboardRow = {
   total_points: number;
 };
 
+type ProfileRow = {
+  id: string;
+  display_name: string | null;
+};
+
+function getDisplayName(
+  userId: string,
+  profilesMap: Map<string, string>,
+  currentUserId: string
+) {
+  const profileName = profilesMap.get(userId)?.trim();
+
+  if (profileName) {
+    return userId === currentUserId ? `${profileName} (jij)` : profileName;
+  }
+
+  const fallback = `Gebruiker ${userId.slice(0, 8)}`;
+  return userId === currentUserId ? `${fallback} (jij)` : fallback;
+}
+
 export default async function PoolLeaderboardPage({
   params,
 }: LeaderboardPageProps) {
@@ -68,6 +88,24 @@ export default async function PoolLeaderboardPage({
     }))
     .sort((a, b) => b.total_points - a.total_points);
 
+  const userIds = leaderboard.map((entry) => entry.user_id);
+
+  let profilesMap = new Map<string, string>();
+
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .in("id", userIds);
+
+    profilesMap = new Map(
+      ((profiles ?? []) as ProfileRow[]).map((profile) => [
+        profile.id,
+        profile.display_name ?? "",
+      ])
+    );
+  }
+
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <section className="py-16">
@@ -90,37 +128,51 @@ export default async function PoolLeaderboardPage({
                 {pool.name}
               </h1>
               <p className="mt-3 text-sm leading-6 text-zinc-400">
-                Deze ranglijst telt alle gescoorde WK voorspellingen binnen deze pool op.
+                Deze ranglijst telt alle gescoorde WK voorspellingen binnen deze
+                pool op.
               </p>
             </div>
 
             {leaderboard.length > 0 ? (
               <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-4 sm:p-6">
                 <div className="grid gap-3">
-                  {leaderboard.map((entry, index) => (
-                    <div
-                      key={entry.user_id}
-                      className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4"
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="text-sm text-zinc-400">
-                            Positie #{index + 1}
-                          </p>
-                          <p className="mt-1 text-sm text-white">
-                            {entry.user_id}
-                          </p>
-                        </div>
+                  {leaderboard.map((entry, index) => {
+                    const displayName = getDisplayName(
+                      entry.user_id,
+                      profilesMap,
+                      user.id
+                    );
+                    const isCurrentUser = entry.user_id === user.id;
 
-                        <div className="text-right">
-                          <p className="text-sm text-zinc-400">Punten</p>
-                          <p className="mt-1 text-xl font-semibold text-white">
-                            {entry.total_points}
-                          </p>
+                    return (
+                      <div
+                        key={entry.user_id}
+                        className={`rounded-2xl border p-4 ${
+                          isCurrentUser
+                            ? "border-white bg-zinc-950"
+                            : "border-zinc-800 bg-zinc-950/60"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <p className="text-sm text-zinc-400">
+                              Positie #{index + 1}
+                            </p>
+                            <p className="mt-1 text-base font-medium text-white">
+                              {displayName}
+                            </p>
+                          </div>
+
+                          <div className="text-right">
+                            <p className="text-sm text-zinc-400">Punten</p>
+                            <p className="mt-1 text-xl font-semibold text-white">
+                              {entry.total_points}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ) : (

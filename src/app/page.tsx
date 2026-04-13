@@ -1,241 +1,74 @@
-import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
-import { getPoolTypeMeta } from "@/lib/pool-types";
 
-type PoolPageProps = {
-  params: Promise<{
-    id: string;
-  }>;
-};
-
-export default async function PoolDetailPage({ params }: PoolPageProps) {
-  const { id } = await params;
-
+export default async function HomePage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/auth");
-  }
-
-  const { data: membership } = await supabase
-    .from("pool_members")
-    .select("role")
-    .eq("pool_id", id)
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (!membership) {
-    notFound();
-  }
-
-  const { data: pool } = await supabase
-    .from("pools")
-    .select("id, name, game_type, invite_code, created_at")
-    .eq("id", id)
-    .maybeSingle();
-
-  if (!pool) {
-    notFound();
-  }
-
-  const { data: members } = await supabase
-    .from("pool_members")
-    .select("user_id, role, joined_at")
-    .eq("pool_id", id)
-    .order("joined_at", { ascending: true });
-
-  const poolType = getPoolTypeMeta(pool.game_type);
-  const canManageResults =
-    pool.game_type === "world_cup" &&
-    ["owner", "admin"].includes(membership.role);
+  const primaryHref = user ? "/dashboard" : "/auth";
+  const primaryLabel = user ? "Naar dashboard" : "Pool starten";
+  const secondaryHref = user ? "/dashboard" : "/auth";
+  const secondaryLabel = user ? "Mijn account" : "Inloggen";
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
-      <section className="py-16">
+      <section className="flex min-h-screen items-center py-16">
         <Container>
-          <div className="flex flex-col gap-6">
-            <div>
+          <div className="max-w-3xl">
+            <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-zinc-400">
+              Social Pool App
+            </p>
+
+            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
+              Maak je eigen social pool platform
+            </h1>
+
+            <p className="mt-6 max-w-2xl text-base leading-7 text-zinc-300 sm:text-lg">
+              Start binnen enkele seconden een pool voor collega’s, vrienden of
+              familie. Kies je type pool, nodig anderen uit en bekijk automatisch
+              standen, voorspellingen en ranglijsten.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <Link
-                href="/dashboard"
-                className="inline-flex text-sm text-zinc-400 transition hover:text-white"
+                href={primaryHref}
+                className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200"
               >
-                ← Terug naar dashboard
+                {primaryLabel}
+              </Link>
+
+              <Link
+                href={secondaryHref}
+                className="rounded-xl border border-zinc-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-zinc-900"
+              >
+                {secondaryLabel}
               </Link>
             </div>
+          </div>
 
-            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/70 p-6">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.2em] text-zinc-400">
-                    Pool overview
-                  </p>
-                  <h1 className="mt-2 text-3xl font-bold tracking-tight">
-                    {pool.name}
-                  </h1>
-                  <p className="mt-3 text-sm leading-6 text-zinc-400">
-                    Speltype: {poolType.label}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 px-4 py-3 text-sm">
-                  <div className="text-zinc-400">Invite code</div>
-                  <div className="mt-1 text-lg font-semibold tracking-wider text-white">
-                    {pool.invite_code}
-                  </div>
-                </div>
-              </div>
+          <div className="mt-16 grid gap-4 sm:grid-cols-3">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+              <h2 className="text-lg font-semibold">WK Poule</h2>
+              <p className="mt-2 text-sm leading-6 text-zinc-400">
+                Laat spelers scores voorspellen en volg automatisch de ranglijst.
+              </p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-                <h2 className="text-lg font-semibold">Jouw rol</h2>
-                <p className="mt-2 text-sm leading-6 text-zinc-400">
-                  Je bent momenteel <span className="text-white">{membership.role}</span>{" "}
-                  in deze pool.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-                <h2 className="text-lg font-semibold">Leden</h2>
-                <p className="mt-2 text-sm leading-6 text-zinc-400">
-                  Deze pool heeft momenteel {members?.length ?? 0}{" "}
-                  {(members?.length ?? 0) === 1 ? "lid" : "leden"}.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-                <h2 className="text-lg font-semibold">Pooltype</h2>
-                <p className="mt-2 text-sm leading-6 text-zinc-400">
-                  {poolType.statusText}
-                </p>
-              </div>
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+              <h2 className="text-lg font-semibold">Office Bingo</h2>
+              <p className="mt-2 text-sm leading-6 text-zinc-400">
+                Maak unieke bingo-pools voor werk, events of vriendengroepen.
+              </p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
-              {pool.game_type === "world_cup" ? (
-                <>
-                  <Link
-                    href={`/pools/${pool.id}/matches`}
-                    className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition hover:border-zinc-600 hover:bg-zinc-900"
-                  >
-                    <h2 className="text-lg font-semibold">Wedstrijden</h2>
-                    <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      Bekijk alle WK wedstrijden in deze pool.
-                    </p>
-                  </Link>
-
-                  {canManageResults ? (
-                    <Link
-                      href={`/pools/${pool.id}/results`}
-                      className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition hover:border-zinc-600 hover:bg-zinc-900"
-                    >
-                      <h2 className="text-lg font-semibold">Resultaten beheren</h2>
-                      <p className="mt-2 text-sm leading-6 text-zinc-400">
-                        Vul eindstanden in en score predictions automatisch door.
-                      </p>
-                    </Link>
-                  ) : (
-                    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 opacity-70">
-                      <h2 className="text-lg font-semibold">Resultaten beheren</h2>
-                      <p className="mt-2 text-sm leading-6 text-zinc-400">
-                        Alleen owner of admin kan wedstrijduitslagen invoeren.
-                      </p>
-                    </div>
-                  )}
-
-                  <Link
-                    href={`/pools/${pool.id}/leaderboard`}
-                    className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition hover:border-zinc-600 hover:bg-zinc-900"
-                  >
-                    <h2 className="text-lg font-semibold">Ranglijst</h2>
-                    <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      Bekijk de huidige stand op basis van gescoorde predictions.
-                    </p>
-                  </Link>
-                </>
-              ) : pool.game_type === "office_bingo" ? (
-                <>
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-                    <h2 className="text-lg font-semibold">Bingo settings</h2>
-                    <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      Hier komt straks de setup voor board size, items en rules.
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 opacity-70">
-                    <h2 className="text-lg font-semibold">Kaarten</h2>
-                    <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      Spelers krijgen later unieke bingo-kaarten binnen deze pool.
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 opacity-70">
-                    <h2 className="text-lg font-semibold">Claims</h2>
-                    <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      Bingo claims en verificatie bouwen we later.
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-                    <h2 className="text-lg font-semibold">Raceweekenden</h2>
-                    <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      Hier komt straks de F1-structuur met weekends en sessies.
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 opacity-70">
-                    <h2 className="text-lg font-semibold">Predictions</h2>
-                    <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      De F1 voorspellingen bouwen we later.
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 opacity-70">
-                    <h2 className="text-lg font-semibold">Stand</h2>
-                    <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      De F1-ranglijst volgt later.
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6">
-              <h2 className="text-2xl font-bold tracking-tight">Pool leden</h2>
-
-              {members && members.length > 0 ? (
-                <div className="mt-6 grid gap-3">
-                  {members.map((member) => (
-                    <div
-                      key={member.user_id}
-                      className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4"
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="text-sm text-zinc-400">Gebruiker ID</p>
-                          <p className="mt-1 text-sm text-white">
-                            {member.user_id}
-                          </p>
-                        </div>
-                        <span className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs uppercase tracking-wide text-zinc-300">
-                          {member.role}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="mt-4 text-sm text-zinc-400">
-                  Er zijn nog geen leden gevonden.
-                </p>
-              )}
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+              <h2 className="text-lg font-semibold">F1 Poule</h2>
+              <p className="mt-2 text-sm leading-6 text-zinc-400">
+                Bouw pools rondom raceweekenden, sessies en seizoensstanden.
+              </p>
             </div>
           </div>
         </Container>
