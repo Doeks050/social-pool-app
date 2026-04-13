@@ -9,14 +9,25 @@ type LeaderboardPageProps = {
   }>;
 };
 
-type LeaderboardRow = {
+type PoolMemberRow = {
   user_id: string;
-  total_points: number;
+  role: string;
+  joined_at: string;
+};
+
+type PredictionRow = {
+  user_id: string;
+  points_awarded: number | null;
 };
 
 type ProfileRow = {
   id: string;
   display_name: string | null;
+};
+
+type LeaderboardRow = {
+  user_id: string;
+  total_points: number;
 };
 
 function getDisplayName(
@@ -69,14 +80,28 @@ export default async function PoolLeaderboardPage({
     notFound();
   }
 
+  const { data: members } = await supabase
+    .from("pool_members")
+    .select("user_id, role, joined_at")
+    .eq("pool_id", pool.id)
+    .order("joined_at", { ascending: true });
+
+  const typedMembers = (members ?? []) as PoolMemberRow[];
+
   const { data: predictions } = await supabase
     .from("predictions")
     .select("user_id, points_awarded")
     .eq("pool_id", pool.id);
 
+  const typedPredictions = (predictions ?? []) as PredictionRow[];
+
   const totalsMap = new Map<string, number>();
 
-  for (const prediction of predictions ?? []) {
+  for (const member of typedMembers) {
+    totalsMap.set(member.user_id, 0);
+  }
+
+  for (const prediction of typedPredictions) {
     const current = totalsMap.get(prediction.user_id) ?? 0;
     totalsMap.set(prediction.user_id, current + (prediction.points_awarded ?? 0));
   }
@@ -86,9 +111,21 @@ export default async function PoolLeaderboardPage({
       user_id: userId,
       total_points: totalPoints,
     }))
-    .sort((a, b) => b.total_points - a.total_points);
+    .sort((a, b) => {
+      if (b.total_points !== a.total_points) {
+        return b.total_points - a.total_points;
+      }
 
-  const userIds = leaderboard.map((entry) => entry.user_id);
+      const aMember = typedMembers.find((member) => member.user_id === a.user_id);
+      const bMember = typedMembers.find((member) => member.user_id === b.user_id);
+
+      return (
+        new Date(aMember?.joined_at ?? 0).getTime() -
+        new Date(bMember?.joined_at ?? 0).getTime()
+      );
+    });
+
+  const userIds = typedMembers.map((member) => member.user_id);
 
   let profilesMap = new Map<string, string>();
 
@@ -128,8 +165,8 @@ export default async function PoolLeaderboardPage({
                 {pool.name}
               </h1>
               <p className="mt-3 text-sm leading-6 text-zinc-400">
-                Deze ranglijst telt alle gescoorde WK voorspellingen binnen deze
-                pool op.
+                Alle poolleden staan altijd in deze ranglijst, ook als ze nog 0
+                punten hebben.
               </p>
             </div>
 
@@ -177,10 +214,9 @@ export default async function PoolLeaderboardPage({
               </div>
             ) : (
               <div className="rounded-3xl border border-dashed border-zinc-700 bg-zinc-900/40 p-6">
-                <h2 className="text-xl font-semibold">Nog geen scoredata</h2>
+                <h2 className="text-xl font-semibold">Nog geen leden gevonden</h2>
                 <p className="mt-3 text-sm leading-6 text-zinc-400">
-                  Zodra wedstrijden finished zijn en predictions gescoord zijn,
-                  verschijnt hier de ranglijst.
+                  Zodra er leden in deze pool zitten, verschijnen ze hier.
                 </p>
               </div>
             )}
