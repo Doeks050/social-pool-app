@@ -25,8 +25,22 @@ type ProfileRow = {
   display_name: string | null;
 };
 
+type BonusTemplateRow = {
+  id: string;
+  points_value: number;
+  correct_answer: string | null;
+};
+
+type BonusAnswerRow = {
+  user_id: string;
+  question_id: string;
+  answer_value: string;
+};
+
 type LeaderboardRow = {
   user_id: string;
+  match_points: number;
+  bonus_points: number;
   total_points: number;
 };
 
@@ -95,33 +109,90 @@ export default async function PoolLeaderboardPage({
 
   const typedPredictions = (predictions ?? []) as PredictionRow[];
 
-  const totalsMap = new Map<string, number>();
+  const { data: bonusTemplates } = await supabase
+    .from("bonus_question_templates")
+    .select("id, points_value, correct_answer")
+    .eq("game_type", "world_cup")
+    .eq("is_active", true);
+
+  const typedBonusTemplates = (bonusTemplates ?? []) as BonusTemplateRow[];
+
+  const { data: bonusAnswers } = await supabase
+    .from("bonus_question_answers")
+    .select("user_id, question_id, answer_value")
+    .eq("pool_id", pool.id);
+
+  const typedBonusAnswers = (bonusAnswers ?? []) as BonusAnswerRow[];
+
+  const memberJoinedAtMap = new Map(
+    typedMembers.map((member) => [member.user_id, member.joined_at])
+  );
+
+  const matchPointsMap = new Map<string, number>();
+  const bonusPointsMap = new Map<string, number>();
 
   for (const member of typedMembers) {
-    totalsMap.set(member.user_id, 0);
+    matchPointsMap.set(member.user_id, 0);
+    bonusPointsMap.set(member.user_id, 0);
   }
 
   for (const prediction of typedPredictions) {
-    const current = totalsMap.get(prediction.user_id) ?? 0;
-    totalsMap.set(prediction.user_id, current + (prediction.points_awarded ?? 0));
+    const current = matchPointsMap.get(prediction.user_id) ?? 0;
+    matchPointsMap.set(
+      prediction.user_id,
+      current + (prediction.points_awarded ?? 0)
+    );
   }
 
-  const leaderboard: LeaderboardRow[] = Array.from(totalsMap.entries())
-    .map(([userId, totalPoints]) => ({
-      user_id: userId,
-      total_points: totalPoints,
-    }))
+  const bonusTemplateMap = new Map(
+    typedBonusTemplates.map((template) => [template.id, template])
+  );
+
+  for (const answer of typedBonusAnswers) {
+    const template = bonusTemplateMap.get(answer.question_id);
+
+    if (!template) {
+      continue;
+    }
+
+    if (!template.correct_answer) {
+      continue;
+    }
+
+    if (answer.answer_value !== template.correct_answer) {
+      continue;
+    }
+
+    const current = bonusPointsMap.get(answer.user_id) ?? 0;
+    bonusPointsMap.set(answer.user_id, current + template.points_value);
+  }
+
+  const leaderboard: LeaderboardRow[] = typedMembers
+    .map((member) => {
+      const matchPoints = matchPointsMap.get(member.user_id) ?? 0;
+      const bonusPoints = bonusPointsMap.get(member.user_id) ?? 0;
+
+      return {
+        user_id: member.user_id,
+        match_points: matchPoints,
+        bonus_points: bonusPoints,
+        total_points: matchPoints + bonusPoints,
+      };
+    })
     .sort((a, b) => {
       if (b.total_points !== a.total_points) {
         return b.total_points - a.total_points;
       }
 
-      const aMember = typedMembers.find((member) => member.user_id === a.user_id);
-      const bMember = typedMembers.find((member) => member.user_id === b.user_id);
+      if (b.match_points !== a.match_points) {
+        return b.match_points - a.match_points;
+      }
+
+      const aJoinedAt = memberJoinedAtMap.get(a.user_id) ?? "";
+      const bJoinedAt = memberJoinedAtMap.get(b.user_id) ?? "";
 
       return (
-        new Date(aMember?.joined_at ?? 0).getTime() -
-        new Date(bMember?.joined_at ?? 0).getTime()
+        new Date(aJoinedAt).getTime() - new Date(bJoinedAt).getTime()
       );
     });
 
@@ -166,7 +237,8 @@ export default async function PoolLeaderboardPage({
               </h1>
               <p className="mt-3 text-sm leading-6 text-zinc-400">
                 Alle poolleden staan altijd in deze ranglijst, ook als ze nog 0
-                punten hebben.
+                punten hebben. Bonuspunten tellen automatisch mee zodra het
+                juiste bonusantwoord is ingevuld door de admin.
               </p>
             </div>
 
@@ -190,7 +262,7 @@ export default async function PoolLeaderboardPage({
                             : "border-zinc-800 bg-zinc-950/60"
                         }`}
                       >
-                        <div className="flex items-center justify-between gap-4">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                           <div>
                             <p className="text-sm text-zinc-400">
                               Positie #{index + 1}
@@ -200,11 +272,33 @@ export default async function PoolLeaderboardPage({
                             </p>
                           </div>
 
-                          <div className="text-right">
-                            <p className="text-sm text-zinc-400">Punten</p>
-                            <p className="mt-1 text-xl font-semibold text-white">
-                              {entry.total_points}
-                            </p>
+                          <div className="grid grid-cols-3 gap-3 sm:min-w-[320px]">
+                            <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-right">
+                              <p className="text-xs uppercase tracking-wide text-zinc-500">
+                                Match
+                              </p>
+                              <p className="mt-1 text-lg font-semibold text-white">
+                                {entry.match_points}
+                              </p>
+                            </div>
+
+                            <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-right">
+                              <p className="text-xs uppercase tracking-wide text-zinc-500">
+                                Bonus
+                              </p>
+                              <p className="mt-1 text-lg font-semibold text-white">
+                                {entry.bonus_points}
+                              </p>
+                            </div>
+
+                            <div className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-right">
+                              <p className="text-xs uppercase tracking-wide text-zinc-400">
+                                Totaal
+                              </p>
+                              <p className="mt-1 text-xl font-semibold text-white">
+                                {entry.total_points}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
