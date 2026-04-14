@@ -6,6 +6,7 @@ import MatchResultAdminCard from "@/components/world-cup/MatchResultAdminCard";
 import { createClient } from "@/lib/supabase";
 import { syncKnockoutTeams } from "@/lib/world-cup/syncKnockoutTeams";
 import type { WorldCupMatchRow } from "@/lib/world-cup/slotResolver";
+import { getPredictionPoints } from "@/lib/world-cup-scoring";
 
 type ResultsPageProps = {
   searchParams?: Promise<{
@@ -13,6 +14,66 @@ type ResultsPageProps = {
     error?: string;
   }>;
 };
+
+type PredictionRow = {
+  id: string;
+  pool_id: string;
+  predicted_home_score: number;
+  predicted_away_score: number;
+};
+
+async function scorePredictionsForMatch(
+  matchId: string,
+  actualHomeScore: number,
+  actualAwayScore: number
+) {
+  const supabase = await createClient();
+
+  const { data: predictions, error: predictionsError } = await supabase
+    .from("predictions")
+    .select("id, pool_id, predicted_home_score, predicted_away_score")
+    .eq("match_id", matchId);
+
+  if (predictionsError) {
+    throw new Error(predictionsError.message);
+  }
+
+  const typedPredictions = (predictions ?? []) as PredictionRow[];
+
+  for (const prediction of typedPredictions) {
+    const points = getPredictionPoints(
+      {
+        home: prediction.predicted_home_score,
+        away: prediction.predicted_away_score,
+      },
+      {
+        home: actualHomeScore,
+        away: actualAwayScore,
+      }
+    );
+
+    const { error: updatePredictionError } = await supabase
+      .from("predictions")
+      .update({
+        points_awarded: points,
+      })
+      .eq("id", prediction.id);
+
+    if (updatePredictionError) {
+      throw new Error(updatePredictionError.message);
+    }
+  }
+
+  const uniquePoolIds = [...new Set(typedPredictions.map((item) => item.pool_id))];
+
+  for (const poolId of uniquePoolIds) {
+    revalidatePath(`/pools/${poolId}`);
+    revalidatePath(`/pools/${poolId}/matches`);
+    revalidatePath(`/pools/${poolId}/leaderboard`);
+    revalidatePath(`/pools/${poolId}/bracket`);
+    revalidatePath(`/pools/${poolId}/bonus`);
+  }
+}
 
 async function saveMatchResult(formData: FormData) {
   "use server";
@@ -80,12 +141,14 @@ async function saveMatchResult(formData: FormData) {
   }
 
   try {
+    await scorePredictionsForMatch(matchId, homeScore, awayScore);
     await syncKnockoutTeams(supabase);
   } catch (error) {
     const message =
       error instanceof Error
         ? error.message
-        : "Onbekende fout tijdens knock-out sync.";
+        : "Onbekende fout tijdens score/sync verwerking.";
+
     redirect(
       "/admin/world-cup/results?error=" + encodeURIComponent(message)
     );
@@ -96,11 +159,15 @@ async function saveMatchResult(formData: FormData) {
   revalidatePath("/admin/world-cup/sync");
   revalidatePath("/pools/[id]", "page");
   revalidatePath("/pools/[id]/matches", "page");
+  revalidatePath("/pools/[id]/leaderboard", "page");
   revalidatePath("/pools/[id]/bracket", "page");
+  revalidatePath("/pools/[id]/bonus", "page");
 
   redirect(
     "/admin/world-cup/results?success=" +
-      encodeURIComponent("Resultaat opgeslagen en knock-out schema gesynchroniseerd.")
+      encodeURIComponent(
+        "Resultaat opgeslagen, punten berekend en knock-out schema gesynchroniseerd."
+      )
   );
 }
 
@@ -236,8 +303,9 @@ export default async function WorldCupResultsPage({
                 WK resultaten beheren
               </h1>
               <p className="mt-3 text-sm leading-6 text-zinc-400">
-                Vul hier officiële WK uitslagen in. Na opslaan wordt het
-                knock-out schema nu automatisch opnieuw gesynchroniseerd.
+                Vul hier officiële WK uitslagen in. Na opslaan worden nu direct
+                de voorspelling-punten bijgewerkt én het knock-out schema
+                opnieuw gesynchroniseerd.
               </p>
             </div>
 

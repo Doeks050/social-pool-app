@@ -34,3 +34,20 @@ export function getPredictionBreakdown(
     correctOutcome,
   };
 }
+
+export function getPredictionPoints(
+  predicted: ScoreInput,
+  actual: ScoreInput
+): number {
+  const breakdown = getPredictionBreakdown(predicted, actual);
+
+  if (breakdown.exactScore) {
+    return 3;
+  }
+
+  if (breakdown.correctOutcome) {
+    return 1;
+  }
+
+  return 0;
+}
