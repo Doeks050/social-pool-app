@@ -57,9 +57,7 @@ function getGroupOrder(label: string) {
     /^group\s+[a-z0-9]+$/i.test(label.trim()) ||
     /^groep\s+[a-z0-9]+$/i.test(label.trim());
 
-  if (isGroupStage) {
-    return 1;
-  }
+  if (isGroupStage) return 1;
 
   if (
     normalized.includes("round of 32") ||
@@ -281,9 +279,9 @@ export default async function PoolMatchesPage({
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
-      <section className="py-16">
+      <section className="py-10 sm:py-12">
         <Container>
-          <div className="flex flex-col gap-6">
+          <div className="mx-auto flex max-w-3xl flex-col gap-4">
             <div>
               <Link
                 href={`/pools/${pool.id}`}
@@ -293,25 +291,24 @@ export default async function PoolMatchesPage({
               </Link>
             </div>
 
-            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/70 p-6">
-              <p className="text-sm uppercase tracking-[0.2em] text-zinc-400">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-5 sm:p-6">
+              <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
                 WK wedstrijden
               </p>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight">
+              <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
                 {pool.name}
               </h1>
-              <p className="mt-3 text-sm leading-6 text-zinc-400">
-                Wedstrijden zijn hieronder gegroepeerd per fase. Binnen elke fase
-                staan open wedstrijden bovenaan, daarna gelockte wedstrijden en
-                finished wedstrijden onderaan.
+              <p className="mt-2 text-sm leading-6 text-zinc-400">
+                Open wedstrijden staan bovenaan. Gelockte en gespeelde duels
+                komen daaronder.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-3">
               <div className="flex flex-wrap gap-2">
                 <Link
                   href={getFilterHref(pool.id, "all")}
-                  className={`rounded-full border px-4 py-2 text-sm font-medium transition ${getFilterButtonClasses(
+                  className={`rounded-full border px-3 py-2 text-sm font-medium transition ${getFilterButtonClasses(
                     activeFilter === "all"
                   )}`}
                 >
@@ -320,7 +317,7 @@ export default async function PoolMatchesPage({
 
                 <Link
                   href={getFilterHref(pool.id, "open")}
-                  className={`rounded-full border px-4 py-2 text-sm font-medium transition ${getFilterButtonClasses(
+                  className={`rounded-full border px-3 py-2 text-sm font-medium transition ${getFilterButtonClasses(
                     activeFilter === "open"
                   )}`}
                 >
@@ -329,7 +326,7 @@ export default async function PoolMatchesPage({
 
                 <Link
                   href={getFilterHref(pool.id, "locked")}
-                  className={`rounded-full border px-4 py-2 text-sm font-medium transition ${getFilterButtonClasses(
+                  className={`rounded-full border px-3 py-2 text-sm font-medium transition ${getFilterButtonClasses(
                     activeFilter === "locked"
                   )}`}
                 >
@@ -338,7 +335,7 @@ export default async function PoolMatchesPage({
 
                 <Link
                   href={getFilterHref(pool.id, "finished")}
-                  className={`rounded-full border px-4 py-2 text-sm font-medium transition ${getFilterButtonClasses(
+                  className={`rounded-full border px-3 py-2 text-sm font-medium transition ${getFilterButtonClasses(
                     activeFilter === "finished"
                   )}`}
                 >
@@ -348,7 +345,7 @@ export default async function PoolMatchesPage({
             </div>
 
             {groupedMatches.length > 0 ? (
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3">
                 {groupedMatches.map((group) => {
                   const openCount = group.matches.filter(
                     (match) => getMatchState(match) === "open"
@@ -369,10 +366,10 @@ export default async function PoolMatchesPage({
                       open={defaultOpen}
                       className="rounded-2xl border border-zinc-800 bg-zinc-900/50"
                     >
-                      <summary className="cursor-pointer list-none px-5 py-4">
+                      <summary className="cursor-pointer list-none px-4 py-4 sm:px-5">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <div>
-                            <h2 className="text-lg font-semibold text-white">
+                            <h2 className="text-base font-semibold text-white sm:text-lg">
                               {group.label}
                             </h2>
                             <p className="mt-1 text-sm text-zinc-400">
@@ -384,20 +381,20 @@ export default async function PoolMatchesPage({
                           </div>
 
                           <div className="flex flex-wrap gap-2 text-xs">
-                            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-emerald-200">
-                              Open: {openCount}
+                            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-emerald-200">
+                              Open {openCount}
                             </span>
-                            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-amber-200">
-                              Gelockt: {lockedCount}
+                            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-amber-200">
+                              Gelockt {lockedCount}
                             </span>
-                            <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-1 text-sky-200">
-                              Finished: {finishedCount}
+                            <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-2.5 py-1 text-sky-200">
+                              Finished {finishedCount}
                             </span>
                           </div>
                         </div>
                       </summary>
 
-                      <div className="border-t border-zinc-800 px-4 py-4">
+                      <div className="border-t border-zinc-800 px-3 py-3 sm:px-4">
                         <div className="grid gap-3">
                           {group.matches.map((match) => (
                             <MatchPredictionCard
@@ -414,11 +411,11 @@ export default async function PoolMatchesPage({
                 })}
               </div>
             ) : (
-              <div className="rounded-3xl border border-dashed border-zinc-700 bg-zinc-900/40 p-6">
-                <h2 className="text-xl font-semibold">
+              <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/40 p-5">
+                <h2 className="text-lg font-semibold">
                   Geen wedstrijden gevonden voor deze filter
                 </h2>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
+                <p className="mt-2 text-sm leading-6 text-zinc-400">
                   Kies een andere filter of bekijk alle wedstrijden.
                 </p>
               </div>

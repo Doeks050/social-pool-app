@@ -102,78 +102,67 @@ export default function BonusQuestionsForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       {questions.map((question, index) => (
         <div
           key={question.id}
-          className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5"
+          className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 sm:p-5"
         >
-          <div className="flex flex-col gap-2">
-            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-              Vraag {index + 1}
-            </p>
-
-            <h2 className="text-lg font-semibold text-white">
-              {question.label}
-            </h2>
-
-            {question.description ? (
-              <p className="text-sm leading-6 text-zinc-400">
-                {question.description}
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                Vraag {index + 1}
               </p>
-            ) : null}
+              <h2 className="mt-1 text-base font-semibold text-white sm:text-lg">
+                {question.label}
+              </h2>
+            </div>
 
-            <p className="text-sm text-zinc-500">
-              Punten: <span className="text-white">{question.pointsValue}</span>
+            <div className="rounded-full border border-zinc-800 bg-zinc-950/70 px-2.5 py-1 text-xs text-zinc-300">
+              {question.pointsValue} pt
+            </div>
+          </div>
+
+          {question.description ? (
+            <p className="mb-3 text-sm leading-6 text-zinc-400">
+              {question.description}
             </p>
-          </div>
+          ) : null}
 
-          <div className="mt-4">
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
-              Selecteer je antwoord
-            </label>
+          <select
+            value={answers[question.id] ?? ""}
+            onChange={(event) => updateAnswer(question.id, event.target.value)}
+            disabled={isLocked || loading}
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-white outline-none transition focus:border-white disabled:opacity-60"
+          >
+            <option value="">Kies een land</option>
 
-            <select
-              value={answers[question.id] ?? ""}
-              onChange={(event) => updateAnswer(question.id, event.target.value)}
-              disabled={isLocked || loading}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-white outline-none transition focus:border-white disabled:opacity-60"
-            >
-              <option value="">Kies een land</option>
-
-              {question.options.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
+            {question.options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </div>
       ))}
 
-      {isLocked ? (
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-          Bonusvragen zijn gelockt. Je kunt niets meer aanpassen.
-        </div>
-      ) : null}
-
       {error ? (
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {error}
         </div>
       ) : null}
 
       {message ? (
-        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
           {message}
         </div>
       ) : null}
 
-      <div>
+      <div className="pt-1">
         <button
           type="submit"
           disabled={isLocked || loading}
-          className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           {isLocked ? "Gelockt" : loading ? "Opslaan..." : "Bonusvragen opslaan"}
         </button>

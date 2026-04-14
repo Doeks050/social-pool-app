@@ -116,9 +116,9 @@ export default async function PoolBonusPage({
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
-      <section className="py-16">
+      <section className="py-10 sm:py-12">
         <Container>
-          <div className="flex flex-col gap-6">
+          <div className="mx-auto flex max-w-3xl flex-col gap-4">
             <div>
               <Link
                 href={`/pools/${pool.id}`}
@@ -128,31 +128,47 @@ export default async function PoolBonusPage({
               </Link>
             </div>
 
-            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/70 p-6">
-              <p className="text-sm uppercase tracking-[0.2em] text-zinc-400">
-                WK bonusvragen
-              </p>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight">
-                {pool.name}
-              </h1>
-              <p className="mt-3 text-sm leading-6 text-zinc-400">
-                Vul je bonusvragen in vóór de eerste WK wedstrijd begint. Daarna
-                worden alle bonusvragen automatisch gelockt.
-              </p>
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-5 sm:p-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                    WK bonusvragen
+                  </p>
+                  <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+                    {pool.name}
+                  </h1>
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">
+                    Vul je bonusvragen in vóór de eerste wedstrijd begint.
+                  </p>
+                </div>
 
-              {formattedLockAt ? (
-                <div className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-950/60 px-4 py-3 text-sm">
-                  <div className="text-zinc-400">Deadline bonusvragen</div>
-                  <div className="mt-1 font-semibold text-white">
-                    {formattedLockAt}
+                {formattedLockAt ? (
+                  <div
+                    className={`rounded-xl border px-3 py-2 text-sm sm:min-w-[180px] ${
+                      isLocked
+                        ? "border-amber-500/30 bg-amber-500/10 text-amber-200"
+                        : "border-zinc-800 bg-zinc-950/70 text-white"
+                    }`}
+                  >
+                    <div className="text-xs uppercase tracking-wide text-zinc-500">
+                      Deadline
+                    </div>
+                    <div className="mt-1 font-semibold">{formattedLockAt}</div>
                   </div>
+                ) : null}
+              </div>
+
+              {isLocked ? (
+                <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                  Bonusvragen zijn gelockt.
                 </div>
-              ) : (
-                <div className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-                  Er is nog geen eerste WK wedstrijd gevonden. Bonusvragen zijn
-                  daardoor nog niet te locken.
+              ) : null}
+
+              {!formattedLockAt ? (
+                <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                  Er is nog geen eerste WK wedstrijd gevonden.
                 </div>
-              )}
+              ) : null}
             </div>
 
             {typedTemplates.length > 0 ? (
@@ -171,11 +187,11 @@ export default async function PoolBonusPage({
                 }))}
               />
             ) : (
-              <div className="rounded-3xl border border-dashed border-zinc-700 bg-zinc-900/40 p-6">
-                <h2 className="text-xl font-semibold">
+              <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/40 p-5">
+                <h2 className="text-lg font-semibold">
                   Er zijn nog geen bonusvragen aangemaakt
                 </h2>
-                <p className="mt-3 text-sm leading-6 text-zinc-400">
+                <p className="mt-2 text-sm leading-6 text-zinc-400">
                   Voeg eerst bonusvragen toe in de tabel{" "}
                   <span className="text-white">bonus_question_templates</span>.
                 </p>

@@ -58,6 +58,14 @@ function getStatusClasses(state: "open" | "locked" | "finished") {
   return "border-sky-500/30 bg-sky-500/10 text-sky-200";
 }
 
+function formatMatchDate(value: string) {
+  return new Intl.DateTimeFormat("nl-NL", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Europe/Amsterdam",
+  }).format(new Date(value));
+}
+
 export default function MatchPredictionCard({
   poolId,
   match,
@@ -77,6 +85,10 @@ export default function MatchPredictionCard({
 
   const matchState = getMatchState(match);
   const isLocked = matchState !== "open";
+  const formattedStart = useMemo(
+    () => formatMatchDate(match.starts_at),
+    [match.starts_at]
+  );
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -140,9 +152,9 @@ export default function MatchPredictionCard({
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <span
               className={`rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide ${getStatusClasses(
@@ -152,12 +164,7 @@ export default function MatchPredictionCard({
               {getStatusLabel(matchState)}
             </span>
 
-            <span className="text-xs text-zinc-500">
-              {new Date(match.starts_at).toLocaleString("nl-NL", {
-                dateStyle: "medium",
-                timeStyle: "short",
-              })}
-            </span>
+            <span className="text-xs text-zinc-500">{formattedStart}</span>
           </div>
 
           <span className="text-xs text-zinc-500">
@@ -166,8 +173,10 @@ export default function MatchPredictionCard({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-2 text-sm sm:text-base">
-            <span className="font-medium text-white">{match.home_team}</span>
+          <div className="grid grid-cols-[1fr_auto_auto_auto_1fr] items-center gap-2 text-sm sm:text-base">
+            <span className="truncate font-medium text-white">
+              {match.home_team}
+            </span>
 
             <input
               type="number"
@@ -176,10 +185,10 @@ export default function MatchPredictionCard({
               value={homeScore}
               onChange={(event) => setHomeScore(event.target.value)}
               disabled={isLocked || loading}
-              className="w-16 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-center text-sm text-white outline-none transition focus:border-white disabled:opacity-60"
+              className="w-14 rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-2 text-center text-sm text-white outline-none transition focus:border-white disabled:opacity-60"
             />
 
-            <span className="text-zinc-500">vs</span>
+            <span className="text-zinc-500">-</span>
 
             <input
               type="number"
@@ -188,60 +197,63 @@ export default function MatchPredictionCard({
               value={awayScore}
               onChange={(event) => setAwayScore(event.target.value)}
               disabled={isLocked || loading}
-              className="w-16 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-center text-sm text-white outline-none transition focus:border-white disabled:opacity-60"
+              className="w-14 rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-2 text-center text-sm text-white outline-none transition focus:border-white disabled:opacity-60"
             />
 
-            <span className="font-medium text-white">{match.away_team}</span>
+            <span className="truncate text-right font-medium text-white">
+              {match.away_team}
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            {matchState === "finished" &&
+            match.home_score !== null &&
+            match.away_score !== null ? (
+              <p className="text-sm text-zinc-300">
+                Uitslag{" "}
+                <span className="font-semibold text-white">
+                  {match.home_score} - {match.away_score}
+                </span>
+              </p>
+            ) : initialPrediction ? (
+              <p className="text-sm text-zinc-400">
+                Mijn voorspelling{" "}
+                <span className="font-medium text-white">
+                  {initialPrediction.predicted_home_score} -{" "}
+                  {initialPrediction.predicted_away_score}
+                </span>
+              </p>
+            ) : (
+              <p className="text-sm text-zinc-500">
+                Nog geen voorspelling ingevuld
+              </p>
+            )}
 
             <button
               type="submit"
               disabled={isLocked || loading}
-              className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60 sm:ml-auto"
+              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isLocked ? "Dicht" : loading ? "..." : "Opslaan"}
+              {isLocked ? "Gelockt" : loading ? "Opslaan..." : "Opslaan"}
             </button>
           </div>
         </form>
 
-        {matchState === "finished" &&
-        match.home_score !== null &&
-        match.away_score !== null ? (
-          <p className="text-sm text-zinc-300">
-            Uitslag:{" "}
-            <span className="font-semibold text-white">
-              {match.home_team} {match.home_score} - {match.away_score}{" "}
-              {match.away_team}
-            </span>
-          </p>
-        ) : initialPrediction ? (
-          <p className="text-sm text-zinc-400">
-            Mijn voorspelling:{" "}
-            <span className="font-medium text-white">
-              {match.home_team} {initialPrediction.predicted_home_score} -{" "}
-              {initialPrediction.predicted_away_score} {match.away_team}
-            </span>
-          </p>
-        ) : (
-          <p className="text-sm text-zinc-500">
-            Nog geen voorspelling ingevuld
-          </p>
-        )}
-
         {matchState === "locked" ? (
-          <p className="text-xs text-amber-300">
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
             Deze wedstrijd is gelockt. Je voorspelling kan niet meer aangepast
             worden.
-          </p>
+          </div>
         ) : null}
 
         {error ? (
-          <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
             {error}
           </div>
         ) : null}
 
         {message ? (
-          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
             {message}
           </div>
         ) : null}
