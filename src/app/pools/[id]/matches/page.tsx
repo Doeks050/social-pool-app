@@ -8,6 +8,9 @@ type PoolMatchesPageProps = {
   params: Promise<{
     id: string;
   }>;
+  searchParams: Promise<{
+    filter?: string;
+  }>;
 };
 
 type PredictionRow = {
@@ -34,6 +37,8 @@ type MatchGroup = {
   matches: MatchRow[];
 };
 
+type MatchFilter = "all" | "open" | "locked" | "finished";
+
 function getGroupLabel(match: MatchRow) {
   const round = match.round_name?.trim();
   const stage = match.stage?.trim();
@@ -46,11 +51,13 @@ function getGroupLabel(match: MatchRow) {
 function getGroupOrder(label: string) {
   const normalized = label.trim().toLowerCase();
 
-  if (
-    normalized.includes("group") ||
+  const isGroupStage =
+    normalized.includes("group stage") ||
     normalized.includes("groepsfase") ||
-    normalized.includes("group stage")
-  ) {
+    /^group\s+[a-z0-9]+$/i.test(label.trim()) ||
+    /^groep\s+[a-z0-9]+$/i.test(label.trim());
+
+  if (isGroupStage) {
     return 1;
   }
 
@@ -72,7 +79,8 @@ function getGroupOrder(label: string) {
   }
 
   if (
-    normalized.includes("quarter") ||
+    normalized.includes("quarterfinal") ||
+    normalized.includes("quarter final") ||
     normalized.includes("kwartfinale") ||
     normalized.includes("1/4")
   ) {
@@ -80,7 +88,8 @@ function getGroupOrder(label: string) {
   }
 
   if (
-    normalized.includes("semi") ||
+    normalized.includes("semifinal") ||
+    normalized.includes("semi final") ||
     normalized.includes("halve finale") ||
     normalized.includes("1/2")
   ) {
@@ -88,14 +97,19 @@ function getGroupOrder(label: string) {
   }
 
   if (
-    normalized.includes("third") ||
-    normalized.includes("3rd") ||
+    normalized.includes("third place") ||
+    normalized.includes("third-place") ||
+    normalized.includes("3rd place") ||
     normalized.includes("derde plaats")
   ) {
     return 6;
   }
 
-  if (normalized.includes("final") || normalized.includes("finale")) {
+  if (
+    normalized === "final" ||
+    normalized === "finale" ||
+    normalized.includes("world cup final")
+  ) {
     return 7;
   }
 
@@ -127,10 +141,41 @@ function getMatchStateOrder(match: MatchRow) {
   return 2;
 }
 
+function normalizeFilter(filter?: string): MatchFilter {
+  if (filter === "open") return "open";
+  if (filter === "locked") return "locked";
+  if (filter === "finished") return "finished";
+  return "all";
+}
+
+function matchesFilter(match: MatchRow, activeFilter: MatchFilter) {
+  if (activeFilter === "all") return true;
+  return getMatchState(match) === activeFilter;
+}
+
+function getFilterHref(poolId: string, filter: MatchFilter) {
+  if (filter === "all") {
+    return `/pools/${poolId}/matches`;
+  }
+
+  return `/pools/${poolId}/matches?filter=${filter}`;
+}
+
+function getFilterButtonClasses(isActive: boolean) {
+  if (isActive) {
+    return "border-white bg-white text-zinc-950";
+  }
+
+  return "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500 hover:text-white";
+}
+
 export default async function PoolMatchesPage({
   params,
+  searchParams,
 }: PoolMatchesPageProps) {
   const { id } = await params;
+  const resolvedSearchParams = await searchParams;
+  const activeFilter = normalizeFilter(resolvedSearchParams.filter);
 
   const supabase = await createClient();
   const {
@@ -198,18 +243,21 @@ export default async function PoolMatchesPage({
     .map(([label, groupMatches]) => ({
       key: label,
       label,
-      matches: [...groupMatches].sort((a, b) => {
-        const stateOrderDiff = getMatchStateOrder(a) - getMatchStateOrder(b);
+      matches: [...groupMatches]
+        .sort((a, b) => {
+          const stateOrderDiff = getMatchStateOrder(a) - getMatchStateOrder(b);
 
-        if (stateOrderDiff !== 0) {
-          return stateOrderDiff;
-        }
+          if (stateOrderDiff !== 0) {
+            return stateOrderDiff;
+          }
 
-        return (
-          new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
-        );
-      }),
+          return (
+            new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
+          );
+        })
+        .filter((match) => matchesFilter(match, activeFilter)),
     }))
+    .filter((group) => group.matches.length > 0)
     .sort((a, b) => {
       const orderDiff = getGroupOrder(a.label) - getGroupOrder(b.label);
 
@@ -219,6 +267,17 @@ export default async function PoolMatchesPage({
 
       return a.label.localeCompare(b.label);
     });
+
+  const totalOpen = typedMatches.filter(
+    (match) => getMatchState(match) === "open"
+  ).length;
+  const totalLocked = typedMatches.filter(
+    (match) => getMatchState(match) === "locked"
+  ).length;
+  const totalFinished = typedMatches.filter(
+    (match) => getMatchState(match) === "finished"
+  ).length;
+  const totalAll = typedMatches.length;
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
@@ -248,6 +307,46 @@ export default async function PoolMatchesPage({
               </p>
             </div>
 
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4">
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href={getFilterHref(pool.id, "all")}
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition ${getFilterButtonClasses(
+                    activeFilter === "all"
+                  )}`}
+                >
+                  Alles ({totalAll})
+                </Link>
+
+                <Link
+                  href={getFilterHref(pool.id, "open")}
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition ${getFilterButtonClasses(
+                    activeFilter === "open"
+                  )}`}
+                >
+                  Open ({totalOpen})
+                </Link>
+
+                <Link
+                  href={getFilterHref(pool.id, "locked")}
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition ${getFilterButtonClasses(
+                    activeFilter === "locked"
+                  )}`}
+                >
+                  Gelockt ({totalLocked})
+                </Link>
+
+                <Link
+                  href={getFilterHref(pool.id, "finished")}
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition ${getFilterButtonClasses(
+                    activeFilter === "finished"
+                  )}`}
+                >
+                  Finished ({totalFinished})
+                </Link>
+              </div>
+            </div>
+
             {groupedMatches.length > 0 ? (
               <div className="flex flex-col gap-4">
                 {groupedMatches.map((group) => {
@@ -261,7 +360,8 @@ export default async function PoolMatchesPage({
                     (match) => getMatchState(match) === "finished"
                   ).length;
 
-                  const defaultOpen = openCount > 0;
+                  const defaultOpen =
+                    activeFilter !== "finished" && openCount > 0;
 
                   return (
                     <details
@@ -316,10 +416,10 @@ export default async function PoolMatchesPage({
             ) : (
               <div className="rounded-3xl border border-dashed border-zinc-700 bg-zinc-900/40 p-6">
                 <h2 className="text-xl font-semibold">
-                  Er staan nog geen WK wedstrijden in de database
+                  Geen wedstrijden gevonden voor deze filter
                 </h2>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
-                  Voeg eerst wedstrijden toe aan de matches tabel.
+                  Kies een andere filter of bekijk alle wedstrijden.
                 </p>
               </div>
             )}
