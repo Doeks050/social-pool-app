@@ -2,6 +2,12 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
+import {
+  buildGroupLookup,
+  buildGroupStandings,
+  resolveSlotLabel,
+  type WorldCupMatchRow,
+} from "@/lib/world-cup/slotResolver";
 
 type BracketPageProps = {
   params: Promise<{
@@ -9,27 +15,66 @@ type BracketPageProps = {
   }>;
 };
 
-type MatchRow = {
-  id: string;
-  stage: string;
-  round_name: string;
-  home_team: string;
-  away_team: string;
-  starts_at: string;
-  status: string;
-  home_score: number | null;
-  away_score: number | null;
-};
-
 type KnockoutRound = {
   key: string;
   label: string;
   order: number;
-  matches: MatchRow[];
+  matches: WorldCupMatchRow[];
 };
 
-function normalizeRound(match: MatchRow): { key: string; label: string; order: number } | null {
+function normalizeRound(
+  match: WorldCupMatchRow
+): { key: string; label: string; order: number } | null {
+  const stageType = (match.stage_type ?? "").toLowerCase();
   const value = `${match.round_name ?? ""} ${match.stage ?? ""}`.toLowerCase();
+
+  if (stageType === "round_of_32") {
+    return {
+      key: "round-of-32",
+      label: "Round of 32",
+      order: 1,
+    };
+  }
+
+  if (stageType === "round_of_16") {
+    return {
+      key: "round-of-16",
+      label: "Round of 16",
+      order: 2,
+    };
+  }
+
+  if (stageType === "quarterfinal") {
+    return {
+      key: "quarterfinals",
+      label: "Quarterfinals",
+      order: 3,
+    };
+  }
+
+  if (stageType === "semifinal") {
+    return {
+      key: "semifinals",
+      label: "Semifinals",
+      order: 4,
+    };
+  }
+
+  if (stageType === "third_place") {
+    return {
+      key: "third-place",
+      label: "Third Place",
+      order: 5,
+    };
+  }
+
+  if (stageType === "final") {
+    return {
+      key: "final",
+      label: "Final",
+      order: 6,
+    };
+  }
 
   if (
     value.includes("round of 32") ||
@@ -95,10 +140,7 @@ function normalizeRound(match: MatchRow): { key: string; label: string; order: n
     };
   }
 
-  if (
-    value.includes("final") ||
-    value.includes("finale")
-  ) {
+  if (value.includes("final") || value.includes("finale")) {
     return {
       key: "final",
       label: "Final",
@@ -117,7 +159,7 @@ function formatMatchDate(value: string) {
   }).format(new Date(value));
 }
 
-function getStatus(match: MatchRow): "open" | "locked" | "finished" {
+function getStatus(match: WorldCupMatchRow): "open" | "locked" | "finished" {
   const hasResult =
     match.status === "finished" &&
     match.home_score !== null &&
@@ -150,6 +192,24 @@ function getStatusClasses(status: "open" | "locked" | "finished") {
   }
 
   return "border-sky-500/30 bg-sky-500/10 text-sky-200";
+}
+
+function getDisplayedTeamName(
+  directTeam: string | null,
+  slot: string | null,
+  groupLookup: Map<string, ReturnType<typeof buildGroupStandings>[number]["teams"]>
+) {
+  if (directTeam && directTeam.trim()) {
+    return directTeam;
+  }
+
+  const resolved = resolveSlotLabel(slot, groupLookup);
+
+  if (resolved && resolved.trim()) {
+    return resolved;
+  }
+
+  return "TBD";
 }
 
 export default async function PoolBracketPage({ params }: BracketPageProps) {
@@ -188,12 +248,16 @@ export default async function PoolBracketPage({ params }: BracketPageProps) {
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "id, stage, round_name, home_team, away_team, starts_at, status, home_score, away_score"
+      "id, stage, round_name, stage_type, group_label, round_order, bracket_code, starts_at, status, home_team, away_team, home_slot, away_slot, home_score, away_score, is_knockout"
     )
     .eq("tournament", "world_cup_2026")
+    .order("round_order", { ascending: true })
     .order("starts_at", { ascending: true });
 
-  const typedMatches = (matches ?? []) as MatchRow[];
+  const typedMatches = (matches ?? []) as WorldCupMatchRow[];
+
+  const groupStandings = buildGroupStandings(typedMatches);
+  const groupLookup = buildGroupLookup(groupStandings);
 
   const roundMap = new Map<string, KnockoutRound>();
 
@@ -219,10 +283,16 @@ export default async function PoolBracketPage({ params }: BracketPageProps) {
   const rounds = Array.from(roundMap.values())
     .map((round) => ({
       ...round,
-      matches: [...round.matches].sort(
-        (a, b) =>
-          new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
-      ),
+      matches: [...round.matches].sort((a, b) => {
+        const orderA = a.round_order ?? 999;
+        const orderB = b.round_order ?? 999;
+
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+
+        return new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime();
+      }),
     }))
     .sort((a, b) => a.order - b.order);
 
@@ -230,6 +300,7 @@ export default async function PoolBracketPage({ params }: BracketPageProps) {
     (total, round) => total + round.matches.length,
     0
   );
+
   const finishedKnockoutMatchCount = rounds.reduce(
     (total, round) =>
       total +
@@ -259,12 +330,15 @@ export default async function PoolBracketPage({ params }: BracketPageProps) {
                 {pool.name}
               </h1>
               <p className="mt-2 text-sm leading-6 text-zinc-400">
-                Hier zie je alle knock-out rondes van het WK schema, automatisch
-                opgebouwd vanuit de wedstrijddata.
+                Deze pagina gebruikt nu ook slot-resolving. Dus imported
+                placeholders zoals <span className="font-semibold text-white">winner_group_a</span> en{" "}
+                <span className="font-semibold text-white">runnerup_group_b</span>{" "}
+                worden automatisch vertaald naar echte landen zodra de
+                groepsstand dat toelaat.
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-4">
               <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
                   Rondes
@@ -291,6 +365,15 @@ export default async function PoolBracketPage({ params }: BracketPageProps) {
                   {finishedKnockoutMatchCount}
                 </p>
               </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                  Groepen beschikbaar
+                </p>
+                <p className="mt-2 text-lg font-semibold text-white">
+                  {groupStandings.length}
+                </p>
+              </div>
             </div>
 
             {rounds.length > 0 ? (
@@ -313,6 +396,16 @@ export default async function PoolBracketPage({ params }: BracketPageProps) {
                     <div className="flex flex-col gap-3">
                       {round.matches.map((match) => {
                         const status = getStatus(match);
+                        const homeTeamName = getDisplayedTeamName(
+                          match.home_team,
+                          match.home_slot,
+                          groupLookup
+                        );
+                        const awayTeamName = getDisplayedTeamName(
+                          match.away_team,
+                          match.away_slot,
+                          groupLookup
+                        );
 
                         return (
                           <div
@@ -333,20 +426,42 @@ export default async function PoolBracketPage({ params }: BracketPageProps) {
                               </span>
                             </div>
 
+                            {match.bracket_code ? (
+                              <div className="mb-3 text-[11px] uppercase tracking-wide text-zinc-500">
+                                {match.bracket_code}
+                              </div>
+                            ) : null}
+
                             <div className="flex flex-col gap-2">
                               <div className="flex items-center justify-between gap-3">
-                                <span className="text-sm font-medium text-white">
-                                  {match.home_team}
-                                </span>
+                                <div className="flex min-w-0 flex-col">
+                                  <span className="truncate text-sm font-medium text-white">
+                                    {homeTeamName}
+                                  </span>
+                                  {match.home_slot && !match.home_team ? (
+                                    <span className="text-[11px] text-zinc-500">
+                                      {match.home_slot}
+                                    </span>
+                                  ) : null}
+                                </div>
+
                                 <span className="text-sm font-semibold text-white">
                                   {match.home_score ?? "-"}
                                 </span>
                               </div>
 
                               <div className="flex items-center justify-between gap-3">
-                                <span className="text-sm font-medium text-white">
-                                  {match.away_team}
-                                </span>
+                                <div className="flex min-w-0 flex-col">
+                                  <span className="truncate text-sm font-medium text-white">
+                                    {awayTeamName}
+                                  </span>
+                                  {match.away_slot && !match.away_team ? (
+                                    <span className="text-[11px] text-zinc-500">
+                                      {match.away_slot}
+                                    </span>
+                                  ) : null}
+                                </div>
+
                                 <span className="text-sm font-semibold text-white">
                                   {match.away_score ?? "-"}
                                 </span>
