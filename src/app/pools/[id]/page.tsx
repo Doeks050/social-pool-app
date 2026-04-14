@@ -21,6 +21,27 @@ type ProfileRow = {
   display_name: string | null;
 };
 
+type MatchRow = {
+  id: string;
+  starts_at: string;
+  status: string;
+  home_score: number | null;
+  away_score: number | null;
+};
+
+type PredictionRow = {
+  match_id: string;
+};
+
+type BonusTemplateRow = {
+  id: string;
+};
+
+type BonusAnswerRow = {
+  question_id: string;
+  answer_value: string;
+};
+
 function getDisplayName(
   userId: string,
   profilesMap: Map<string, string>,
@@ -34,6 +55,23 @@ function getDisplayName(
 
   const fallback = `Gebruiker ${userId.slice(0, 8)}`;
   return userId === currentUserId ? `${fallback} (jij)` : fallback;
+}
+
+function getMatchState(match: MatchRow): "open" | "locked" | "finished" {
+  const hasResult =
+    match.status === "finished" &&
+    match.home_score !== null &&
+    match.away_score !== null;
+
+  if (hasResult) {
+    return "finished";
+  }
+
+  if (new Date(match.starts_at).getTime() <= Date.now()) {
+    return "locked";
+  }
+
+  return "open";
 }
 
 export default async function PoolDetailPage({ params }: PoolPageProps) {
@@ -96,6 +134,85 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
 
   const poolType = getPoolTypeMeta(pool.game_type);
   const isWorldCup = pool.game_type === "world_cup";
+
+  let openMatchesCount = 0;
+  let savedOpenPredictionsCount = 0;
+  let remainingOpenPredictionsCount = 0;
+  let totalBonusQuestions = 0;
+  let answeredBonusQuestions = 0;
+  let bonusLocked = false;
+
+  if (isWorldCup) {
+    const { data: matches } = await supabase
+      .from("matches")
+      .select("id, starts_at, status, home_score, away_score")
+      .eq("tournament", "world_cup_2026");
+
+    const { data: predictions } = await supabase
+      .from("predictions")
+      .select("match_id")
+      .eq("pool_id", pool.id)
+      .eq("user_id", user.id);
+
+    const { data: bonusTemplates } = await supabase
+      .from("bonus_question_templates")
+      .select("id")
+      .eq("game_type", "world_cup")
+      .eq("is_active", true);
+
+    const { data: bonusAnswers } = await supabase
+      .from("bonus_question_answers")
+      .select("question_id, answer_value")
+      .eq("pool_id", pool.id)
+      .eq("user_id", user.id);
+
+    const { data: firstMatch } = await supabase
+      .from("matches")
+      .select("starts_at")
+      .eq("tournament", "world_cup_2026")
+      .order("starts_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    const typedMatches = (matches ?? []) as MatchRow[];
+    const typedPredictions = (predictions ?? []) as PredictionRow[];
+    const typedBonusTemplates = (bonusTemplates ?? []) as BonusTemplateRow[];
+    const typedBonusAnswers = (bonusAnswers ?? []) as BonusAnswerRow[];
+
+    const openMatches = typedMatches.filter(
+      (match) => getMatchState(match) === "open"
+    );
+
+    const predictionMatchIds = new Set(
+      typedPredictions.map((prediction) => prediction.match_id)
+    );
+
+    openMatchesCount = openMatches.length;
+    savedOpenPredictionsCount = openMatches.filter((match) =>
+      predictionMatchIds.has(match.id)
+    ).length;
+    remainingOpenPredictionsCount =
+      openMatchesCount - savedOpenPredictionsCount;
+
+    totalBonusQuestions = typedBonusTemplates.length;
+
+    const answeredQuestionIds = new Set(
+      typedBonusAnswers
+        .filter((answer) => answer.answer_value?.trim())
+        .map((answer) => answer.question_id)
+    );
+
+    answeredBonusQuestions = typedBonusTemplates.filter((question) =>
+      answeredQuestionIds.has(question.id)
+    ).length;
+
+    bonusLocked = firstMatch
+      ? new Date(firstMatch.starts_at).getTime() <= Date.now()
+      : false;
+  }
+
+  const bonusComplete =
+    totalBonusQuestions > 0 && answeredBonusQuestions === totalBonusQuestions;
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
@@ -170,7 +287,73 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
+            {isWorldCup ? (
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+                  <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                    Open wedstrijden
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-white">
+                    {openMatchesCount}
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-400">
+                    Nog open om in te vullen
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+                  <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                    Ingevuld
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-white">
+                    {savedOpenPredictionsCount}
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-400">
+                    Van open wedstrijden
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+                  <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                    Bonusvragen
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-white">
+                    {answeredBonusQuestions}/{totalBonusQuestions}
+                  </p>
+                  <p
+                    className={`mt-1 text-sm ${
+                      bonusComplete
+                        ? "text-emerald-300"
+                        : bonusLocked
+                        ? "text-amber-300"
+                        : "text-zinc-400"
+                    }`}
+                  >
+                    {bonusComplete
+                      ? "Compleet ingevuld"
+                      : bonusLocked
+                      ? "Gelockt"
+                      : "Nog niet compleet"}
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
+            {isWorldCup && remainingOpenPredictionsCount > 0 ? (
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
+                Je hebt nog{" "}
+                <span className="font-semibold text-white">
+                  {remainingOpenPredictionsCount}
+                </span>{" "}
+                open{" "}
+                {remainingOpenPredictionsCount === 1
+                  ? "wedstrijd"
+                  : "wedstrijden"}{" "}
+                zonder voorspelling.
+              </div>
+            ) : null}
+
+            <div className="grid gap-3 sm:grid-cols-2">
               {pool.game_type === "world_cup" ? (
                 <>
                   <Link
@@ -196,6 +379,32 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                     <h2 className="mt-2 text-base font-semibold">Bonusvragen</h2>
                     <p className="mt-2 text-sm leading-6 text-zinc-400">
                       Vul je bonusvragen in vóór de eerste wedstrijd.
+                    </p>
+                  </Link>
+
+                  <Link
+                    href={`/pools/${pool.id}/standings`}
+                    className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 transition hover:border-zinc-600 hover:bg-zinc-900"
+                  >
+                    <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                      WK
+                    </p>
+                    <h2 className="mt-2 text-base font-semibold">Groepenstand</h2>
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      Bekijk de actuele stand per groep op basis van uitslagen.
+                    </p>
+                  </Link>
+
+                  <Link
+                    href={`/pools/${pool.id}/bracket`}
+                    className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 transition hover:border-zinc-600 hover:bg-zinc-900"
+                  >
+                    <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                      WK
+                    </p>
+                    <h2 className="mt-2 text-base font-semibold">Knock-out schema</h2>
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      Bekijk alle knock-out rondes van het toernooi.
                     </p>
                   </Link>
 
