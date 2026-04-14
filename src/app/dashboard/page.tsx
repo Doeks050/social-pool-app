@@ -139,16 +139,26 @@ export default async function DashboardPage() {
                       App admin tools
                     </h2>
                     <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      Beheer hier de centrale WK-uitslagen voor alle pools.
+                      Beheer hier de centrale WK-uitslagen en bonusvragen voor
+                      alle pools.
                     </p>
                   </div>
 
-                  <Link
-                    href="/admin/world-cup/results"
-                    className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200"
-                  >
-                    WK resultaten beheren
-                  </Link>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Link
+                      href="/admin/world-cup/results"
+                      className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200"
+                    >
+                      WK resultaten beheren
+                    </Link>
+
+                    <Link
+                      href="/admin/world-cup/bonus"
+                      className="rounded-xl border border-zinc-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800"
+                    >
+                      WK bonusvragen beheren
+                    </Link>
+                  </div>
                 </div>
               </div>
             ) : null}

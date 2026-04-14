@@ -33,6 +33,14 @@ export default function MatchResultAdminCard({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const formattedStart = useMemo(() => {
+    return new Intl.DateTimeFormat("nl-NL", {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: "Europe/Amsterdam",
+    }).format(new Date(match.starts_at));
+  }, [match.starts_at]);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -88,13 +96,7 @@ export default function MatchResultAdminCard({
             {match.home_team} vs {match.away_team}
           </h2>
 
-          <p className="mt-2 text-sm text-zinc-400">
-            Start:{" "}
-            {new Date(match.starts_at).toLocaleString("nl-NL", {
-              dateStyle: "medium",
-              timeStyle: "short",
-            })}
-          </p>
+          <p className="mt-2 text-sm text-zinc-400">Start: {formattedStart}</p>
         </div>
 
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 px-4 py-3 text-sm">
