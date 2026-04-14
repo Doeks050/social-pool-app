@@ -43,6 +43,90 @@ function getGroupLabel(match: MatchRow) {
   return "Overig";
 }
 
+function getGroupOrder(label: string) {
+  const normalized = label.trim().toLowerCase();
+
+  if (
+    normalized.includes("group") ||
+    normalized.includes("groepsfase") ||
+    normalized.includes("group stage")
+  ) {
+    return 1;
+  }
+
+  if (
+    normalized.includes("round of 32") ||
+    normalized.includes("laatste 32") ||
+    normalized.includes("1/16")
+  ) {
+    return 2;
+  }
+
+  if (
+    normalized.includes("round of 16") ||
+    normalized.includes("laatste 16") ||
+    normalized.includes("achtste finale") ||
+    normalized.includes("1/8")
+  ) {
+    return 3;
+  }
+
+  if (
+    normalized.includes("quarter") ||
+    normalized.includes("kwartfinale") ||
+    normalized.includes("1/4")
+  ) {
+    return 4;
+  }
+
+  if (
+    normalized.includes("semi") ||
+    normalized.includes("halve finale") ||
+    normalized.includes("1/2")
+  ) {
+    return 5;
+  }
+
+  if (
+    normalized.includes("third") ||
+    normalized.includes("3rd") ||
+    normalized.includes("derde plaats")
+  ) {
+    return 6;
+  }
+
+  if (normalized.includes("final") || normalized.includes("finale")) {
+    return 7;
+  }
+
+  return 99;
+}
+
+function getMatchState(match: MatchRow): "open" | "locked" | "finished" {
+  const hasResult =
+    match.status === "finished" &&
+    match.home_score !== null &&
+    match.away_score !== null;
+
+  if (hasResult) {
+    return "finished";
+  }
+
+  if (new Date(match.starts_at).getTime() <= Date.now()) {
+    return "locked";
+  }
+
+  return "open";
+}
+
+function getMatchStateOrder(match: MatchRow) {
+  const state = getMatchState(match);
+
+  if (state === "open") return 0;
+  if (state === "locked") return 1;
+  return 2;
+}
+
 export default async function PoolMatchesPage({
   params,
 }: PoolMatchesPageProps) {
@@ -110,13 +194,31 @@ export default async function PoolMatchesPage({
     groupedMatchesMap.set(label, existing);
   }
 
-  const groupedMatches: MatchGroup[] = Array.from(groupedMatchesMap.entries()).map(
-    ([label, groupMatches]) => ({
+  const groupedMatches: MatchGroup[] = Array.from(groupedMatchesMap.entries())
+    .map(([label, groupMatches]) => ({
       key: label,
       label,
-      matches: groupMatches,
-    })
-  );
+      matches: [...groupMatches].sort((a, b) => {
+        const stateOrderDiff = getMatchStateOrder(a) - getMatchStateOrder(b);
+
+        if (stateOrderDiff !== 0) {
+          return stateOrderDiff;
+        }
+
+        return (
+          new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
+        );
+      }),
+    }))
+    .sort((a, b) => {
+      const orderDiff = getGroupOrder(a.label) - getGroupOrder(b.label);
+
+      if (orderDiff !== 0) {
+        return orderDiff;
+      }
+
+      return a.label.localeCompare(b.label);
+    });
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
@@ -140,42 +242,76 @@ export default async function PoolMatchesPage({
                 {pool.name}
               </h1>
               <p className="mt-3 text-sm leading-6 text-zinc-400">
-                Wedstrijden zijn hieronder gegroepeerd per fase. Open matches kun
-                je nog voorspellen of aanpassen. Zodra een wedstrijd begint,
-                wordt die automatisch gelockt.
+                Wedstrijden zijn hieronder gegroepeerd per fase. Binnen elke fase
+                staan open wedstrijden bovenaan, daarna gelockte wedstrijden en
+                finished wedstrijden onderaan.
               </p>
             </div>
 
             {groupedMatches.length > 0 ? (
-              <div className="flex flex-col gap-8">
-                {groupedMatches.map((group) => (
-                  <section key={group.key} className="flex flex-col gap-4">
-                    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 px-5 py-4">
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <h2 className="text-lg font-semibold">{group.label}</h2>
-                          <p className="mt-1 text-sm text-zinc-400">
-                            {group.matches.length}{" "}
-                            {group.matches.length === 1
-                              ? "wedstrijd"
-                              : "wedstrijden"}
-                          </p>
+              <div className="flex flex-col gap-4">
+                {groupedMatches.map((group) => {
+                  const openCount = group.matches.filter(
+                    (match) => getMatchState(match) === "open"
+                  ).length;
+                  const lockedCount = group.matches.filter(
+                    (match) => getMatchState(match) === "locked"
+                  ).length;
+                  const finishedCount = group.matches.filter(
+                    (match) => getMatchState(match) === "finished"
+                  ).length;
+
+                  const defaultOpen = openCount > 0;
+
+                  return (
+                    <details
+                      key={group.key}
+                      open={defaultOpen}
+                      className="rounded-2xl border border-zinc-800 bg-zinc-900/50"
+                    >
+                      <summary className="cursor-pointer list-none px-5 py-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <h2 className="text-lg font-semibold text-white">
+                              {group.label}
+                            </h2>
+                            <p className="mt-1 text-sm text-zinc-400">
+                              {group.matches.length}{" "}
+                              {group.matches.length === 1
+                                ? "wedstrijd"
+                                : "wedstrijden"}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2 text-xs">
+                            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-emerald-200">
+                              Open: {openCount}
+                            </span>
+                            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-amber-200">
+                              Gelockt: {lockedCount}
+                            </span>
+                            <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-1 text-sky-200">
+                              Finished: {finishedCount}
+                            </span>
+                          </div>
+                        </div>
+                      </summary>
+
+                      <div className="border-t border-zinc-800 px-4 py-4">
+                        <div className="grid gap-3">
+                          {group.matches.map((match) => (
+                            <MatchPredictionCard
+                              key={match.id}
+                              poolId={pool.id}
+                              match={match}
+                              initialPrediction={predictionMap.get(match.id) ?? null}
+                            />
+                          ))}
                         </div>
                       </div>
-                    </div>
-
-                    <div className="grid gap-3">
-                      {group.matches.map((match) => (
-                        <MatchPredictionCard
-                          key={match.id}
-                          poolId={pool.id}
-                          match={match}
-                          initialPrediction={predictionMap.get(match.id) ?? null}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                ))}
+                    </details>
+                  );
+                })}
               </div>
             ) : (
               <div className="rounded-3xl border border-dashed border-zinc-700 bg-zinc-900/40 p-6">
