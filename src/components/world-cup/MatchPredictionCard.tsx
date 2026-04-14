@@ -20,6 +20,7 @@ type MatchPredictionCardProps = {
   initialPrediction: {
     predicted_home_score: number;
     predicted_away_score: number;
+    points_awarded?: number | null;
   } | null;
 };
 
@@ -209,12 +210,24 @@ export default function MatchPredictionCard({
             {matchState === "finished" &&
             match.home_score !== null &&
             match.away_score !== null ? (
-              <p className="text-sm text-zinc-300">
-                Uitslag{" "}
-                <span className="font-semibold text-white">
-                  {match.home_score} - {match.away_score}
-                </span>
-              </p>
+              <div className="flex flex-col gap-1">
+                <p className="text-sm text-zinc-300">
+                  Uitslag{" "}
+                  <span className="font-semibold text-white">
+                    {match.home_score} - {match.away_score}
+                  </span>
+                </p>
+
+                {initialPrediction ? (
+                  <p className="text-sm text-zinc-400">
+                    Jouw voorspelling{" "}
+                    <span className="font-medium text-white">
+                      {initialPrediction.predicted_home_score} -{" "}
+                      {initialPrediction.predicted_away_score}
+                    </span>
+                  </p>
+                ) : null}
+              </div>
             ) : initialPrediction ? (
               <p className="text-sm text-zinc-400">
                 Mijn voorspelling{" "}
@@ -238,6 +251,15 @@ export default function MatchPredictionCard({
             </button>
           </div>
         </form>
+
+        {matchState === "finished" && initialPrediction ? (
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+            Behaalde punten:{" "}
+            <span className="font-semibold text-white">
+              {initialPrediction.points_awarded ?? 0}
+            </span>
+          </div>
+        ) : null}
 
         {matchState === "locked" ? (
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">

@@ -26,6 +26,33 @@ type PoolMembershipRow = {
     | null;
 };
 
+type DashboardPool = {
+  id: string;
+  name: string;
+  gameType: string;
+  gameTypeLabel: string;
+  gameTypeShortLabel: string;
+  inviteCode: string;
+  createdAt: string;
+  role: string;
+};
+
+function getPoolCardClasses(gameType: string) {
+  if (gameType === "world_cup") {
+    return "border-white/15 bg-zinc-950";
+  }
+
+  return "border-zinc-800 bg-zinc-950/60";
+}
+
+function getPoolTypeBadgeClasses(gameType: string) {
+  if (gameType === "world_cup") {
+    return "border-white/20 bg-white/5 text-white";
+  }
+
+  return "border-zinc-700 text-zinc-300";
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -82,33 +109,24 @@ export default async function DashboardPage() {
         role: membership.role,
       };
     })
-    .filter(Boolean) as {
-    id: string;
-    name: string;
-    gameType: string;
-    gameTypeLabel: string;
-    gameTypeShortLabel: string;
-    inviteCode: string;
-    createdAt: string;
-    role: string;
-  }[];
+    .filter(Boolean) as DashboardPool[];
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
-      <section className="py-16">
+      <section className="py-12">
         <Container>
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-4 rounded-3xl border border-zinc-800 bg-zinc-900/70 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
               <div>
-                <p className="text-sm uppercase tracking-[0.2em] text-zinc-400">
+                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
                   Dashboard
                 </p>
-                <h1 className="mt-2 text-3xl font-bold tracking-tight">
+                <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
                   Welkom, {displayName}
                 </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
-                  Hier zie je al je pools. Je kunt nu een nieuwe pool aanmaken
-                  en daarbij direct het juiste pooltype kiezen.
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+                  Hier zie je jouw pools en kun je een nieuwe pool aanmaken of
+                  een bestaande pool joinen.
                 </p>
               </div>
 
@@ -132,10 +150,10 @@ export default async function DashboardPage() {
             </div>
 
             {appAdmin ? (
-              <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6">
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h2 className="text-2xl font-bold tracking-tight">
+                    <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
                       App admin tools
                     </h2>
                     <p className="mt-2 text-sm leading-6 text-zinc-400">
@@ -163,10 +181,10 @@ export default async function DashboardPage() {
               </div>
             ) : null}
 
-            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 sm:p-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold tracking-tight">
+                  <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
                     Mijn pools
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-zinc-400">
@@ -193,7 +211,7 @@ export default async function DashboardPage() {
               </div>
 
               {myPools.length === 0 ? (
-                <div className="mt-6 rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-6">
+                <div className="mt-5 rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-5">
                   <h3 className="text-lg font-semibold">
                     Je hebt nog geen pools
                   </h3>
@@ -219,23 +237,31 @@ export default async function DashboardPage() {
                   </div>
                 </div>
               ) : (
-                <div className="mt-6 grid gap-4">
+                <div className="mt-5 grid gap-3">
                   {myPools.map((pool) => (
                     <Link
                       key={pool.id}
                       href={`/pools/${pool.id}`}
-                      className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-5 transition hover:border-zinc-600 hover:bg-zinc-950"
+                      className={`rounded-2xl border p-4 transition hover:border-zinc-600 hover:bg-zinc-950 ${getPoolCardClasses(
+                        pool.gameType
+                      )}`}
                     >
-                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-xl font-semibold">
+                            <h3 className="text-lg font-semibold">
                               {pool.name}
                             </h3>
+
                             <span className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs uppercase tracking-wide text-zinc-300">
                               {pool.role}
                             </span>
-                            <span className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs uppercase tracking-wide text-zinc-300">
+
+                            <span
+                              className={`rounded-full border px-2.5 py-1 text-xs uppercase tracking-wide ${getPoolTypeBadgeClasses(
+                                pool.gameType
+                              )}`}
+                            >
                               {pool.gameTypeShortLabel}
                             </span>
                           </div>

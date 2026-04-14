@@ -191,9 +191,7 @@ export default async function PoolLeaderboardPage({
       const aJoinedAt = memberJoinedAtMap.get(a.user_id) ?? "";
       const bJoinedAt = memberJoinedAtMap.get(b.user_id) ?? "";
 
-      return (
-        new Date(aJoinedAt).getTime() - new Date(bJoinedAt).getTime()
-      );
+      return new Date(aJoinedAt).getTime() - new Date(bJoinedAt).getTime();
     });
 
   const userIds = typedMembers.map((member) => member.user_id);
@@ -214,11 +212,13 @@ export default async function PoolLeaderboardPage({
     );
   }
 
+  const leader = leaderboard[0] ?? null;
+
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
-      <section className="py-16">
+      <section className="py-10 sm:py-12">
         <Container>
-          <div className="flex flex-col gap-6">
+          <div className="mx-auto flex max-w-3xl flex-col gap-4">
             <div>
               <Link
                 href={`/pools/${pool.id}`}
@@ -228,88 +228,129 @@ export default async function PoolLeaderboardPage({
               </Link>
             </div>
 
-            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/70 p-6">
-              <p className="text-sm uppercase tracking-[0.2em] text-zinc-400">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-5 sm:p-6">
+              <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
                 Ranglijst
               </p>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight">
+              <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
                 {pool.name}
               </h1>
-              <p className="mt-3 text-sm leading-6 text-zinc-400">
-                Alle poolleden staan altijd in deze ranglijst, ook als ze nog 0
-                punten hebben. Bonuspunten tellen automatisch mee zodra het
-                juiste bonusantwoord is ingevuld door de admin.
+              <p className="mt-2 text-sm leading-6 text-zinc-400">
+                Matchpunten en bonuspunten worden automatisch samengevoegd in
+                deze stand.
               </p>
             </div>
 
-            {leaderboard.length > 0 ? (
-              <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-4 sm:p-6">
-                <div className="grid gap-3">
-                  {leaderboard.map((entry, index) => {
-                    const displayName = getDisplayName(
-                      entry.user_id,
-                      profilesMap,
-                      user.id
-                    );
-                    const isCurrentUser = entry.user_id === user.id;
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                  Leden
+                </p>
+                <p className="mt-2 text-sm font-medium text-white">
+                  {leaderboard.length}
+                </p>
+              </div>
 
-                    return (
-                      <div
-                        key={entry.user_id}
-                        className={`rounded-2xl border p-4 ${
-                          isCurrentUser
-                            ? "border-white bg-zinc-950"
-                            : "border-zinc-800 bg-zinc-950/60"
-                        }`}
-                      >
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                  Leider
+                </p>
+                <p className="mt-2 text-sm font-medium text-white">
+                  {leader
+                    ? getDisplayName(leader.user_id, profilesMap, user.id)
+                    : "-"}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                  Hoogste score
+                </p>
+                <p className="mt-2 text-sm font-medium text-white">
+                  {leader ? leader.total_points : 0}
+                </p>
+              </div>
+            </div>
+
+            {leaderboard.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {leaderboard.map((entry, index) => {
+                  const displayName = getDisplayName(
+                    entry.user_id,
+                    profilesMap,
+                    user.id
+                  );
+                  const isCurrentUser = entry.user_id === user.id;
+                  const isLeader = index === 0;
+
+                  return (
+                    <div
+                      key={entry.user_id}
+                      className={`rounded-2xl border p-4 ${
+                        isCurrentUser
+                          ? "border-white bg-zinc-950"
+                          : "border-zinc-800 bg-zinc-900/60"
+                      }`}
+                    >
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold ${
+                              isLeader
+                                ? "border-amber-500/30 bg-amber-500/10 text-amber-200"
+                                : "border-zinc-800 bg-zinc-950/70 text-white"
+                            }`}
+                          >
+                            #{index + 1}
+                          </div>
+
                           <div>
-                            <p className="text-sm text-zinc-400">
-                              Positie #{index + 1}
-                            </p>
-                            <p className="mt-1 text-base font-medium text-white">
+                            <p className="text-sm font-medium text-white">
                               {displayName}
+                            </p>
+                            <p className="mt-1 text-xs text-zinc-500">
+                              {isLeader ? "Huidige leider" : "Poollid"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2 sm:min-w-[290px]">
+                          <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-right">
+                            <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+                              Match
+                            </p>
+                            <p className="mt-1 text-base font-semibold text-white">
+                              {entry.match_points}
                             </p>
                           </div>
 
-                          <div className="grid grid-cols-3 gap-3 sm:min-w-[320px]">
-                            <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-right">
-                              <p className="text-xs uppercase tracking-wide text-zinc-500">
-                                Match
-                              </p>
-                              <p className="mt-1 text-lg font-semibold text-white">
-                                {entry.match_points}
-                              </p>
-                            </div>
+                          <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-right">
+                            <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+                              Bonus
+                            </p>
+                            <p className="mt-1 text-base font-semibold text-white">
+                              {entry.bonus_points}
+                            </p>
+                          </div>
 
-                            <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-right">
-                              <p className="text-xs uppercase tracking-wide text-zinc-500">
-                                Bonus
-                              </p>
-                              <p className="mt-1 text-lg font-semibold text-white">
-                                {entry.bonus_points}
-                              </p>
-                            </div>
-
-                            <div className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-right">
-                              <p className="text-xs uppercase tracking-wide text-zinc-400">
-                                Totaal
-                              </p>
-                              <p className="mt-1 text-xl font-semibold text-white">
-                                {entry.total_points}
-                              </p>
-                            </div>
+                          <div className="rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-right">
+                            <p className="text-[11px] uppercase tracking-wide text-zinc-400">
+                              Totaal
+                            </p>
+                            <p className="mt-1 text-lg font-semibold text-white">
+                              {entry.total_points}
+                            </p>
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
-              <div className="rounded-3xl border border-dashed border-zinc-700 bg-zinc-900/40 p-6">
-                <h2 className="text-xl font-semibold">Nog geen leden gevonden</h2>
-                <p className="mt-3 text-sm leading-6 text-zinc-400">
+              <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/40 p-5">
+                <h2 className="text-lg font-semibold">Nog geen leden gevonden</h2>
+                <p className="mt-2 text-sm leading-6 text-zinc-400">
                   Zodra er leden in deze pool zitten, verschijnen ze hier.
                 </p>
               </div>

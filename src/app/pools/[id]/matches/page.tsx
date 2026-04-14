@@ -17,6 +17,7 @@ type PredictionRow = {
   match_id: string;
   predicted_home_score: number;
   predicted_away_score: number;
+  points_awarded: number | null;
 };
 
 type MatchRow = {
@@ -215,7 +216,9 @@ export default async function PoolMatchesPage({
 
   const { data: predictions } = await supabase
     .from("predictions")
-    .select("match_id, predicted_home_score, predicted_away_score")
+    .select(
+      "match_id, predicted_home_score, predicted_away_score, points_awarded"
+    )
     .eq("pool_id", pool.id)
     .eq("user_id", user.id);
 
