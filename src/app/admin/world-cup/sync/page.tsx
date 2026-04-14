@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
 import {
-  buildGroupLookup,
-  buildGroupStandings,
+  buildSlotResolverContext,
   resolveSlotTeam,
   type WorldCupMatchRow,
 } from "@/lib/world-cup/slotResolver";
@@ -56,8 +55,7 @@ async function syncWorldCupKnockoutTeams() {
   }
 
   const typedMatches = (matches ?? []) as WorldCupMatchRow[];
-  const groupStandings = buildGroupStandings(typedMatches);
-  const groupLookup = buildGroupLookup(groupStandings);
+  const context = buildSlotResolverContext(typedMatches);
 
   const knockoutMatches = typedMatches.filter(
     (match) =>
@@ -71,8 +69,8 @@ async function syncWorldCupKnockoutTeams() {
   let skippedCount = 0;
 
   for (const match of knockoutMatches) {
-    const resolvedHomeTeam = resolveSlotTeam(match.home_slot, groupLookup);
-    const resolvedAwayTeam = resolveSlotTeam(match.away_slot, groupLookup);
+    const resolvedHomeTeam = resolveSlotTeam(match.home_slot, context);
+    const resolvedAwayTeam = resolveSlotTeam(match.away_slot, context);
 
     const nextHomeTeam = resolvedHomeTeam ?? match.home_team ?? null;
     const nextAwayTeam = resolvedAwayTeam ?? match.away_team ?? null;
@@ -152,14 +150,14 @@ export default async function WorldCupSyncPage({
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "id, stage_type, group_label, home_slot, away_slot, home_team, away_team, status, home_score, away_score"
+      "id, stage_type, bracket_code, home_slot, away_slot, home_team, away_team, status, home_score, away_score"
     )
     .eq("tournament", "world_cup_2026");
 
   const typedMatches = (matches ?? []) as Array<{
     id: string;
     stage_type: string | null;
-    group_label: string | null;
+    bracket_code: string | null;
     home_slot: string | null;
     away_slot: string | null;
     home_team: string | null;
@@ -170,18 +168,23 @@ export default async function WorldCupSyncPage({
   }>;
 
   const totalMatches = typedMatches.length;
-  const groupMatches = typedMatches.filter(
-    (match) => match.stage_type === "group"
-  ).length;
   const slotMatches = typedMatches.filter(
     (match) => !!match.home_slot || !!match.away_slot
   ).length;
-  const finishedGroupMatches = typedMatches.filter(
+  const finishedKnockoutMatches = typedMatches.filter(
     (match) =>
-      match.stage_type === "group" &&
+      match.stage_type !== "group" &&
       match.status === "finished" &&
       match.home_score !== null &&
       match.away_score !== null
+  ).length;
+  const progressedMatches = typedMatches.filter(
+    (match) =>
+      (match.home_slot?.startsWith("winner_") ||
+        match.home_slot?.startsWith("loser_") ||
+        match.away_slot?.startsWith("winner_") ||
+        match.away_slot?.startsWith("loser_")) &&
+      match.stage_type !== "group"
   ).length;
 
   return (
@@ -203,13 +206,13 @@ export default async function WorldCupSyncPage({
                 App admin
               </p>
               <h1 className="mt-2 text-3xl font-bold tracking-tight">
-                Sync groepswinnaars naar knock-out
+                Sync knock-out vervolgslots
               </h1>
               <p className="mt-3 text-sm leading-6 text-zinc-400">
-                Deze actie kijkt naar de huidige groepsstanden en vult daarna
-                knock-out wedstrijden die werken met slots zoals{" "}
-                <span className="font-semibold text-white">winner_group_a</span>{" "}
-                en <span className="font-semibold text-white">runnerup_group_b</span>.
+                Deze sync ondersteunt nu zowel groepslots als vervolgslots uit
+                eerdere knock-out rondes. Daardoor kunnen kwartfinales, halve
+                finales, finale en derde plaats automatisch doorschuiven zodra
+                bronwedstrijden finished zijn.
               </p>
             </div>
 
@@ -225,28 +228,28 @@ export default async function WorldCupSyncPage({
 
               <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                  Groepswedstrijden
-                </p>
-                <p className="mt-2 text-lg font-semibold text-white">
-                  {groupMatches}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                  Finished group duels
-                </p>
-                <p className="mt-2 text-lg font-semibold text-white">
-                  {finishedGroupMatches}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
                   Slot matches
                 </p>
                 <p className="mt-2 text-lg font-semibold text-white">
                   {slotMatches}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                  Finished knock-out duels
+                </p>
+                <p className="mt-2 text-lg font-semibold text-white">
+                  {finishedKnockoutMatches}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                  Vervolgslot matches
+                </p>
+                <p className="mt-2 text-lg font-semibold text-white">
+                  {progressedMatches}
                 </p>
               </div>
             </div>
@@ -265,23 +268,21 @@ export default async function WorldCupSyncPage({
             ) : null}
 
             <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6">
-              <h2 className="text-xl font-semibold">Wat deze sync nu doet</h2>
+              <h2 className="text-xl font-semibold">Ondersteunde slottypes</h2>
               <div className="mt-4 grid gap-3 text-sm text-zinc-300">
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
-                  1. Berekent de huidige groepsstand op basis van finished
-                  groepswedstrijden.
+                  <span className="font-semibold text-white">
+                    winner_group_a
+                  </span>{" "}
+                  / <span className="font-semibold text-white">runnerup_group_b</span>
                 </div>
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
-                  2. Leest slotcodes zoals{" "}
-                  <span className="font-semibold text-white">winner_group_a</span>{" "}
-                  en{" "}
-                  <span className="font-semibold text-white">runnerup_group_b</span>.
+                  <span className="font-semibold text-white">winner_r32_1</span>{" "}
+                  / <span className="font-semibold text-white">winner_qf_2</span>
                 </div>
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
-                  3. Schrijft de gevonden landen echt weg naar{" "}
-                  <span className="font-semibold text-white">home_team</span> en{" "}
-                  <span className="font-semibold text-white">away_team</span> in
-                  de knock-out matches.
+                  <span className="font-semibold text-white">winner_sf_1</span>{" "}
+                  / <span className="font-semibold text-white">loser_sf_1</span>
                 </div>
               </div>
             </div>
@@ -294,8 +295,9 @@ export default async function WorldCupSyncPage({
                 <div>
                   <h2 className="text-xl font-semibold">Sync uitvoeren</h2>
                   <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    Gebruik dit nadat je groepsuitslagen hebt ingevoerd of nadat
-                    je de officiële WK structuur hebt geïmporteerd.
+                    Gebruik dit nadat groepsuitslagen of knock-out resultaten
+                    zijn ingevuld, zodat vervolgwedstrijden automatisch worden
+                    bijgewerkt.
                   </p>
                 </div>
 

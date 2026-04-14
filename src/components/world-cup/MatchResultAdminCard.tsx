@@ -1,167 +1,148 @@
-"use client";
-
-import { FormEvent, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase-browser";
-
 type MatchResultAdminCardProps = {
   match: {
     id: string;
-    stage: string;
-    round_name: string;
-    home_team: string;
-    away_team: string;
+    stage: string | null;
+    round_name: string | null;
+    stage_type: string | null;
+    group_label: string | null;
+    round_order: number | null;
+    bracket_code: string | null;
     starts_at: string;
     status: string;
+    home_team: string | null;
+    away_team: string | null;
+    home_slot: string | null;
+    away_slot: string | null;
     home_score: number | null;
     away_score: number | null;
+    is_knockout: boolean | null;
   };
+  saveAction: (formData: FormData) => Promise<void>;
 };
+
+function formatMatchDate(value: string) {
+  return new Intl.DateTimeFormat("nl-NL", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Europe/Amsterdam",
+  }).format(new Date(value));
+}
+
+function getDisplayTeam(team: string | null, slot: string | null) {
+  if (team && team.trim()) {
+    return team;
+  }
+
+  if (slot && slot.trim()) {
+    return slot;
+  }
+
+  return "TBD";
+}
+
+function getStatusLabel(status: string) {
+  if (status === "finished") return "Finished";
+  if (status === "live") return "Live";
+  if (status === "locked") return "Locked";
+  return "Scheduled";
+}
+
+function getStatusClasses(status: string) {
+  if (status === "finished") {
+    return "border-sky-500/30 bg-sky-500/10 text-sky-200";
+  }
+
+  if (status === "live") {
+    return "border-red-500/30 bg-red-500/10 text-red-200";
+  }
+
+  if (status === "locked") {
+    return "border-amber-500/30 bg-amber-500/10 text-amber-200";
+  }
+
+  return "border-emerald-500/30 bg-emerald-500/10 text-emerald-200";
+}
 
 export default function MatchResultAdminCard({
   match,
+  saveAction,
 }: MatchResultAdminCardProps) {
-  const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
-  const [homeScore, setHomeScore] = useState(
-    match.home_score !== null ? String(match.home_score) : ""
-  );
-  const [awayScore, setAwayScore] = useState(
-    match.away_score !== null ? String(match.away_score) : ""
-  );
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const formattedStart = useMemo(() => {
-    return new Intl.DateTimeFormat("nl-NL", {
-      dateStyle: "medium",
-      timeStyle: "short",
-      timeZone: "Europe/Amsterdam",
-    }).format(new Date(match.starts_at));
-  }, [match.starts_at]);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    const parsedHome = Number(homeScore);
-    const parsedAway = Number(awayScore);
-
-    if (
-      !Number.isInteger(parsedHome) ||
-      !Number.isInteger(parsedAway) ||
-      parsedHome < 0 ||
-      parsedAway < 0
-    ) {
-      setError("Vul geldige scores van 0 of hoger in.");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    setMessage(null);
-
-    const { error: rpcError } = await supabase.rpc(
-      "submit_world_cup_match_result_admin",
-      {
-        target_match_id: match.id,
-        new_home_score: parsedHome,
-        new_away_score: parsedAway,
-      }
-    );
-
-    if (rpcError) {
-      setError(rpcError.message);
-      setLoading(false);
-      return;
-    }
-
-    setMessage("Officiële uitslag opgeslagen en scoring bijgewerkt.");
-    setLoading(false);
-    router.refresh();
-  }
+  const homeDisplay = getDisplayTeam(match.home_team, match.home_slot);
+  const awayDisplay = getDisplayTeam(match.away_team, match.away_slot);
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs uppercase tracking-wide text-zinc-300">
-              {match.stage}
-            </span>
-            <span className="text-sm text-zinc-400">{match.round_name}</span>
-          </div>
+          <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+            {match.group_label || match.round_name || match.stage || "Wedstrijd"}
+          </p>
+          <h3 className="mt-1 text-lg font-semibold text-white">
+            {homeDisplay} vs {awayDisplay}
+          </h3>
+          <p className="mt-2 text-sm text-zinc-400">
+            Start: {formatMatchDate(match.starts_at)}
+          </p>
 
-          <h2 className="mt-3 text-xl font-semibold">
-            {match.home_team} vs {match.away_team}
-          </h2>
-
-          <p className="mt-2 text-sm text-zinc-400">Start: {formattedStart}</p>
+          {match.bracket_code ? (
+            <p className="mt-1 text-xs uppercase tracking-wide text-zinc-500">
+              {match.bracket_code}
+            </p>
+          ) : null}
         </div>
 
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 px-4 py-3 text-sm">
-          <div className="font-semibold capitalize text-white">
-            {match.status}
-          </div>
+        <div
+          className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wide ${getStatusClasses(
+            match.status
+          )}`}
+        >
+          {getStatusLabel(match.status)}
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-        <div className="grid gap-4 sm:grid-cols-[1fr_auto_1fr] sm:items-end">
+      <form action={saveAction} className="mt-5 space-y-4">
+        <input type="hidden" name="match_id" value={match.id} />
+
+        <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-200">
-              {match.home_team}
+            <label className="mb-2 block text-sm font-medium text-zinc-300">
+              {homeDisplay}
             </label>
             <input
+              name="home_score"
               type="number"
               min="0"
-              inputMode="numeric"
-              value={homeScore}
-              onChange={(event) => setHomeScore(event.target.value)}
-              disabled={loading}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-white outline-none transition focus:border-white disabled:opacity-60"
+              defaultValue={match.home_score ?? ""}
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white outline-none transition focus:border-white"
+              placeholder="0"
+              required
             />
           </div>
 
-          <div className="pb-3 text-center text-lg font-semibold text-zinc-400">
-            -
-          </div>
-
           <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-200">
-              {match.away_team}
+            <label className="mb-2 block text-sm font-medium text-zinc-300">
+              {awayDisplay}
             </label>
             <input
+              name="away_score"
               type="number"
               min="0"
-              inputMode="numeric"
-              value={awayScore}
-              onChange={(event) => setAwayScore(event.target.value)}
-              disabled={loading}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-white outline-none transition focus:border-white disabled:opacity-60"
+              defaultValue={match.away_score ?? ""}
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white outline-none transition focus:border-white"
+              placeholder="0"
+              required
             />
           </div>
         </div>
 
-        {error ? (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            {error}
-          </div>
-        ) : null}
-
-        {message ? (
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-            {message}
-          </div>
-        ) : null}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading ? "Opslaan..." : "Officiële uitslag opslaan"}
-        </button>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <button
+            type="submit"
+            className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200"
+          >
+            Resultaat opslaan
+          </button>
+        </div>
       </form>
     </div>
   );

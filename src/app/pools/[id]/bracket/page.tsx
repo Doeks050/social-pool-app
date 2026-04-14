@@ -3,9 +3,9 @@ import Link from "next/link";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
 import {
-  buildGroupLookup,
-  buildGroupStandings,
+  buildSlotResolverContext,
   resolveSlotLabel,
+  type SlotResolverContext,
   type WorldCupMatchRow,
 } from "@/lib/world-cup/slotResolver";
 
@@ -197,13 +197,13 @@ function getStatusClasses(status: "open" | "locked" | "finished") {
 function getDisplayedTeamName(
   directTeam: string | null,
   slot: string | null,
-  groupLookup: Map<string, ReturnType<typeof buildGroupStandings>[number]["teams"]>
+  context: SlotResolverContext
 ) {
   if (directTeam && directTeam.trim()) {
     return directTeam;
   }
 
-  const resolved = resolveSlotLabel(slot, groupLookup);
+  const resolved = resolveSlotLabel(slot, context);
 
   if (resolved && resolved.trim()) {
     return resolved;
@@ -255,9 +255,7 @@ export default async function PoolBracketPage({ params }: BracketPageProps) {
     .order("starts_at", { ascending: true });
 
   const typedMatches = (matches ?? []) as WorldCupMatchRow[];
-
-  const groupStandings = buildGroupStandings(typedMatches);
-  const groupLookup = buildGroupLookup(groupStandings);
+  const context = buildSlotResolverContext(typedMatches);
 
   const roundMap = new Map<string, KnockoutRound>();
 
@@ -330,15 +328,17 @@ export default async function PoolBracketPage({ params }: BracketPageProps) {
                 {pool.name}
               </h1>
               <p className="mt-2 text-sm leading-6 text-zinc-400">
-                Deze pagina gebruikt nu ook slot-resolving. Dus imported
-                placeholders zoals <span className="font-semibold text-white">winner_group_a</span> en{" "}
-                <span className="font-semibold text-white">runnerup_group_b</span>{" "}
-                worden automatisch vertaald naar echte landen zodra de
-                groepsstand dat toelaat.
+                Deze pagina ondersteunt nu ook vervolgslots uit eerdere
+                knock-out rondes. Dus voorbeelden als{" "}
+                <span className="font-semibold text-white">winner_r32_1</span>,{" "}
+                <span className="font-semibold text-white">winner_qf_2</span> en{" "}
+                <span className="font-semibold text-white">loser_sf_1</span>{" "}
+                kunnen automatisch worden omgezet zodra de bronwedstrijd
+                finished is.
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
                   Rondes
@@ -363,15 +363,6 @@ export default async function PoolBracketPage({ params }: BracketPageProps) {
                 </p>
                 <p className="mt-2 text-lg font-semibold text-white">
                   {finishedKnockoutMatchCount}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                  Groepen beschikbaar
-                </p>
-                <p className="mt-2 text-lg font-semibold text-white">
-                  {groupStandings.length}
                 </p>
               </div>
             </div>
@@ -399,12 +390,12 @@ export default async function PoolBracketPage({ params }: BracketPageProps) {
                         const homeTeamName = getDisplayedTeamName(
                           match.home_team,
                           match.home_slot,
-                          groupLookup
+                          context
                         );
                         const awayTeamName = getDisplayedTeamName(
                           match.away_team,
                           match.away_slot,
-                          groupLookup
+                          context
                         );
 
                         return (
