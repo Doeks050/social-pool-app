@@ -28,6 +28,12 @@ type PhaseOption = {
   label: string;
 };
 
+type DateGroup = {
+  key: string;
+  label: string;
+  matches: WorldCupMatchRow[];
+};
+
 const PHASE_OPTIONS: PhaseOption[] = [
   { value: "all", label: "Alles" },
   { value: "group", label: "Groepsfase" },
@@ -213,67 +219,24 @@ function matchesPhase(match: WorldCupMatchRow, phase: string) {
   return (match.stage_type ?? "").toLowerCase() === phase;
 }
 
-function getStageOrder(stageType: string | null | undefined) {
-  const value = (stageType ?? "").toLowerCase();
+function getDateKey(value: string) {
+  const date = new Date(value);
 
-  if (value === "group") return 1;
-  if (value === "round_of_32") return 2;
-  if (value === "round_of_16") return 3;
-  if (value === "quarterfinal") return 4;
-  if (value === "semifinal") return 5;
-  if (value === "third_place") return 6;
-  if (value === "final") return 7;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
 
-  return 99;
+  return `${year}-${month}-${day}`;
 }
 
-function getGroupOrder(groupLabel: string | null | undefined) {
-  const label = (groupLabel ?? "").trim().toUpperCase();
-
-  if (label === "GROUP A") return 1;
-  if (label === "GROUP B") return 2;
-  if (label === "GROUP C") return 3;
-  if (label === "GROUP D") return 4;
-  if (label === "GROUP E") return 5;
-  if (label === "GROUP F") return 6;
-  if (label === "GROUP G") return 7;
-  if (label === "GROUP H") return 8;
-
-  return 99;
-}
-
-function getSectionLabel(match: WorldCupMatchRow) {
-  const stageType = (match.stage_type ?? "").toLowerCase();
-
-  if (stageType === "group") {
-    return match.group_label || "Groepsfase";
-  }
-
-  if (stageType === "round_of_32") {
-    return "Round of 32";
-  }
-
-  if (stageType === "round_of_16") {
-    return "Round of 16";
-  }
-
-  if (stageType === "quarterfinal") {
-    return "Kwartfinales";
-  }
-
-  if (stageType === "semifinal") {
-    return "Halve finales";
-  }
-
-  if (stageType === "third_place") {
-    return "Troostfinale";
-  }
-
-  if (stageType === "final") {
-    return "Finale";
-  }
-
-  return match.group_label || match.round_name || match.stage || "Wedstrijd";
+function getDateLabel(value: string) {
+  return new Intl.DateTimeFormat("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/Amsterdam",
+  }).format(new Date(value));
 }
 
 export default async function WorldCupResultsPage({
@@ -313,7 +276,8 @@ export default async function WorldCupResultsPage({
     .select(
       "id, stage, round_name, stage_type, group_label, round_order, bracket_code, starts_at, status, home_team, away_team, home_slot, away_slot, home_score, away_score, is_knockout"
     )
-    .eq("tournament", "world_cup_2026");
+    .eq("tournament", "world_cup_2026")
+    .order("starts_at", { ascending: true });
 
   if (error) {
     return (
@@ -329,45 +293,29 @@ export default async function WorldCupResultsPage({
     );
   }
 
-  const typedMatches = ((matches ?? []) as WorldCupMatchRow[])
-    .filter((match) => matchesPhase(match, activePhase))
-    .sort((a, b) => {
-      const stageDiff =
-        getStageOrder(a.stage_type) - getStageOrder(b.stage_type);
+  const typedMatches = ((matches ?? []) as WorldCupMatchRow[]).filter((match) =>
+    matchesPhase(match, activePhase)
+  );
 
-      if (stageDiff !== 0) {
-        return stageDiff;
-      }
+  const dateGroupMap = new Map<string, WorldCupMatchRow[]>();
 
-      const groupDiff =
-        getGroupOrder(a.group_label) - getGroupOrder(b.group_label);
+  for (const match of typedMatches) {
+    const key = getDateKey(match.starts_at);
+    const existing = dateGroupMap.get(key) ?? [];
+    existing.push(match);
+    dateGroupMap.set(key, existing);
+  }
 
-      if (groupDiff !== 0) {
-        return groupDiff;
-      }
-
-      const roundOrderA = a.round_order ?? 999;
-      const roundOrderB = b.round_order ?? 999;
-
-      if (roundOrderA !== roundOrderB) {
-        return roundOrderA - roundOrderB;
-      }
-
-      return new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime();
-    });
-
-  const groupedMatches = typedMatches.reduce<
-    Record<string, WorldCupMatchRow[]>
-  >((acc, match) => {
-    const key = getSectionLabel(match);
-
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-
-    acc[key].push(match);
-    return acc;
-  }, {});
+  const groupedMatches: DateGroup[] = Array.from(dateGroupMap.entries())
+    .map(([key, dateMatches]) => ({
+      key,
+      label: getDateLabel(dateMatches[0].starts_at),
+      matches: [...dateMatches].sort(
+        (a, b) =>
+          new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
+      ),
+    }))
+    .sort((a, b) => a.key.localeCompare(b.key));
 
   const totalMatches = ((matches ?? []) as WorldCupMatchRow[]).length;
   const finishedMatches = ((matches ?? []) as WorldCupMatchRow[]).filter(
@@ -376,7 +324,6 @@ export default async function WorldCupResultsPage({
       match.home_score !== null &&
       match.away_score !== null
   ).length;
-
   const filteredCount = typedMatches.length;
 
   return (
@@ -401,8 +348,7 @@ export default async function WorldCupResultsPage({
                 WK resultaten beheren
               </h1>
               <p className="mt-3 text-sm leading-6 text-zinc-400">
-                Vul hier officiële WK uitslagen in. Punten worden direct opnieuw
-                berekend en het knock-out schema wordt opnieuw gesynchroniseerd.
+                Wedstrijden staan hieronder compact gegroepeerd per speeldatum.
               </p>
             </div>
 
@@ -475,29 +421,31 @@ export default async function WorldCupResultsPage({
               </div>
             </section>
 
-            <div className="space-y-6">
-              {typedMatches.length === 0 ? (
-                <div className="rounded-3xl border border-zinc-800 bg-zinc-900/40 p-8 text-center text-zinc-400">
-                  Geen wedstrijden gevonden voor deze filter.
-                </div>
-              ) : (
-                Object.entries(groupedMatches).map(([groupLabel, groupMatches]) => (
+            {groupedMatches.length === 0 ? (
+              <div className="rounded-3xl border border-zinc-800 bg-zinc-900/40 p-8 text-center text-zinc-400">
+                Geen wedstrijden gevonden voor deze filter.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {groupedMatches.map((group) => (
                   <section
-                    key={groupLabel}
+                    key={group.key}
                     className="rounded-3xl border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5"
                   >
                     <div className="mb-4">
-                      <h2 className="text-xl font-semibold text-white">
-                        {groupLabel}
+                      <h2 className="text-lg font-semibold capitalize text-white sm:text-xl">
+                        {group.label}
                       </h2>
                       <p className="mt-1 text-sm text-zinc-500">
-                        {groupMatches.length}{" "}
-                        {groupMatches.length === 1 ? "wedstrijd" : "wedstrijden"}
+                        {group.matches.length}{" "}
+                        {group.matches.length === 1
+                          ? "wedstrijd"
+                          : "wedstrijden"}
                       </p>
                     </div>
 
-                    <div className="space-y-4">
-                      {groupMatches.map((match) => (
+                    <div className="space-y-3">
+                      {group.matches.map((match) => (
                         <MatchResultAdminCard
                           key={match.id}
                           match={match}
@@ -506,9 +454,9 @@ export default async function WorldCupResultsPage({
                       ))}
                     </div>
                   </section>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </Container>
       </section>

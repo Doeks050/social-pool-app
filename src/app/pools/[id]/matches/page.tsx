@@ -22,98 +22,30 @@ type PredictionRow = {
 
 type MatchRow = {
   id: string;
-  stage: string;
-  round_name: string;
-  home_team: string;
-  away_team: string;
+  stage: string | null;
+  round_name: string | null;
+  stage_type: string | null;
+  group_label: string | null;
+  round_order: number | null;
+  bracket_code: string | null;
   starts_at: string;
   status: string;
+  home_team: string | null;
+  away_team: string | null;
+  home_slot: string | null;
+  away_slot: string | null;
   home_score: number | null;
   away_score: number | null;
+  is_knockout: boolean | null;
 };
 
-type MatchGroup = {
+type DateGroup = {
   key: string;
   label: string;
   matches: MatchRow[];
 };
 
 type MatchFilter = "all" | "open" | "locked" | "finished";
-
-function getGroupLabel(match: MatchRow) {
-  const round = match.round_name?.trim();
-  const stage = match.stage?.trim();
-
-  if (round) return round;
-  if (stage) return stage;
-  return "Overig";
-}
-
-function getGroupOrder(label: string) {
-  const normalized = label.trim().toLowerCase();
-
-  const isGroupStage =
-    normalized.includes("group stage") ||
-    normalized.includes("groepsfase") ||
-    /^group\s+[a-z0-9]+$/i.test(label.trim()) ||
-    /^groep\s+[a-z0-9]+$/i.test(label.trim());
-
-  if (isGroupStage) return 1;
-
-  if (
-    normalized.includes("round of 32") ||
-    normalized.includes("laatste 32") ||
-    normalized.includes("1/16")
-  ) {
-    return 2;
-  }
-
-  if (
-    normalized.includes("round of 16") ||
-    normalized.includes("laatste 16") ||
-    normalized.includes("achtste finale") ||
-    normalized.includes("1/8")
-  ) {
-    return 3;
-  }
-
-  if (
-    normalized.includes("quarterfinal") ||
-    normalized.includes("quarter final") ||
-    normalized.includes("kwartfinale") ||
-    normalized.includes("1/4")
-  ) {
-    return 4;
-  }
-
-  if (
-    normalized.includes("semifinal") ||
-    normalized.includes("semi final") ||
-    normalized.includes("halve finale") ||
-    normalized.includes("1/2")
-  ) {
-    return 5;
-  }
-
-  if (
-    normalized.includes("third place") ||
-    normalized.includes("third-place") ||
-    normalized.includes("3rd place") ||
-    normalized.includes("derde plaats")
-  ) {
-    return 6;
-  }
-
-  if (
-    normalized === "final" ||
-    normalized === "finale" ||
-    normalized.includes("world cup final")
-  ) {
-    return 7;
-  }
-
-  return 99;
-}
 
 function getMatchState(match: MatchRow): "open" | "locked" | "finished" {
   const hasResult =
@@ -130,14 +62,6 @@ function getMatchState(match: MatchRow): "open" | "locked" | "finished" {
   }
 
   return "open";
-}
-
-function getMatchStateOrder(match: MatchRow) {
-  const state = getMatchState(match);
-
-  if (state === "open") return 0;
-  if (state === "locked") return 1;
-  return 2;
 }
 
 function normalizeFilter(filter?: string): MatchFilter {
@@ -166,6 +90,26 @@ function getFilterButtonClasses(isActive: boolean) {
   }
 
   return "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500 hover:text-white";
+}
+
+function getDateKey(value: string) {
+  const date = new Date(value);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function getDateLabel(value: string) {
+  return new Intl.DateTimeFormat("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/Amsterdam",
+  }).format(new Date(value));
 }
 
 export default async function PoolMatchesPage({
@@ -209,7 +153,7 @@ export default async function PoolMatchesPage({
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "id, stage, round_name, home_team, away_team, starts_at, status, home_score, away_score"
+      "id, stage, round_name, stage_type, group_label, round_order, bracket_code, starts_at, status, home_team, away_team, home_slot, away_slot, home_score, away_score, is_knockout"
     )
     .eq("tournament", "world_cup_2026")
     .order("starts_at", { ascending: true });
@@ -231,43 +175,29 @@ export default async function PoolMatchesPage({
     ])
   );
 
-  const groupedMatchesMap = new Map<string, MatchRow[]>();
+  const filteredMatches = typedMatches.filter((match) =>
+    matchesFilter(match, activeFilter)
+  );
 
-  for (const match of typedMatches) {
-    const label = getGroupLabel(match);
-    const existing = groupedMatchesMap.get(label) ?? [];
+  const dateGroupMap = new Map<string, MatchRow[]>();
+
+  for (const match of filteredMatches) {
+    const key = getDateKey(match.starts_at);
+    const existing = dateGroupMap.get(key) ?? [];
     existing.push(match);
-    groupedMatchesMap.set(label, existing);
+    dateGroupMap.set(key, existing);
   }
 
-  const groupedMatches: MatchGroup[] = Array.from(groupedMatchesMap.entries())
-    .map(([label, groupMatches]) => ({
-      key: label,
-      label,
-      matches: [...groupMatches]
-        .sort((a, b) => {
-          const stateOrderDiff = getMatchStateOrder(a) - getMatchStateOrder(b);
-
-          if (stateOrderDiff !== 0) {
-            return stateOrderDiff;
-          }
-
-          return (
-            new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
-          );
-        })
-        .filter((match) => matchesFilter(match, activeFilter)),
+  const groupedMatches: DateGroup[] = Array.from(dateGroupMap.entries())
+    .map(([key, dateMatches]) => ({
+      key,
+      label: getDateLabel(dateMatches[0].starts_at),
+      matches: [...dateMatches].sort(
+        (a, b) =>
+          new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
+      ),
     }))
-    .filter((group) => group.matches.length > 0)
-    .sort((a, b) => {
-      const orderDiff = getGroupOrder(a.label) - getGroupOrder(b.label);
-
-      if (orderDiff !== 0) {
-        return orderDiff;
-      }
-
-      return a.label.localeCompare(b.label);
-    });
+    .sort((a, b) => a.key.localeCompare(b.key));
 
   const totalOpen = typedMatches.filter(
     (match) => getMatchState(match) === "open"
@@ -302,8 +232,7 @@ export default async function PoolMatchesPage({
                 {pool.name}
               </h1>
               <p className="mt-2 text-sm leading-6 text-zinc-400">
-                Open wedstrijden staan bovenaan. Gelockte en gespeelde duels
-                komen daaronder.
+                Wedstrijden staan hieronder compact gegroepeerd per speeldatum.
               </p>
             </div>
 
@@ -348,70 +277,35 @@ export default async function PoolMatchesPage({
             </div>
 
             {groupedMatches.length > 0 ? (
-              <div className="flex flex-col gap-3">
-                {groupedMatches.map((group) => {
-                  const openCount = group.matches.filter(
-                    (match) => getMatchState(match) === "open"
-                  ).length;
-                  const lockedCount = group.matches.filter(
-                    (match) => getMatchState(match) === "locked"
-                  ).length;
-                  const finishedCount = group.matches.filter(
-                    (match) => getMatchState(match) === "finished"
-                  ).length;
+              <div className="space-y-4">
+                {groupedMatches.map((group) => (
+                  <section
+                    key={group.key}
+                    className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5"
+                  >
+                    <div className="mb-3">
+                      <h2 className="text-base font-semibold capitalize text-white sm:text-lg">
+                        {group.label}
+                      </h2>
+                      <p className="mt-1 text-sm text-zinc-500">
+                        {group.matches.length}{" "}
+                        {group.matches.length === 1
+                          ? "wedstrijd"
+                          : "wedstrijden"}
+                      </p>
+                    </div>
 
-                  const defaultOpen =
-                    activeFilter !== "finished" && openCount > 0;
-
-                  return (
-                    <details
-                      key={group.key}
-                      open={defaultOpen}
-                      className="rounded-2xl border border-zinc-800 bg-zinc-900/50"
-                    >
-                      <summary className="cursor-pointer list-none px-4 py-4 sm:px-5">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                          <div>
-                            <h2 className="text-base font-semibold text-white sm:text-lg">
-                              {group.label}
-                            </h2>
-                            <p className="mt-1 text-sm text-zinc-400">
-                              {group.matches.length}{" "}
-                              {group.matches.length === 1
-                                ? "wedstrijd"
-                                : "wedstrijden"}
-                            </p>
-                          </div>
-
-                          <div className="flex flex-wrap gap-2 text-xs">
-                            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-emerald-200">
-                              Open {openCount}
-                            </span>
-                            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-amber-200">
-                              Gelockt {lockedCount}
-                            </span>
-                            <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-2.5 py-1 text-sky-200">
-                              Finished {finishedCount}
-                            </span>
-                          </div>
-                        </div>
-                      </summary>
-
-                      <div className="border-t border-zinc-800 px-3 py-3 sm:px-4">
-                        <div className="grid gap-3">
-                          {group.matches.map((match) => (
-                            <MatchPredictionCard
-                              key={match.id}
-                              poolId={pool.id}
-                              match={match}
-                              initialPrediction={predictionMap.get(match.id) ?? null}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </details>
-                  );
-                })}
+                    <div className="grid gap-3">
+                      {group.matches.map((match) => (
+                        <MatchPredictionCard
+                          key={match.id}
+                          match={match}
+                          initialPrediction={predictionMap.get(match.id) ?? null}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ))}
               </div>
             ) : (
               <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/40 p-5">

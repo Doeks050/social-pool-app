@@ -22,8 +22,12 @@ type MatchResultAdminCardProps = {
 
 function formatMatchDate(value: string) {
   return new Intl.DateTimeFormat("nl-NL", {
-    dateStyle: "medium",
-    timeStyle: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
     timeZone: "Europe/Amsterdam",
   }).format(new Date(value));
 }
@@ -44,7 +48,7 @@ function getStatusLabel(status: string) {
   if (status === "finished") return "Finished";
   if (status === "live") return "Live";
   if (status === "locked") return "Locked";
-  return "Scheduled";
+  return "Open";
 }
 
 function getStatusClasses(status: string) {
@@ -70,29 +74,28 @@ export default function MatchResultAdminCard({
   const homeDisplay = getDisplayTeam(match.home_team, match.home_slot);
   const awayDisplay = getDisplayTeam(match.away_team, match.away_slot);
 
-  return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 sm:p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-            {match.group_label || match.round_name || match.stage || "Wedstrijd"}
-          </p>
-          <h3 className="mt-1 text-lg font-semibold text-white">
-            {homeDisplay} vs {awayDisplay}
-          </h3>
-          <p className="mt-2 text-sm text-zinc-400">
-            Start: {formatMatchDate(match.starts_at)}
-          </p>
+  const headerLabel =
+    match.group_label || match.round_name || match.stage || "Wedstrijd";
 
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">
+            {headerLabel}
+          </p>
+          <p className="mt-1 text-sm text-zinc-400">
+            {formatMatchDate(match.starts_at)}
+          </p>
           {match.bracket_code ? (
-            <p className="mt-1 text-xs uppercase tracking-wide text-zinc-500">
+            <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-zinc-600">
               {match.bracket_code}
             </p>
           ) : null}
         </div>
 
         <div
-          className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium uppercase tracking-wide ${getStatusClasses(
+          className={`shrink-0 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${getStatusClasses(
             match.status
           )}`}
         >
@@ -100,47 +103,51 @@ export default function MatchResultAdminCard({
         </div>
       </div>
 
-      <form action={saveAction} className="mt-5 space-y-4">
+      <form action={saveAction} className="mt-4">
         <input type="hidden" name="match_id" value={match.id} />
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto] md:items-end">
           <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
+            <label className="mb-2 block text-base font-semibold text-white">
               {homeDisplay}
             </label>
             <input
               name="home_score"
               type="number"
               min="0"
+              inputMode="numeric"
               defaultValue={match.home_score ?? ""}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white outline-none transition focus:border-white"
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-lg font-semibold text-white outline-none transition focus:border-white"
               placeholder="0"
               required
             />
           </div>
 
+          <div className="pb-3 text-center text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">
+            vs
+          </div>
+
           <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-300">
+            <label className="mb-2 block text-base font-semibold text-white">
               {awayDisplay}
             </label>
             <input
               name="away_score"
               type="number"
               min="0"
+              inputMode="numeric"
               defaultValue={match.away_score ?? ""}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-white outline-none transition focus:border-white"
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-lg font-semibold text-white outline-none transition focus:border-white"
               placeholder="0"
               required
             />
           </div>
-        </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row">
           <button
             type="submit"
-            className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200"
+            className="h-[52px] rounded-xl bg-white px-5 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200 md:self-end"
           >
-            Resultaat opslaan
+            Opslaan
           </button>
         </div>
       </form>
