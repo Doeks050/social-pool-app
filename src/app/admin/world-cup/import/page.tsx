@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { revalidatePath } from "next/cache";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
 
@@ -9,29 +8,6 @@ type WorldCupImportPageProps = {
     success?: string;
     error?: string;
   }>;
-};
-
-type ImportMatchRow = {
-  bracket_code: string;
-  match_number?: number | null;
-  stage?: string | null;
-  round_name?: string | null;
-  stage_type:
-    | "group"
-    | "round_of_32"
-    | "round_of_16"
-    | "quarterfinal"
-    | "semifinal"
-    | "third_place"
-    | "final";
-  group_label?: string | null;
-  round_order: number;
-  starts_at: string;
-  home_team?: string | null;
-  away_team?: string | null;
-  home_slot?: string | null;
-  away_slot?: string | null;
-  is_knockout?: boolean;
 };
 
 const exampleJson = `[
@@ -67,105 +43,10 @@ const exampleJson = `[
   }
 ]`;
 
-async function importWorldCupMatches(formData: FormData) {
-  "use server";
-
-  const rawJson = formData.get("matches_json");
-
-  if (typeof rawJson !== "string" || !rawJson.trim()) {
-    redirect("/admin/world-cup/import?error=missing_json");
-  }
-
-  let parsed: unknown;
-
-  try {
-    parsed = JSON.parse(rawJson);
-  } catch {
-    redirect("/admin/world-cup/import?error=invalid_json");
-  }
-
-  if (!Array.isArray(parsed) || parsed.length === 0) {
-    redirect("/admin/world-cup/import?error=empty_array");
-  }
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/auth");
-  }
-
-  const { data: appAdmin } = await supabase
-    .from("app_admins")
-    .select("user_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (!appAdmin) {
-    notFound();
-  }
-
-  const rows = (parsed as ImportMatchRow[]).map((row) => ({
-    tournament: "world_cup_2026",
-    bracket_code: row.bracket_code,
-    match_number: row.match_number ?? null,
-    stage: row.stage ?? null,
-    round_name: row.round_name ?? null,
-    stage_type: row.stage_type,
-    group_label: row.group_label ?? null,
-    round_order: row.round_order,
-    starts_at: row.starts_at,
-    home_team: row.home_team ?? null,
-    away_team: row.away_team ?? null,
-    home_slot: row.home_slot ?? null,
-    away_slot: row.away_slot ?? null,
-    is_knockout:
-      typeof row.is_knockout === "boolean"
-        ? row.is_knockout
-        : row.stage_type !== "group",
-    status: "scheduled",
-    home_score: null,
-    away_score: null,
-  }));
-
-  const invalidRow = rows.find(
-    (row) =>
-      !row.bracket_code ||
-      !row.stage_type ||
-      !row.round_order ||
-      !row.starts_at
-  );
-
-  if (invalidRow) {
-    redirect("/admin/world-cup/import?error=missing_required_fields");
-  }
-
-  const { error } = await supabase.from("matches").upsert(rows, {
-    onConflict: "tournament,bracket_code",
-  });
-
-  if (error) {
-    redirect(
-      `/admin/world-cup/import?error=${encodeURIComponent(error.message)}`
-    );
-  }
-
-  revalidatePath("/admin/world-cup/import");
-  revalidatePath("/admin/world-cup/results");
-  revalidatePath("/admin");
-  redirect(`/admin/world-cup/import?success=${rows.length}`);
-}
-
 function getErrorMessage(error: string | undefined) {
   if (!error) return null;
-  if (error === "missing_json") {
-    return "Plak eerst JSON in het importveld.";
-  }
-  if (error === "invalid_json") {
-    return "De ingeplakte JSON is ongeldig.";
-  }
+  if (error === "missing_json") return "Plak eerst JSON in het importveld.";
+  if (error === "invalid_json") return "De ingeplakte JSON is ongeldig.";
   if (error === "empty_array") {
     return "De JSON moet een array met wedstrijden bevatten.";
   }
@@ -186,6 +67,7 @@ export default async function WorldCupImportPage({
   const errorMessage = getErrorMessage(resolvedSearchParams?.error);
 
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -234,8 +116,11 @@ export default async function WorldCupImportPage({
               </h1>
               <p className="mt-3 text-sm leading-6 text-zinc-400">
                 Plak hier de officiële WK wedstrijden als JSON. Deze pagina
-                upsert de records op basis van <span className="font-semibold text-white">tournament + bracket_code</span>,
-                zodat je later veilig opnieuw kunt importeren of corrigeren.
+                upsert de records op basis van{" "}
+                <span className="font-semibold text-white">
+                  tournament + bracket_code
+                </span>
+                , zodat je later veilig opnieuw kunt importeren of corrigeren.
               </p>
             </div>
 
@@ -283,10 +168,13 @@ export default async function WorldCupImportPage({
             <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6">
               <h2 className="text-xl font-semibold">Verwachte JSON structuur</h2>
               <p className="mt-2 text-sm leading-6 text-zinc-400">
-                Gebruik voor elke wedstrijd een uniek <span className="font-semibold text-white">bracket_code</span>.
-                Voor groepswedstrijden zet je gewoon teams in <span className="font-semibold text-white">home_team</span> en{" "}
+                Gebruik voor elke wedstrijd een uniek{" "}
+                <span className="font-semibold text-white">bracket_code</span>.
+                Voor groepswedstrijden zet je gewoon teams in{" "}
+                <span className="font-semibold text-white">home_team</span> en{" "}
                 <span className="font-semibold text-white">away_team</span>.
-                Voor knock-out placeholders kun je teams leeg laten en werken met{" "}
+                Voor knock-out placeholders kun je teams leeg laten en werken
+                met{" "}
                 <span className="font-semibold text-white">home_slot</span> en{" "}
                 <span className="font-semibold text-white">away_slot</span>.
               </p>
@@ -297,14 +185,15 @@ export default async function WorldCupImportPage({
             </div>
 
             <form
-              action={importWorldCupMatches}
+              method="POST"
+              action="/admin/world-cup/import/submit"
               className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6"
             >
               <div className="flex flex-col gap-4">
                 <div>
                   <h2 className="text-xl font-semibold">Import JSON plakken</h2>
                   <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    Plak hier straks de officiële WK agenda in JSON-vorm.
+                    Plak hier de officiële WK agenda in JSON-vorm.
                   </p>
                 </div>
 
