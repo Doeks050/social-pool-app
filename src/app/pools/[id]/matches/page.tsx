@@ -296,9 +296,9 @@ export default async function PoolMatchesPage({
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
-      <section className="py-8 sm:py-10">
+      <section className="py-6 sm:py-8">
         <Container>
-          <div className="mx-auto flex max-w-3xl flex-col gap-3">
+          <div className="mx-auto flex max-w-5xl flex-col gap-3">
             <div>
               <Link
                 href={`/pools/${pool.id}`}
@@ -308,7 +308,7 @@ export default async function PoolMatchesPage({
               </Link>
             </div>
 
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-4 sm:p-5">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-4">
               <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
                 WK wedstrijden
               </p>
@@ -362,13 +362,13 @@ export default async function PoolMatchesPage({
                 {groupedMatches.map((group) => (
                   <section
                     key={group.key}
-                    className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 sm:p-4"
+                    className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3"
                   >
-                    <div className="mb-2">
+                    <div className="mb-2 flex items-end justify-between gap-3 border-b border-zinc-800 pb-2">
                       <h2 className="text-sm font-semibold capitalize text-white sm:text-base">
                         {group.label}
                       </h2>
-                      <p className="mt-0.5 text-xs text-zinc-500">
+                      <p className="text-[11px] text-zinc-500">
                         {group.matches.length}{" "}
                         {group.matches.length === 1
                           ? "wedstrijd"
@@ -376,7 +376,7 @@ export default async function PoolMatchesPage({
                       </p>
                     </div>
 
-                    <div className="grid gap-2">
+                    <div className="grid gap-2 lg:grid-cols-2">
                       {group.matches.map((match) => (
                         <MatchPredictionCard
                           key={match.id}
