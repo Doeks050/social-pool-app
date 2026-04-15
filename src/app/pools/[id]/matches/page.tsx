@@ -14,9 +14,10 @@ type PoolMatchesPageProps = {
 };
 
 type PredictionRow = {
+  id: string;
   match_id: string;
-  predicted_home_score: number;
-  predicted_away_score: number;
+  predicted_home_score: number | null;
+  predicted_away_score: number | null;
   points_awarded: number | null;
 };
 
@@ -121,6 +122,7 @@ export default async function PoolMatchesPage({
   const activeFilter = normalizeFilter(resolvedSearchParams.filter);
 
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -150,6 +152,71 @@ export default async function PoolMatchesPage({
     notFound();
   }
 
+  async function savePrediction(formData: FormData) {
+    "use server";
+
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      redirect("/auth");
+    }
+
+    const matchId = String(formData.get("match_id") ?? "");
+    const predictedHomeScore = Number(formData.get("predicted_home_score"));
+    const predictedAwayScore = Number(formData.get("predicted_away_score"));
+
+    if (!matchId) {
+      return;
+    }
+
+    const { data: latestMembership } = await supabase
+      .from("pool_members")
+      .select("id")
+      .eq("pool_id", id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!latestMembership) {
+      notFound();
+    }
+
+    const { data: match } = await supabase
+      .from("matches")
+      .select("id, starts_at, status")
+      .eq("id", matchId)
+      .maybeSingle();
+
+    if (!match) {
+      return;
+    }
+
+    const isLocked =
+      match.status === "finished" ||
+      match.status === "live" ||
+      new Date(match.starts_at).getTime() <= Date.now();
+
+    if (isLocked) {
+      return;
+    }
+
+    await supabase.from("predictions").upsert(
+      {
+        pool_id: id,
+        user_id: user.id,
+        match_id: matchId,
+        predicted_home_score: predictedHomeScore,
+        predicted_away_score: predictedAwayScore,
+      },
+      {
+        onConflict: "pool_id,user_id,match_id",
+      }
+    );
+  }
+
   const { data: matches } = await supabase
     .from("matches")
     .select(
@@ -161,7 +228,7 @@ export default async function PoolMatchesPage({
   const { data: predictions } = await supabase
     .from("predictions")
     .select(
-      "match_id, predicted_home_score, predicted_away_score, points_awarded"
+      "id, match_id, predicted_home_score, predicted_away_score, points_awarded"
     )
     .eq("pool_id", pool.id)
     .eq("user_id", user.id);
@@ -300,7 +367,8 @@ export default async function PoolMatchesPage({
                         <MatchPredictionCard
                           key={match.id}
                           match={match}
-                          initialPrediction={predictionMap.get(match.id) ?? null}
+                          prediction={predictionMap.get(match.id) ?? null}
+                          saveAction={savePrediction}
                         />
                       ))}
                     </div>
