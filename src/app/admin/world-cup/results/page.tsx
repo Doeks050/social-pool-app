@@ -45,6 +45,38 @@ const PHASE_OPTIONS: PhaseOption[] = [
   { value: "final", label: "Finale" },
 ];
 
+function getAmsterdamDateParts(value: string) {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Amsterdam",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const parts = formatter.formatToParts(new Date(value));
+
+  const year = parts.find((part) => part.type === "year")?.value ?? "0000";
+  const month = parts.find((part) => part.type === "month")?.value ?? "00";
+  const day = parts.find((part) => part.type === "day")?.value ?? "00";
+
+  return { year, month, day };
+}
+
+function getDateKey(value: string) {
+  const { year, month, day } = getAmsterdamDateParts(value);
+  return `${year}-${month}-${day}`;
+}
+
+function getDateLabel(value: string) {
+  return new Intl.DateTimeFormat("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/Amsterdam",
+  }).format(new Date(value));
+}
+
 async function scorePredictionsForMatch(
   matchId: string,
   actualHomeScore: number,
@@ -219,26 +251,6 @@ function matchesPhase(match: WorldCupMatchRow, phase: string) {
   return (match.stage_type ?? "").toLowerCase() === phase;
 }
 
-function getDateKey(value: string) {
-  const date = new Date(value);
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-function getDateLabel(value: string) {
-  return new Intl.DateTimeFormat("nl-NL", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "Europe/Amsterdam",
-  }).format(new Date(value));
-}
-
 export default async function WorldCupResultsPage({
   searchParams,
 }: ResultsPageProps) {
@@ -284,7 +296,7 @@ export default async function WorldCupResultsPage({
       <main className="min-h-screen bg-zinc-950 text-white">
         <section className="py-16">
           <Container>
-            <div className="mx-auto max-w-5xl rounded-3xl border border-red-500/30 bg-red-500/10 p-6 text-red-200">
+            <div className="mx-auto max-w-5xl rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-red-200">
               {error.message}
             </div>
           </Container>
@@ -317,20 +329,11 @@ export default async function WorldCupResultsPage({
     }))
     .sort((a, b) => a.key.localeCompare(b.key));
 
-  const totalMatches = ((matches ?? []) as WorldCupMatchRow[]).length;
-  const finishedMatches = ((matches ?? []) as WorldCupMatchRow[]).filter(
-    (match) =>
-      match.status === "finished" &&
-      match.home_score !== null &&
-      match.away_score !== null
-  ).length;
-  const filteredCount = typedMatches.length;
-
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
-      <section className="py-10 sm:py-12">
+      <section className="py-8 sm:py-10">
         <Container>
-          <div className="mx-auto flex max-w-5xl flex-col gap-6">
+          <div className="mx-auto flex max-w-3xl flex-col gap-3">
             <div>
               <Link
                 href="/admin"
@@ -340,66 +343,28 @@ export default async function WorldCupResultsPage({
               </Link>
             </div>
 
-            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/70 p-6">
-              <p className="text-sm uppercase tracking-[0.2em] text-zinc-400">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-4 sm:p-5">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
                 App admin
               </p>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight">
+              <h1 className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">
                 WK resultaten beheren
               </h1>
-              <p className="mt-3 text-sm leading-6 text-zinc-400">
-                Wedstrijden staan hieronder compact gegroepeerd per speeldatum.
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                  Totaal wedstrijden
-                </p>
-                <p className="mt-2 text-lg font-semibold text-white">
-                  {totalMatches}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                  Finished
-                </p>
-                <p className="mt-2 text-lg font-semibold text-white">
-                  {finishedMatches}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                  In huidige filter
-                </p>
-                <p className="mt-2 text-lg font-semibold text-white">
-                  {filteredCount}
-                </p>
-              </div>
             </div>
 
             {successMessage ? (
-              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">
                 {successMessage}
               </div>
             ) : null}
 
             {errorMessage ? (
-              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+              <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
                 {errorMessage}
               </div>
             ) : null}
 
-            <section className="rounded-3xl border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5">
-              <div className="mb-4">
-                <h2 className="text-lg font-semibold text-white">
-                  Filter op fase
-                </h2>
-              </div>
-
+            <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-2.5">
               <div className="flex flex-wrap gap-2">
                 {PHASE_OPTIONS.map((option) => {
                   const isActive = option.value === activePhase;
@@ -410,8 +375,8 @@ export default async function WorldCupResultsPage({
                       href={buildPhaseHref(option.value)}
                       className={
                         isActive
-                          ? "rounded-full border border-white bg-white px-4 py-2 text-sm font-semibold text-zinc-950"
-                          : "rounded-full border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm font-medium text-zinc-300 transition hover:border-zinc-500 hover:text-white"
+                          ? "rounded-full border border-white bg-white px-3 py-1.5 text-xs font-semibold text-zinc-950"
+                          : "rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:border-zinc-500 hover:text-white"
                       }
                     >
                       {option.label}
@@ -422,21 +387,21 @@ export default async function WorldCupResultsPage({
             </section>
 
             {groupedMatches.length === 0 ? (
-              <div className="rounded-3xl border border-zinc-800 bg-zinc-900/40 p-8 text-center text-zinc-400">
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 text-center text-zinc-400">
                 Geen wedstrijden gevonden voor deze filter.
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {groupedMatches.map((group) => (
                   <section
                     key={group.key}
-                    className="rounded-3xl border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5"
+                    className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 sm:p-4"
                   >
-                    <div className="mb-4">
-                      <h2 className="text-lg font-semibold capitalize text-white sm:text-xl">
+                    <div className="mb-2">
+                      <h2 className="text-sm font-semibold capitalize text-white sm:text-base">
                         {group.label}
                       </h2>
-                      <p className="mt-1 text-sm text-zinc-500">
+                      <p className="mt-0.5 text-xs text-zinc-500">
                         {group.matches.length}{" "}
                         {group.matches.length === 1
                           ? "wedstrijd"
@@ -444,7 +409,7 @@ export default async function WorldCupResultsPage({
                       </p>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="grid gap-2">
                       {group.matches.map((match) => (
                         <MatchResultAdminCard
                           key={match.id}

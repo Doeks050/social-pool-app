@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
@@ -48,6 +49,38 @@ type DateGroup = {
 
 type MatchFilter = "all" | "open" | "locked" | "finished";
 
+function getAmsterdamDateParts(value: string) {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Amsterdam",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const parts = formatter.formatToParts(new Date(value));
+
+  const year = parts.find((part) => part.type === "year")?.value ?? "0000";
+  const month = parts.find((part) => part.type === "month")?.value ?? "00";
+  const day = parts.find((part) => part.type === "day")?.value ?? "00";
+
+  return { year, month, day };
+}
+
+function getDateKey(value: string) {
+  const { year, month, day } = getAmsterdamDateParts(value);
+  return `${year}-${month}-${day}`;
+}
+
+function getDateLabel(value: string) {
+  return new Intl.DateTimeFormat("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/Amsterdam",
+  }).format(new Date(value));
+}
+
 function getMatchState(match: MatchRow): "open" | "locked" | "finished" {
   const hasResult =
     match.status === "finished" &&
@@ -91,26 +124,6 @@ function getFilterButtonClasses(isActive: boolean) {
   }
 
   return "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500 hover:text-white";
-}
-
-function getDateKey(value: string) {
-  const date = new Date(value);
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-function getDateLabel(value: string) {
-  return new Intl.DateTimeFormat("nl-NL", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "Europe/Amsterdam",
-  }).format(new Date(value));
 }
 
 export default async function PoolMatchesPage({
@@ -215,6 +228,10 @@ export default async function PoolMatchesPage({
         onConflict: "pool_id,user_id,match_id",
       }
     );
+
+    revalidatePath(`/pools/${id}/matches`);
+    revalidatePath(`/pools/${id}`);
+    revalidatePath(`/pools/${id}/leaderboard`);
   }
 
   const { data: matches } = await supabase
@@ -279,9 +296,9 @@ export default async function PoolMatchesPage({
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
-      <section className="py-10 sm:py-12">
+      <section className="py-8 sm:py-10">
         <Container>
-          <div className="mx-auto flex max-w-3xl flex-col gap-4">
+          <div className="mx-auto flex max-w-3xl flex-col gap-3">
             <div>
               <Link
                 href={`/pools/${pool.id}`}
@@ -291,23 +308,20 @@ export default async function PoolMatchesPage({
               </Link>
             </div>
 
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-5 sm:p-6">
-              <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-4 sm:p-5">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
                 WK wedstrijden
               </p>
-              <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+              <h1 className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">
                 {pool.name}
               </h1>
-              <p className="mt-2 text-sm leading-6 text-zinc-400">
-                Wedstrijden staan hieronder compact gegroepeerd per speeldatum.
-              </p>
             </div>
 
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-3">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-2.5">
               <div className="flex flex-wrap gap-2">
                 <Link
                   href={getFilterHref(pool.id, "all")}
-                  className={`rounded-full border px-3 py-2 text-sm font-medium transition ${getFilterButtonClasses(
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${getFilterButtonClasses(
                     activeFilter === "all"
                   )}`}
                 >
@@ -316,7 +330,7 @@ export default async function PoolMatchesPage({
 
                 <Link
                   href={getFilterHref(pool.id, "open")}
-                  className={`rounded-full border px-3 py-2 text-sm font-medium transition ${getFilterButtonClasses(
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${getFilterButtonClasses(
                     activeFilter === "open"
                   )}`}
                 >
@@ -325,7 +339,7 @@ export default async function PoolMatchesPage({
 
                 <Link
                   href={getFilterHref(pool.id, "locked")}
-                  className={`rounded-full border px-3 py-2 text-sm font-medium transition ${getFilterButtonClasses(
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${getFilterButtonClasses(
                     activeFilter === "locked"
                   )}`}
                 >
@@ -334,7 +348,7 @@ export default async function PoolMatchesPage({
 
                 <Link
                   href={getFilterHref(pool.id, "finished")}
-                  className={`rounded-full border px-3 py-2 text-sm font-medium transition ${getFilterButtonClasses(
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${getFilterButtonClasses(
                     activeFilter === "finished"
                   )}`}
                 >
@@ -344,17 +358,17 @@ export default async function PoolMatchesPage({
             </div>
 
             {groupedMatches.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {groupedMatches.map((group) => (
                   <section
                     key={group.key}
-                    className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5"
+                    className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 sm:p-4"
                   >
-                    <div className="mb-3">
-                      <h2 className="text-base font-semibold capitalize text-white sm:text-lg">
+                    <div className="mb-2">
+                      <h2 className="text-sm font-semibold capitalize text-white sm:text-base">
                         {group.label}
                       </h2>
-                      <p className="mt-1 text-sm text-zinc-500">
+                      <p className="mt-0.5 text-xs text-zinc-500">
                         {group.matches.length}{" "}
                         {group.matches.length === 1
                           ? "wedstrijd"
@@ -362,7 +376,7 @@ export default async function PoolMatchesPage({
                       </p>
                     </div>
 
-                    <div className="grid gap-3">
+                    <div className="grid gap-2">
                       {group.matches.map((match) => (
                         <MatchPredictionCard
                           key={match.id}
@@ -376,11 +390,11 @@ export default async function PoolMatchesPage({
                 ))}
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/40 p-5">
-                <h2 className="text-lg font-semibold">
+              <div className="rounded-xl border border-dashed border-zinc-700 bg-zinc-900/40 p-4">
+                <h2 className="text-base font-semibold">
                   Geen wedstrijden gevonden voor deze filter
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-zinc-400">
+                <p className="mt-1 text-sm text-zinc-400">
                   Kies een andere filter of bekijk alle wedstrijden.
                 </p>
               </div>
