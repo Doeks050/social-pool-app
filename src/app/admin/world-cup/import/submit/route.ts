@@ -27,11 +27,23 @@ type ImportMatchRow = {
 function redirectWithParams(request: Request, params: Record<string, string>) {
   const url = new URL("/admin/world-cup/import", request.url);
 
-  Object.entries(params).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(params)) {
     url.searchParams.set(key, value);
-  });
+  }
 
   return NextResponse.redirect(url);
+}
+
+function normalizeText(value: string | null | undefined): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function fallbackTeamName(team: string | null, slot: string | null, bracketCode: string, side: "home" | "away") {
+  if (team) return team;
+  if (slot) return slot;
+  return `${bracketCode.toUpperCase()} ${side.toUpperCase()}`;
 }
 
 export async function POST(request: Request) {
@@ -71,38 +83,51 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (!appAdmin) {
-    return NextResponse.redirect(new URL("/admin/world-cup/import?error=forbidden", request.url));
+    return redirectWithParams(request, { error: "forbidden" });
   }
 
-  const rows = (parsed as ImportMatchRow[]).map((row) => ({
-    tournament: "world_cup_2026",
-    bracket_code: row.bracket_code,
-    match_number: row.match_number ?? null,
-    stage: row.stage ?? null,
-    round_name: row.round_name ?? null,
-    stage_type: row.stage_type,
-    group_label: row.group_label ?? null,
-    round_order: row.round_order,
-    starts_at: row.starts_at,
-    home_team: row.home_team ?? null,
-    away_team: row.away_team ?? null,
-    home_slot: row.home_slot ?? null,
-    away_slot: row.away_slot ?? null,
-    is_knockout:
-      typeof row.is_knockout === "boolean"
-        ? row.is_knockout
-        : row.stage_type !== "group",
-    status: "scheduled",
-    home_score: null,
-    away_score: null,
-  }));
+  const sourceRows = parsed as ImportMatchRow[];
+
+  const rows = sourceRows.map((row) => {
+    const bracketCode = normalizeText(row.bracket_code);
+    const homeTeam = normalizeText(row.home_team);
+    const awayTeam = normalizeText(row.away_team);
+    const homeSlot = normalizeText(row.home_slot);
+    const awaySlot = normalizeText(row.away_slot);
+
+    return {
+      tournament: "world_cup_2026",
+      bracket_code: bracketCode,
+      match_number: row.match_number ?? null,
+      stage: normalizeText(row.stage),
+      round_name: normalizeText(row.round_name),
+      stage_type: row.stage_type,
+      group_label: normalizeText(row.group_label),
+      round_order: row.round_order,
+      starts_at: row.starts_at,
+      home_team: fallbackTeamName(homeTeam, homeSlot, bracketCode ?? "match", "home"),
+      away_team: fallbackTeamName(awayTeam, awaySlot, bracketCode ?? "match", "away"),
+      home_slot: homeSlot,
+      away_slot: awaySlot,
+      is_knockout:
+        typeof row.is_knockout === "boolean"
+          ? row.is_knockout
+          : row.stage_type !== "group",
+      status: "upcoming",
+      home_score: null,
+      away_score: null,
+    };
+  });
 
   const invalidRow = rows.find(
     (row) =>
       !row.bracket_code ||
       !row.stage_type ||
-      !row.round_order ||
-      !row.starts_at
+      row.round_order === null ||
+      row.round_order === undefined ||
+      !row.starts_at ||
+      !row.home_team ||
+      !row.away_team
   );
 
   if (invalidRow) {
@@ -115,7 +140,7 @@ export async function POST(request: Request) {
 
   if (error) {
     return redirectWithParams(request, {
-      error: encodeURIComponent(error.message),
+      error: error.message,
     });
   }
 
