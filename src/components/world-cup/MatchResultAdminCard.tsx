@@ -6,6 +6,7 @@ type MatchResultAdminCardProps = {
     stage_type: string | null;
     group_label: string | null;
     round_order: number | null;
+    match_number: number | null;
     bracket_code: string | null;
     starts_at: string;
     status: string;
@@ -68,26 +69,13 @@ function getStatusClasses(status: string) {
   return "border-emerald-500/30 bg-emerald-500/10 text-emerald-200";
 }
 
-function getMatchNumber(match: MatchResultAdminCardProps["match"]) {
-  if (!match.bracket_code) return null;
-
-  const cleaned = match.bracket_code.trim();
-
-  if (!cleaned) return null;
-
-  const trailingNumberMatch = cleaned.match(/(\d+)$/);
-  if (!trailingNumberMatch) return null;
-
-  return Number(trailingNumberMatch[1]);
-}
-
 export default function MatchResultAdminCard({
   match,
   saveAction,
 }: MatchResultAdminCardProps) {
   const homeDisplay = getDisplayTeam(match.home_team, match.home_slot);
   const awayDisplay = getDisplayTeam(match.away_team, match.away_slot);
-  const matchNumber = getMatchNumber(match);
+  const matchNumber = match.match_number;
 
   return (
     <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-2.5 transition hover:border-zinc-700">

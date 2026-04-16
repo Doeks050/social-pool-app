@@ -31,6 +31,7 @@ type PhaseOption = {
 type SyncableWorldCupMatchRow = WorldCupMatchRow & {
   home_team_locked_by_admin: boolean;
   away_team_locked_by_admin: boolean;
+  match_number: number | null;
 };
 
 type DateGroup = {
@@ -544,11 +545,11 @@ export default async function WorldCupResultsPage({
   const { data: matches, error } = await supabase
     .from("matches")
     .select(
-      "id, stage, round_name, stage_type, group_label, round_order, bracket_code, starts_at, status, home_team, away_team, home_slot, away_slot, home_score, away_score, is_knockout, home_team_locked_by_admin, away_team_locked_by_admin"
+      "id, stage, round_name, stage_type, group_label, round_order, match_number, bracket_code, starts_at, status, home_team, away_team, home_slot, away_slot, home_score, away_score, is_knockout, home_team_locked_by_admin, away_team_locked_by_admin"
     )
     .eq("tournament", "world_cup_2026")
-    .order("round_order", { ascending: true })
-    .order("starts_at", { ascending: true });
+    .order("starts_at", { ascending: true })
+    .order("match_number", { ascending: true });
 
   if (error) {
     return (
@@ -585,10 +586,19 @@ export default async function WorldCupResultsPage({
     .map(([key, dateMatches]) => ({
       key,
       label: getDateLabel(dateMatches[0].starts_at),
-      matches: [...dateMatches].sort(
-        (a, b) =>
-          new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
-      ),
+      matches: [...dateMatches].sort((a, b) => {
+        const aTime = new Date(a.starts_at).getTime();
+        const bTime = new Date(b.starts_at).getTime();
+
+        if (aTime !== bTime) {
+          return aTime - bTime;
+        }
+
+        const aMatchNumber = a.match_number ?? Number.MAX_SAFE_INTEGER;
+        const bMatchNumber = b.match_number ?? Number.MAX_SAFE_INTEGER;
+
+        return aMatchNumber - bMatchNumber;
+      }),
     }))
     .sort((a, b) => a.key.localeCompare(b.key));
 
