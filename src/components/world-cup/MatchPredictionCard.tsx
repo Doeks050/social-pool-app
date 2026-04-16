@@ -6,6 +6,7 @@ type MatchPredictionCardProps = {
     stage_type: string | null;
     group_label: string | null;
     round_order: number | null;
+    match_number: number | null;
     bracket_code: string | null;
     starts_at: string;
     status: string;
@@ -77,19 +78,6 @@ function isEditable(status: string) {
   return status !== "finished" && status !== "locked" && status !== "live";
 }
 
-function getMatchNumber(match: MatchPredictionCardProps["match"]) {
-  if (!match.bracket_code) return null;
-
-  const cleaned = match.bracket_code.trim();
-
-  if (!cleaned) return null;
-
-  const trailingNumberMatch = cleaned.match(/(\d+)$/);
-  if (!trailingNumberMatch) return null;
-
-  return Number(trailingNumberMatch[1]);
-}
-
 export default function MatchPredictionCard({
   match,
   prediction,
@@ -98,7 +86,6 @@ export default function MatchPredictionCard({
   const homeDisplay = getDisplayTeam(match.home_team, match.home_slot);
   const awayDisplay = getDisplayTeam(match.away_team, match.away_slot);
   const editable = isEditable(match.status);
-  const matchNumber = getMatchNumber(match);
 
   return (
     <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-2.5 transition hover:border-zinc-700">
@@ -109,9 +96,9 @@ export default function MatchPredictionCard({
               {getStageLabel(match)}
             </p>
 
-            {matchNumber !== null ? (
+            {match.match_number !== null ? (
               <span className="rounded-full border border-zinc-700 bg-zinc-950 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-300">
-                Match {matchNumber}
+                Match {match.match_number}
               </span>
             ) : null}
           </div>

@@ -29,6 +29,7 @@ type MatchRow = {
   stage_type: string | null;
   group_label: string | null;
   round_order: number | null;
+  match_number: number | null;
   bracket_code: string | null;
   starts_at: string;
   status: string;
@@ -237,10 +238,11 @@ export default async function PoolMatchesPage({
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "id, stage, round_name, stage_type, group_label, round_order, bracket_code, starts_at, status, home_team, away_team, home_slot, away_slot, home_score, away_score, is_knockout"
+      "id, stage, round_name, stage_type, group_label, round_order, match_number, bracket_code, starts_at, status, home_team, away_team, home_slot, away_slot, home_score, away_score, is_knockout"
     )
     .eq("tournament", "world_cup_2026")
-    .order("starts_at", { ascending: true });
+    .order("starts_at", { ascending: true })
+    .order("match_number", { ascending: true });
 
   const { data: predictions } = await supabase
     .from("predictions")
@@ -276,10 +278,14 @@ export default async function PoolMatchesPage({
     .map(([key, dateMatches]) => ({
       key,
       label: getDateLabel(dateMatches[0].starts_at),
-      matches: [...dateMatches].sort(
-        (a, b) =>
-          new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
-      ),
+      matches: [...dateMatches].sort((a, b) => {
+        const timeDiff =
+          new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime();
+
+        if (timeDiff !== 0) return timeDiff;
+
+        return (a.match_number ?? 9999) - (b.match_number ?? 9999);
+      }),
     }))
     .sort((a, b) => a.key.localeCompare(b.key));
 
