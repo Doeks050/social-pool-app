@@ -396,19 +396,6 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                   </Link>
 
                   <Link
-                    href={`/pools/${pool.id}/bracket`}
-                    className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 transition hover:border-zinc-600 hover:bg-zinc-900"
-                  >
-                    <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                      WK
-                    </p>
-                    <h2 className="mt-2 text-base font-semibold">Knock-out schema</h2>
-                    <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      Bekijk alle knock-out rondes van het toernooi.
-                    </p>
-                  </Link>
-
-                  <Link
                     href={`/pools/${pool.id}/leaderboard`}
                     className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 transition hover:border-zinc-600 hover:bg-zinc-900"
                   >
