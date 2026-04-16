@@ -45,7 +45,16 @@ function getDisplayTeam(team: string | null, slot: string | null) {
 }
 
 function getStageLabel(match: MatchPredictionCardProps["match"]) {
-  if (match.group_label) return `Group ${match.group_label}`;
+  if (match.group_label && match.group_label.trim()) {
+    const value = match.group_label.trim();
+
+    if (value.toLowerCase().startsWith("group ")) {
+      return value;
+    }
+
+    return `Group ${value}`;
+  }
+
   if (match.round_name) return match.round_name;
   if (match.stage) return match.stage;
   return "Wedstrijd";
