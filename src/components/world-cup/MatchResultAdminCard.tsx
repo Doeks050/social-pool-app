@@ -68,20 +68,43 @@ function getStatusClasses(status: string) {
   return "border-emerald-500/30 bg-emerald-500/10 text-emerald-200";
 }
 
+function getMatchNumber(match: MatchResultAdminCardProps["match"]) {
+  if (!match.bracket_code) return null;
+
+  const cleaned = match.bracket_code.trim();
+
+  if (!cleaned) return null;
+
+  const trailingNumberMatch = cleaned.match(/(\d+)$/);
+  if (!trailingNumberMatch) return null;
+
+  return Number(trailingNumberMatch[1]);
+}
+
 export default function MatchResultAdminCard({
   match,
   saveAction,
 }: MatchResultAdminCardProps) {
   const homeDisplay = getDisplayTeam(match.home_team, match.home_slot);
   const awayDisplay = getDisplayTeam(match.away_team, match.away_slot);
+  const matchNumber = getMatchNumber(match);
 
   return (
     <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-2.5 transition hover:border-zinc-700">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-            {getStageLabel(match)}
-          </p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+              {getStageLabel(match)}
+            </p>
+
+            {matchNumber !== null ? (
+              <span className="rounded-full border border-zinc-700 bg-zinc-950 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-300">
+                Match {matchNumber}
+              </span>
+            ) : null}
+          </div>
+
           <p className="mt-0.5 text-[11px] text-zinc-400">
             {formatMatchDate(match.starts_at)}
           </p>

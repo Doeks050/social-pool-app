@@ -738,9 +738,7 @@ export default async function WorldCupResultsPage({
                                         defaultValue={match.home_team ?? ""}
                                         className="h-10 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-white"
                                       >
-                                        <option value="">
-                                          {prettifySlot(match.home_slot)}
-                                        </option>
+                                        <option value="">Kies land</option>
                                         {homeOptions.map((team) => (
                                           <option key={`home-${match.id}-${team}`} value={team}>
                                             {team}
@@ -800,9 +798,7 @@ export default async function WorldCupResultsPage({
                                         defaultValue={match.away_team ?? ""}
                                         className="h-10 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-white"
                                       >
-                                        <option value="">
-                                          {prettifySlot(match.away_slot)}
-                                        </option>
+                                        <option value="">Kies land</option>
                                         {awayOptions.map((team) => (
                                           <option key={`away-${match.id}-${team}`} value={team}>
                                             {team}
