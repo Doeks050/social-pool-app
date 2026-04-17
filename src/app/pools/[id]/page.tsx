@@ -1,4 +1,3 @@
-import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
@@ -143,199 +142,6 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
   const isWorldCup = pool.game_type === "world_cup";
   const canManageTestData =
     membership.role === "owner" || membership.role === "admin";
-
-  async function fillTestData() {
-    "use server";
-
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      redirect("/auth");
-    }
-
-    const { data: latestMembership } = await supabase
-      .from("pool_members")
-      .select("role")
-      .eq("pool_id", id)
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (!latestMembership) {
-      notFound();
-    }
-
-    const canManage =
-      latestMembership.role === "owner" || latestMembership.role === "admin";
-
-    if (!canManage) {
-      return;
-    }
-
-    const { data: latestPool } = await supabase
-      .from("pools")
-      .select("id, game_type")
-      .eq("id", id)
-      .maybeSingle();
-
-    if (!latestPool || latestPool.game_type !== "world_cup") {
-      return;
-    }
-
-    const { data: latestMembers } = await supabase
-      .from("pool_members")
-      .select("user_id")
-      .eq("pool_id", id)
-      .order("joined_at", { ascending: true });
-
-    const { data: matches } = await supabase
-      .from("matches")
-      .select("id, home_team, away_team")
-      .eq("tournament", "world_cup_2026")
-      .order("starts_at", { ascending: true })
-      .order("match_number", { ascending: true });
-
-    const { data: bonusTemplates } = await supabase
-      .from("bonus_question_templates")
-      .select("id, options")
-      .eq("game_type", "world_cup")
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true });
-
-    const membersForFill = (latestMembers ?? []) as Array<{ user_id: string }>;
-    const matchesForFill = (matches ?? []) as Array<{
-      id: string;
-      home_team: string | null;
-      away_team: string | null;
-    }>;
-    const bonusTemplatesForFill = (bonusTemplates ?? []) as Array<{
-      id: string;
-      options: string[] | null;
-    }>;
-
-    const playableMatches = matchesForFill.filter(
-      (match) => match.home_team && match.away_team
-    );
-
-    const predictionPayload: Array<{
-      pool_id: string;
-      user_id: string;
-      match_id: string;
-      predicted_home_score: number;
-      predicted_away_score: number;
-    }> = [];
-
-    for (let memberIndex = 0; memberIndex < membersForFill.length; memberIndex++) {
-      const member = membersForFill[memberIndex];
-
-      for (let matchIndex = 0; matchIndex < playableMatches.length; matchIndex++) {
-        const match = playableMatches[matchIndex];
-
-        const homeScore = (memberIndex + matchIndex) % 4;
-        const awayScore = (memberIndex * 2 + matchIndex + 1) % 4;
-
-        predictionPayload.push({
-          pool_id: id,
-          user_id: member.user_id,
-          match_id: match.id,
-          predicted_home_score: homeScore,
-          predicted_away_score: awayScore,
-        });
-      }
-    }
-
-    if (predictionPayload.length > 0) {
-      await supabase.from("predictions").upsert(predictionPayload, {
-        onConflict: "pool_id,user_id,match_id",
-      });
-    }
-
-    const bonusPayload: Array<{
-      pool_id: string;
-      user_id: string;
-      question_id: string;
-      answer_value: string;
-    }> = [];
-
-    for (let memberIndex = 0; memberIndex < membersForFill.length; memberIndex++) {
-      const member = membersForFill[memberIndex];
-
-      for (
-        let questionIndex = 0;
-        questionIndex < bonusTemplatesForFill.length;
-        questionIndex++
-      ) {
-        const question = bonusTemplatesForFill[questionIndex];
-        const options = question.options ?? [];
-
-        if (options.length === 0) {
-          continue;
-        }
-
-        const selectedOption =
-          options[(memberIndex + questionIndex) % options.length];
-
-        bonusPayload.push({
-          pool_id: id,
-          user_id: member.user_id,
-          question_id: question.id,
-          answer_value: selectedOption,
-        });
-      }
-    }
-
-    if (bonusPayload.length > 0) {
-      await supabase.from("bonus_question_answers").upsert(bonusPayload, {
-        onConflict: "pool_id,user_id,question_id",
-      });
-    }
-
-    revalidatePath(`/pools/${id}`);
-    revalidatePath(`/pools/${id}/matches`);
-    revalidatePath(`/pools/${id}/bonus`);
-    revalidatePath(`/pools/${id}/leaderboard`);
-  }
-
-  async function resetTestData() {
-    "use server";
-
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      redirect("/auth");
-    }
-
-    const { data: latestMembership } = await supabase
-      .from("pool_members")
-      .select("role")
-      .eq("pool_id", id)
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (!latestMembership) {
-      notFound();
-    }
-
-    const canManage =
-      latestMembership.role === "owner" || latestMembership.role === "admin";
-
-    if (!canManage) {
-      return;
-    }
-
-    await supabase.from("predictions").delete().eq("pool_id", id);
-    await supabase.from("bonus_question_answers").delete().eq("pool_id", id);
-
-    revalidatePath(`/pools/${id}`);
-    revalidatePath(`/pools/${id}/matches`);
-    revalidatePath(`/pools/${id}/bonus`);
-    revalidatePath(`/pools/${id}/leaderboard`);
-  }
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
@@ -508,7 +314,7 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <form action={fillTestData}>
+                  <form method="post" action={`/api/pools/${id}/fill-testdata`}>
                     <button
                       type="submit"
                       className="w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-semibold text-white transition hover:border-zinc-500 hover:bg-zinc-900"
@@ -517,7 +323,7 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                     </button>
                   </form>
 
-                  <form action={resetTestData}>
+                  <form method="post" action={`/api/pools/${id}/reset-testdata`}>
                     <button
                       type="submit"
                       className="w-full rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200 transition hover:border-red-500/50 hover:bg-red-500/15"
