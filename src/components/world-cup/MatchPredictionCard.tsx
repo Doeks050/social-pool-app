@@ -1,3 +1,7 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+
 type MatchPredictionCardProps = {
   match: {
     id: string;
@@ -18,12 +22,13 @@ type MatchPredictionCardProps = {
     away_score: number | null;
     is_knockout: boolean | null;
   };
+  poolId: string;
   prediction: {
     id: string;
     predicted_home_score: number | null;
     predicted_away_score: number | null;
+    points_awarded?: number | null;
   } | null;
-  saveAction: (formData: FormData) => Promise<void>;
 };
 
 function formatMatchDate(value: string) {
@@ -83,18 +88,94 @@ function getStatusClasses(status: string) {
   return "border-emerald-500/30 bg-emerald-500/10 text-emerald-200";
 }
 
-function isEditable(status: string) {
-  return status !== "finished" && status !== "locked" && status !== "live";
+function isEditable(match: MatchPredictionCardProps["match"]) {
+  if (
+    match.status === "finished" ||
+    match.status === "locked" ||
+    match.status === "live"
+  ) {
+    return false;
+  }
+
+  return new Date(match.starts_at).getTime() > Date.now();
 }
 
 export default function MatchPredictionCard({
   match,
+  poolId,
   prediction,
-  saveAction,
 }: MatchPredictionCardProps) {
   const homeDisplay = getDisplayTeam(match.home_team, match.home_slot);
   const awayDisplay = getDisplayTeam(match.away_team, match.away_slot);
-  const editable = isEditable(match.status);
+  const editable = isEditable(match);
+
+  const [homeScore, setHomeScore] = useState(
+    prediction?.predicted_home_score === null ||
+      prediction?.predicted_home_score === undefined
+      ? ""
+      : String(prediction.predicted_home_score)
+  );
+
+  const [awayScore, setAwayScore] = useState(
+    prediction?.predicted_away_score === null ||
+      prediction?.predicted_away_score === undefined
+      ? ""
+      : String(prediction.predicted_away_score)
+  );
+
+  const [hasPrediction, setHasPrediction] = useState(Boolean(prediction));
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!editable) {
+      return;
+    }
+
+    setLoading(true);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/pools/${poolId}/predictions/save`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          matchId: match.id,
+          predictedHomeScore: Number(homeScore),
+          predictedAwayScore: Number(awayScore),
+        }),
+      });
+
+      const result = (await response.json()) as {
+        ok?: boolean;
+        message?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !result.ok) {
+        setError(result.error ?? "Voorspelling opslaan is mislukt.");
+        setLoading(false);
+        return;
+      }
+
+      setHasPrediction(true);
+      setMessage(result.message ?? "Voorspelling opgeslagen.");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Onbekende fout tijdens opslaan."
+      );
+    }
+
+    setLoading(false);
+  }
 
   return (
     <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-2.5 transition hover:border-zinc-700">
@@ -126,19 +207,20 @@ export default function MatchPredictionCard({
         </div>
       </div>
 
-      <form action={saveAction} className="mt-2.5">
-        <input type="hidden" name="match_id" value={match.id} />
-
+      <form onSubmit={handleSubmit} className="mt-2.5">
         <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2 rounded-lg border border-zinc-800 bg-zinc-950/60 p-2.5">
           <div>
-            <p className="mb-1 text-sm font-semibold text-white">{homeDisplay}</p>
+            <p className="mb-1 text-sm font-semibold text-white">
+              {homeDisplay}
+            </p>
             <input
               name="predicted_home_score"
               type="number"
               min="0"
               inputMode="numeric"
-              defaultValue={prediction?.predicted_home_score ?? ""}
-              disabled={!editable}
+              value={homeScore}
+              onChange={(event) => setHomeScore(event.target.value)}
+              disabled={!editable || loading}
               className="h-10 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 text-center text-sm font-semibold text-white outline-none transition focus:border-white disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="-"
               required={editable}
@@ -150,14 +232,17 @@ export default function MatchPredictionCard({
           </div>
 
           <div>
-            <p className="mb-1 text-sm font-semibold text-white">{awayDisplay}</p>
+            <p className="mb-1 text-sm font-semibold text-white">
+              {awayDisplay}
+            </p>
             <input
               name="predicted_away_score"
               type="number"
               min="0"
               inputMode="numeric"
-              defaultValue={prediction?.predicted_away_score ?? ""}
-              disabled={!editable}
+              value={awayScore}
+              onChange={(event) => setAwayScore(event.target.value)}
+              disabled={!editable || loading}
               className="h-10 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 text-center text-sm font-semibold text-white outline-none transition focus:border-white disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="-"
               required={editable}
@@ -165,9 +250,21 @@ export default function MatchPredictionCard({
           </div>
         </div>
 
+        {error ? (
+          <div className="mt-2 rounded-md border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-[11px] text-red-200">
+            {error}
+          </div>
+        ) : null}
+
+        {message ? (
+          <div className="mt-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] text-emerald-200">
+            {message}
+          </div>
+        ) : null}
+
         <div className="mt-2 flex items-center justify-between gap-2">
           <div className="text-[10px] text-zinc-500">
-            {prediction
+            {hasPrediction
               ? "Voorspelling opgeslagen"
               : editable
               ? "Nog geen voorspelling"
@@ -176,10 +273,10 @@ export default function MatchPredictionCard({
 
           <button
             type="submit"
-            disabled={!editable}
+            disabled={!editable || loading}
             className="rounded-md bg-white px-3 py-1.5 text-[11px] font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Opslaan
+            {loading ? "Opslaan..." : "Opslaan"}
           </button>
         </div>
       </form>

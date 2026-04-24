@@ -387,8 +387,8 @@ export default async function PoolMatchesPage({
                         <MatchPredictionCard
                           key={match.id}
                           match={match}
+                          poolId={pool.id}
                           prediction={predictionMap.get(match.id) ?? null}
-                          saveAction={savePrediction}
                         />
                       ))}
                     </div>

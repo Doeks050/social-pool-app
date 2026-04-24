@@ -1,3 +1,7 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+
 type MatchResultAdminCardProps = {
   match: {
     id: string;
@@ -18,7 +22,6 @@ type MatchResultAdminCardProps = {
     away_score: number | null;
     is_knockout: boolean | null;
   };
-  saveAction: (formData: FormData) => Promise<void>;
 };
 
 function formatMatchDate(value: string) {
@@ -40,7 +43,7 @@ function getDisplayTeam(team: string | null, slot: string | null) {
 }
 
 function getStageLabel(match: MatchResultAdminCardProps["match"]) {
-  if (match.group_label) return `Group ${match.group_label}`;
+  if (match.group_label) return match.group_label;
   if (match.round_name) return match.round_name;
   if (match.stage) return match.stage;
   return "Wedstrijd";
@@ -71,11 +74,66 @@ function getStatusClasses(status: string) {
 
 export default function MatchResultAdminCard({
   match,
-  saveAction,
 }: MatchResultAdminCardProps) {
   const homeDisplay = getDisplayTeam(match.home_team, match.home_slot);
   const awayDisplay = getDisplayTeam(match.away_team, match.away_slot);
   const matchNumber = match.match_number;
+
+  const [homeScore, setHomeScore] = useState(
+    match.home_score === null ? "" : String(match.home_score)
+  );
+  const [awayScore, setAwayScore] = useState(
+    match.away_score === null ? "" : String(match.away_score)
+  );
+  const [status, setStatus] = useState(match.status);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    setLoading(true);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin/world-cup/results/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          matchId: match.id,
+          homeScore: Number(homeScore),
+          awayScore: Number(awayScore),
+        }),
+      });
+
+      const result = (await response.json()) as {
+        ok?: boolean;
+        message?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !result.ok) {
+        setError(result.error ?? "Opslaan mislukt.");
+        setLoading(false);
+        return;
+      }
+
+      setStatus("finished");
+      setMessage(result.message ?? "Resultaat opgeslagen.");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Onbekende fout tijdens opslaan."
+      );
+    }
+
+    setLoading(false);
+  }
 
   return (
     <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-2.5 transition hover:border-zinc-700">
@@ -100,28 +158,30 @@ export default function MatchResultAdminCard({
 
         <div
           className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${getStatusClasses(
-            match.status
+            status
           )}`}
         >
-          {getStatusLabel(match.status)}
+          {getStatusLabel(status)}
         </div>
       </div>
 
-      <form action={saveAction} className="mt-2.5">
-        <input type="hidden" name="match_id" value={match.id} />
-
+      <form onSubmit={handleSubmit} className="mt-2.5">
         <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2 rounded-lg border border-zinc-800 bg-zinc-950/60 p-2.5">
           <div>
-            <p className="mb-1 text-sm font-semibold text-white">{homeDisplay}</p>
+            <p className="mb-1 text-sm font-semibold text-white">
+              {homeDisplay}
+            </p>
             <input
               name="home_score"
               type="number"
               min="0"
               inputMode="numeric"
-              defaultValue={match.home_score ?? ""}
+              value={homeScore}
+              onChange={(event) => setHomeScore(event.target.value)}
               className="h-10 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 text-center text-sm font-semibold text-white outline-none transition focus:border-white"
               placeholder="0"
               required
+              disabled={loading}
             />
           </div>
 
@@ -130,26 +190,43 @@ export default function MatchResultAdminCard({
           </div>
 
           <div>
-            <p className="mb-1 text-sm font-semibold text-white">{awayDisplay}</p>
+            <p className="mb-1 text-sm font-semibold text-white">
+              {awayDisplay}
+            </p>
             <input
               name="away_score"
               type="number"
               min="0"
               inputMode="numeric"
-              defaultValue={match.away_score ?? ""}
+              value={awayScore}
+              onChange={(event) => setAwayScore(event.target.value)}
               className="h-10 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 text-center text-sm font-semibold text-white outline-none transition focus:border-white"
               placeholder="0"
               required
+              disabled={loading}
             />
           </div>
         </div>
 
+        {error ? (
+          <div className="mt-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+            {error}
+          </div>
+        ) : null}
+
+        {message ? (
+          <div className="mt-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
+            {message}
+          </div>
+        ) : null}
+
         <div className="mt-2 flex justify-end">
           <button
             type="submit"
-            className="rounded-md bg-white px-3 py-1.5 text-[11px] font-semibold text-zinc-950 transition hover:bg-zinc-200"
+            disabled={loading}
+            className="rounded-md bg-white px-3 py-1.5 text-[11px] font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Opslaan
+            {loading ? "Opslaan..." : "Opslaan"}
           </button>
         </div>
       </form>
