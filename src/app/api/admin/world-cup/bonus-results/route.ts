@@ -59,17 +59,25 @@ export async function POST(request: Request) {
   const answers = payload.answers ?? {};
   const entries = Object.entries(answers);
 
+  if (entries.length === 0) {
+    return NextResponse.json(
+      { error: "Geen bonusantwoorden ontvangen." },
+      { status: 400 }
+    );
+  }
+
+  let savedCount = 0;
+
   for (const [questionId, rawAnswer] of entries) {
     const answer = rawAnswer.trim();
 
-    const { error: updateError } = await supabase
+    const { data: updatedRows, error: updateError } = await supabase
       .from("bonus_question_templates")
       .update({
         correct_answer: answer.length > 0 ? answer : null,
       })
       .eq("id", questionId)
-      .eq("game_type", "world_cup")
-      .eq("is_active", true);
+      .select("id, label, correct_answer");
 
     if (updateError) {
       return NextResponse.json(
@@ -77,6 +85,22 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
+
+    if (!updatedRows || updatedRows.length === 0) {
+      return NextResponse.json(
+        {
+          error: `Geen bonusvraag gevonden of geen update toegestaan voor questionId: ${questionId}`,
+        },
+        { status: 404 }
+      );
+    }
+
+    savedCount += updatedRows.length;
+
+    console.log("bonus result saved:", {
+      questionId,
+      savedAnswer: updatedRows[0]?.correct_answer,
+    });
   }
 
   revalidatePath("/admin/world-cup/bonus");
@@ -85,6 +109,6 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
-    saved: entries.length,
+    saved: savedCount,
   });
 }
