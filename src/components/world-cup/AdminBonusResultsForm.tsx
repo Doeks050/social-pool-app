@@ -1,7 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
-import { createClient } from "@/lib/supabase-browser";
+import { FormEvent, useState } from "react";
 
 type AdminBonusQuestion = {
   id: string;
@@ -20,12 +19,12 @@ type AdminBonusResultsFormProps = {
 export default function AdminBonusResultsForm({
   questions,
 }: AdminBonusResultsFormProps) {
-  const supabase = useMemo(() => createClient(), []);
   const [values, setValues] = useState<Record<string, string>>(
     Object.fromEntries(
       questions.map((question) => [question.id, question.correctAnswer ?? ""])
     )
   );
+
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -44,24 +43,38 @@ export default function AdminBonusResultsForm({
     setMessage(null);
     setError(null);
 
-    for (const question of questions) {
-      const answer = values[question.id]?.trim() ?? "";
+    try {
+      const response = await fetch("/api/admin/world-cup/bonus-results", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          answers: values,
+        }),
+      });
 
-      const { error: updateError } = await supabase
-        .from("bonus_question_templates")
-        .update({
-          correct_answer: answer.length > 0 ? answer : null,
-        })
-        .eq("id", question.id);
+      const result = (await response.json()) as {
+        ok?: boolean;
+        saved?: number;
+        error?: string;
+      };
 
-      if (updateError) {
-        setError(updateError.message);
+      if (!response.ok || !result.ok) {
+        setError(result.error ?? "Bonusresultaten opslaan is mislukt.");
         setLoading(false);
         return;
       }
+
+      setMessage(`Bonusresultaten opgeslagen (${result.saved ?? 0}).`);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Onbekende fout tijdens opslaan."
+      );
     }
 
-    setMessage("Bonusresultaten opgeslagen.");
     setLoading(false);
   }
 

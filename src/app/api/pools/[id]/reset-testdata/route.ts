@@ -8,6 +8,15 @@ type RouteContext = {
   }>;
 };
 
+function redirectTo(path: string, status = 303) {
+  return new NextResponse(null, {
+    status,
+    headers: {
+      Location: path,
+    },
+  });
+}
+
 export async function POST(_request: Request, context: RouteContext) {
   const { id } = await context.params;
 
@@ -17,7 +26,7 @@ export async function POST(_request: Request, context: RouteContext) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(new URL("/auth", _request.url));
+    return redirectTo("/auth");
   }
 
   const { data: membership } = await supabase
@@ -28,14 +37,14 @@ export async function POST(_request: Request, context: RouteContext) {
     .maybeSingle();
 
   if (!membership) {
-    return NextResponse.redirect(new URL(`/pools/${id}`, _request.url));
+    return redirectTo(`/pools/${id}`);
   }
 
   const canManage =
     membership.role === "owner" || membership.role === "admin";
 
   if (!canManage) {
-    return NextResponse.redirect(new URL(`/pools/${id}`, _request.url));
+    return redirectTo(`/pools/${id}`);
   }
 
   await supabase.from("predictions").delete().eq("pool_id", id);
@@ -46,5 +55,5 @@ export async function POST(_request: Request, context: RouteContext) {
   revalidatePath(`/pools/${id}/bonus`);
   revalidatePath(`/pools/${id}/leaderboard`);
 
-  return NextResponse.redirect(new URL(`/pools/${id}`, _request.url), 303);
+  return redirectTo(`/pools/${id}`);
 }
