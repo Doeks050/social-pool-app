@@ -3,8 +3,8 @@ import Link from "next/link";
 import Container from "@/components/Container";
 import MatchResultAdminCard from "@/components/world-cup/MatchResultAdminCard";
 import ResetMatchResultButton from "@/components/world-cup/ResetMatchResultButton";
+import KnockoutOverridePanel from "@/components/world-cup/KnockoutOverridePanel";
 import { createClient } from "@/lib/supabase";
-import { syncKnockoutTeams } from "@/lib/world-cup/syncKnockoutTeams";
 import type { WorldCupMatchRow } from "@/lib/world-cup/slotResolver";
 
 type ResultsPageProps = {
@@ -104,22 +104,6 @@ function isKnockoutLike(match: WorldCupMatchRow) {
   return (match.stage_type ?? "").toLowerCase() !== "group";
 }
 
-function prettifySlot(slot: string | null) {
-  if (!slot) return "Automatische plek";
-
-  return slot
-    .replace(/_/g, " ")
-    .replace(/\bgroup\b/gi, "Group")
-    .replace(/\bwinner\b/gi, "Winner")
-    .replace(/\brunnerup\b/gi, "Runner-up")
-    .replace(/\bloser\b/gi, "Loser")
-    .replace(/\bround\b/gi, "Round")
-    .replace(/\bof\b/gi, "of")
-    .replace(/\bquarterfinal\b/gi, "Quarterfinal")
-    .replace(/\bsemifinal\b/gi, "Semifinal")
-    .replace(/\bfinal\b/gi, "Final");
-}
-
 function buildAllTournamentTeams(matches: SyncableWorldCupMatchRow[]) {
   const teamSet = new Set<string>();
 
@@ -210,147 +194,6 @@ function getTeamsForSlot(
   }
 
   return groupTeams;
-}
-
-async function saveKnockoutSideOverride(formData: FormData) {
-  "use server";
-
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/auth");
-  }
-
-  const { data: appAdmin } = await supabase
-    .from("app_admins")
-    .select("user_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (!appAdmin) {
-    notFound();
-  }
-
-  const matchId = String(formData.get("match_id") ?? "").trim();
-  const side = String(formData.get("side") ?? "").trim();
-  const teamName = String(formData.get("team_name") ?? "").trim();
-
-  if (!matchId || (side !== "home" && side !== "away")) {
-    redirect(
-      "/admin/world-cup/results?error=" +
-        encodeURIComponent("Ongeldige override invoer.")
-    );
-  }
-
-  const updatePayload =
-    side === "home"
-      ? {
-          home_team: teamName || null,
-          home_team_locked_by_admin: true,
-        }
-      : {
-          away_team: teamName || null,
-          away_team_locked_by_admin: true,
-        };
-
-  const { error } = await supabase
-    .from("matches")
-    .update(updatePayload)
-    .eq("id", matchId);
-
-  if (error) {
-    redirect(
-      "/admin/world-cup/results?error=" + encodeURIComponent(error.message)
-    );
-  }
-
-  redirect(
-    "/admin/world-cup/results?success=" +
-      encodeURIComponent(
-        side === "home"
-          ? "Home team handmatig opgeslagen."
-          : "Away team handmatig opgeslagen."
-      )
-  );
-}
-
-async function resetKnockoutSideOverride(formData: FormData) {
-  "use server";
-
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/auth");
-  }
-
-  const { data: appAdmin } = await supabase
-    .from("app_admins")
-    .select("user_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (!appAdmin) {
-    notFound();
-  }
-
-  const matchId = String(formData.get("match_id") ?? "").trim();
-  const side = String(formData.get("side") ?? "").trim();
-
-  if (!matchId || (side !== "home" && side !== "away")) {
-    redirect(
-      "/admin/world-cup/results?error=" +
-        encodeURIComponent("Ongeldige reset invoer.")
-    );
-  }
-
-  const updatePayload =
-    side === "home"
-      ? {
-          home_team_locked_by_admin: false,
-        }
-      : {
-          away_team_locked_by_admin: false,
-        };
-
-  const { error: unlockError } = await supabase
-    .from("matches")
-    .update(updatePayload)
-    .eq("id", matchId);
-
-  if (unlockError) {
-    redirect(
-      "/admin/world-cup/results?error=" +
-        encodeURIComponent(unlockError.message)
-    );
-  }
-
-  try {
-    await syncKnockoutTeams(supabase);
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Onbekende sync fout.";
-
-    redirect(
-      "/admin/world-cup/results?error=" + encodeURIComponent(message)
-    );
-  }
-
-  redirect(
-    "/admin/world-cup/results?success=" +
-      encodeURIComponent(
-        side === "home"
-          ? "Home team reset naar auto-sync."
-          : "Away team reset naar auto-sync."
-      )
-  );
 }
 
 export default async function WorldCupResultsPage({
@@ -548,138 +391,21 @@ export default async function WorldCupResultsPage({
                             <ResetMatchResultButton matchId={match.id} />
 
                             {isKnockoutLike(match) ? (
-                              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-                                <div className="mb-2">
-                                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-200">
-                                    Handmatige knockout override
-                                  </p>
-                                  <p className="mt-1 text-[11px] text-zinc-400">
-                                    Groepsslots tonen alleen landen uit de juiste groep.
-                                  </p>
-                                </div>
-
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                  <div className="rounded-md border border-zinc-800 bg-zinc-950/40 p-2.5">
-                                    <div className="mb-2 flex items-center justify-between gap-2">
-                                      <div>
-                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-300">
-                                          Home side
-                                        </p>
-                                        <p className="mt-0.5 text-[10px] text-zinc-500">
-                                          {prettifySlot(match.home_slot)}
-                                        </p>
-                                      </div>
-
-                                      {match.home_team_locked_by_admin ? (
-                                        <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200">
-                                          Locked
-                                        </span>
-                                      ) : (
-                                        <span className="rounded-full border border-zinc-700 bg-zinc-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
-                                          Auto
-                                        </span>
-                                      )}
-                                    </div>
-
-                                    <form action={saveKnockoutSideOverride} className="space-y-2">
-                                      <input type="hidden" name="match_id" value={match.id} />
-                                      <input type="hidden" name="side" value="home" />
-
-                                      <select
-                                        name="team_name"
-                                        defaultValue={match.home_team ?? ""}
-                                        className="h-10 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-white"
-                                      >
-                                        <option value="">Kies land</option>
-                                        {homeOptions.map((team) => (
-                                          <option key={`home-${match.id}-${team}`} value={team}>
-                                            {team}
-                                          </option>
-                                        ))}
-                                      </select>
-
-                                      <button
-                                        type="submit"
-                                        className="rounded-md bg-white px-3 py-1.5 text-[11px] font-semibold text-zinc-950 transition hover:bg-zinc-200"
-                                      >
-                                        Home opslaan
-                                      </button>
-                                    </form>
-
-                                    <form action={resetKnockoutSideOverride} className="mt-2">
-                                      <input type="hidden" name="match_id" value={match.id} />
-                                      <input type="hidden" name="side" value="home" />
-
-                                      <button
-                                        type="submit"
-                                        className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-[11px] font-semibold text-zinc-200 transition hover:border-zinc-500 hover:text-white"
-                                      >
-                                        Reset home
-                                      </button>
-                                    </form>
-                                  </div>
-
-                                  <div className="rounded-md border border-zinc-800 bg-zinc-950/40 p-2.5">
-                                    <div className="mb-2 flex items-center justify-between gap-2">
-                                      <div>
-                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-300">
-                                          Away side
-                                        </p>
-                                        <p className="mt-0.5 text-[10px] text-zinc-500">
-                                          {prettifySlot(match.away_slot)}
-                                        </p>
-                                      </div>
-
-                                      {match.away_team_locked_by_admin ? (
-                                        <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200">
-                                          Locked
-                                        </span>
-                                      ) : (
-                                        <span className="rounded-full border border-zinc-700 bg-zinc-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
-                                          Auto
-                                        </span>
-                                      )}
-                                    </div>
-
-                                    <form action={saveKnockoutSideOverride} className="space-y-2">
-                                      <input type="hidden" name="match_id" value={match.id} />
-                                      <input type="hidden" name="side" value="away" />
-
-                                      <select
-                                        name="team_name"
-                                        defaultValue={match.away_team ?? ""}
-                                        className="h-10 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-white"
-                                      >
-                                        <option value="">Kies land</option>
-                                        {awayOptions.map((team) => (
-                                          <option key={`away-${match.id}-${team}`} value={team}>
-                                            {team}
-                                          </option>
-                                        ))}
-                                      </select>
-
-                                      <button
-                                        type="submit"
-                                        className="rounded-md bg-white px-3 py-1.5 text-[11px] font-semibold text-zinc-950 transition hover:bg-zinc-200"
-                                      >
-                                        Away opslaan
-                                      </button>
-                                    </form>
-
-                                    <form action={resetKnockoutSideOverride} className="mt-2">
-                                      <input type="hidden" name="match_id" value={match.id} />
-                                      <input type="hidden" name="side" value="away" />
-
-                                      <button
-                                        type="submit"
-                                        className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-[11px] font-semibold text-zinc-200 transition hover:border-zinc-500 hover:text-white"
-                                      >
-                                        Reset away
-                                      </button>
-                                    </form>
-                                  </div>
-                                </div>
-                              </div>
+                              <KnockoutOverridePanel
+                                matchId={match.id}
+                                homeSlot={match.home_slot}
+                                awaySlot={match.away_slot}
+                                homeTeam={match.home_team}
+                                awayTeam={match.away_team}
+                                homeTeamLockedByAdmin={
+                                  match.home_team_locked_by_admin
+                                }
+                                awayTeamLockedByAdmin={
+                                  match.away_team_locked_by_admin
+                                }
+                                homeOptions={homeOptions}
+                                awayOptions={awayOptions}
+                              />
                             ) : null}
                           </div>
                         );
