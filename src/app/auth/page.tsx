@@ -52,10 +52,12 @@ export default function AuthPage() {
         return;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data: signInData, error } = await supabase.auth.signInWithPassword(
+        {
+          email,
+          password,
+        }
+      );
 
       if (error) {
         setError(error.message);
@@ -63,7 +65,21 @@ export default function AuthPage() {
         return;
       }
 
-      router.push("/dashboard");
+      const userId = signInData.user?.id;
+
+      if (!userId) {
+        router.push("/dashboard");
+        router.refresh();
+        return;
+      }
+
+      const { data: appAdmin } = await supabase
+        .from("app_admins")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      router.push(appAdmin ? "/admin" : "/dashboard");
       router.refresh();
     } catch {
       setError("Er ging iets mis. Probeer het opnieuw.");
