@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import SignOutButton from "@/components/SignOutButton";
+import DeletePoolButton from "@/components/admin/DeletePoolButton";
 import { createClient } from "@/lib/supabase";
 import { getPoolTypeMeta } from "@/lib/pool-types";
 
@@ -274,7 +275,8 @@ export default async function DashboardPage() {
                     </div>
 
                     <p className="text-sm text-zinc-500">
-                      {appPools.length} {appPools.length === 1 ? "pool" : "pools"}
+                      {appPools.length}{" "}
+                      {appPools.length === 1 ? "pool" : "pools"}
                     </p>
                   </div>
 
@@ -371,6 +373,11 @@ export default async function DashboardPage() {
                                     </form>
                                   </>
                                 ) : null}
+
+                                <DeletePoolButton
+                                  poolId={pool.id}
+                                  poolName={pool.name}
+                                />
                               </div>
                             </div>
                           </div>
