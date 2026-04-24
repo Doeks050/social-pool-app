@@ -37,36 +37,44 @@ export async function POST(_request: Request, context: RouteContext) {
     return redirectTo("/auth");
   }
 
-  const { data: membership, error: membershipError } = await supabase
-    .from("pool_members")
-    .select("role")
-    .eq("pool_id", id)
+  const { data: appAdmin, error: appAdminError } = await supabase
+    .from("app_admins")
+    .select("user_id")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (membershipError) {
-    return new NextResponse(
-      `Membership lookup failed: ${membershipError.message}`,
-      { status: 500 }
-    );
+  if (appAdminError) {
+    return new NextResponse(`App admin check failed: ${appAdminError.message}`, {
+      status: 500,
+    });
   }
 
-  if (!membership) {
-    return redirectTo(`/pools/${id}`);
+  if (!appAdmin) {
+    return new NextResponse("Alleen app admins mogen alle testdata resetten.", {
+      status: 403,
+    });
   }
 
-  const canManage =
-    membership.role === "owner" || membership.role === "admin";
+  const { data: pool, error: poolError } = await supabase
+    .from("pools")
+    .select("id, game_type")
+    .eq("id", id)
+    .maybeSingle();
 
-  if (!canManage) {
+  if (poolError) {
+    return new NextResponse(`Pool lookup failed: ${poolError.message}`, {
+      status: 500,
+    });
+  }
+
+  if (!pool || pool.game_type !== "world_cup") {
     return redirectTo(`/pools/${id}`);
   }
 
   const { error: predictionsDeleteError } = await supabase
     .from("predictions")
     .delete()
-    .eq("pool_id", id)
-    .eq("user_id", user.id);
+    .eq("pool_id", id);
 
   if (predictionsDeleteError) {
     return new NextResponse(
@@ -78,8 +86,7 @@ export async function POST(_request: Request, context: RouteContext) {
   const { error: bonusDeleteError } = await supabase
     .from("bonus_question_answers")
     .delete()
-    .eq("pool_id", id)
-    .eq("user_id", user.id);
+    .eq("pool_id", id);
 
   if (bonusDeleteError) {
     return new NextResponse(

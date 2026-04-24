@@ -1,8 +1,11 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
 import PoolMatchesDateGroup from "@/components/world-cup/PoolMatchesDateGroup";
+
+export const dynamic = "force-dynamic";
 
 type PoolMatchesPageProps = {
   params: Promise<{
