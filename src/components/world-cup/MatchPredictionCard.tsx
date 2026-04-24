@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 type MatchPredictionCardProps = {
   match: {
@@ -100,6 +100,10 @@ function isEditable(match: MatchPredictionCardProps["match"]) {
   return new Date(match.starts_at).getTime() > Date.now();
 }
 
+function getScoreValue(value: number | null | undefined) {
+  return value === null || value === undefined ? "" : String(value);
+}
+
 export default function MatchPredictionCard({
   match,
   poolId,
@@ -110,23 +114,27 @@ export default function MatchPredictionCard({
   const editable = isEditable(match);
 
   const [homeScore, setHomeScore] = useState(
-    prediction?.predicted_home_score === null ||
-      prediction?.predicted_home_score === undefined
-      ? ""
-      : String(prediction.predicted_home_score)
+    getScoreValue(prediction?.predicted_home_score)
   );
-
   const [awayScore, setAwayScore] = useState(
-    prediction?.predicted_away_score === null ||
-      prediction?.predicted_away_score === undefined
-      ? ""
-      : String(prediction.predicted_away_score)
+    getScoreValue(prediction?.predicted_away_score)
   );
-
   const [hasPrediction, setHasPrediction] = useState(Boolean(prediction));
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setHomeScore(getScoreValue(prediction?.predicted_home_score));
+    setAwayScore(getScoreValue(prediction?.predicted_away_score));
+    setHasPrediction(Boolean(prediction));
+    setMessage(null);
+    setError(null);
+  }, [
+    prediction?.id,
+    prediction?.predicted_home_score,
+    prediction?.predicted_away_score,
+  ]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
