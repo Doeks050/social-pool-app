@@ -53,6 +53,8 @@ function SidePanel({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const sideLabel = side === "home" ? "Home" : "Away";
+
   async function saveOverride() {
     setLoading(true);
     setMessage(null);
@@ -84,7 +86,7 @@ function SidePanel({
       }
 
       setIsLocked(true);
-      setMessage(result.message ?? "Opgeslagen.");
+      setMessage("Opgeslagen.");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Onbekende fout tijdens opslaan."
@@ -96,7 +98,7 @@ function SidePanel({
 
   async function resetOverride() {
     const confirmed = window.confirm(
-      `Weet je zeker dat je ${side === "home" ? "home" : "away"} wilt resetten naar auto-sync?`
+      `Weet je zeker dat je ${sideLabel.toLowerCase()} wilt resetten naar auto-sync?`
     );
 
     if (!confirmed) {
@@ -132,7 +134,7 @@ function SidePanel({
       }
 
       setIsLocked(false);
-      setMessage(result.message ?? "Reset uitgevoerd.");
+      setMessage("Reset naar auto-sync.");
       window.location.reload();
     } catch (err) {
       setError(
@@ -144,34 +146,34 @@ function SidePanel({
   }
 
   return (
-    <div className="rounded-md border border-zinc-800 bg-zinc-950/40 p-2.5">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-300">
-            {side === "home" ? "Home side" : "Away side"}
+    <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-2.5">
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400">
+            {sideLabel}
           </p>
-          <p className="mt-0.5 text-[10px] text-zinc-500">
+          <p className="mt-0.5 truncate text-[11px] text-zinc-500">
             {prettifySlot(slot)}
           </p>
         </div>
 
-        {isLocked ? (
-          <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200">
-            Locked
-          </span>
-        ) : (
-          <span className="rounded-full border border-zinc-700 bg-zinc-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
-            Auto
-          </span>
-        )}
+        <span
+          className={
+            isLocked
+              ? "shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200"
+              : "shrink-0 rounded-full border border-zinc-700 bg-zinc-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400"
+          }
+        >
+          {isLocked ? "Locked" : "Auto"}
+        </span>
       </div>
 
-      <div className="space-y-2">
+      <div className="grid gap-2">
         <select
           value={selectedTeam}
           onChange={(event) => setSelectedTeam(event.target.value)}
           disabled={loading}
-          className="h-10 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-white disabled:opacity-60"
+          className="h-9 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 text-xs text-white outline-none transition focus:border-white disabled:opacity-60"
         >
           <option value="">Kies land</option>
           {options.map((team) => (
@@ -181,39 +183,35 @@ function SidePanel({
           ))}
         </select>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={saveOverride}
             disabled={loading}
             className="rounded-md bg-white px-3 py-1.5 text-[11px] font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading
-              ? "Opslaan..."
-              : side === "home"
-              ? "Home opslaan"
-              : "Away opslaan"}
+            {loading ? "..." : "Opslaan"}
           </button>
 
           <button
             type="button"
             onClick={resetOverride}
             disabled={loading}
-            className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-[11px] font-semibold text-zinc-200 transition hover:border-zinc-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-[11px] font-semibold text-zinc-300 transition hover:border-zinc-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {side === "home" ? "Reset home" : "Reset away"}
+            Reset
           </button>
         </div>
       </div>
 
       {error ? (
-        <div className="mt-2 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-[11px] text-red-200">
+        <div className="mt-2 rounded-md border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-[11px] text-red-200">
           {error}
         </div>
       ) : null}
 
       {message ? (
-        <div className="mt-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-[11px] text-emerald-200">
+        <div className="mt-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] text-emerald-200">
           {message}
         </div>
       ) : null}
@@ -233,17 +231,17 @@ export default function KnockoutOverridePanel({
   awayOptions,
 }: KnockoutOverridePanelProps) {
   return (
-    <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-      <div className="mb-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-200">
-          Handmatige knockout override
+    <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 p-2.5">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-200">
+          Knockout override
         </p>
-        <p className="mt-1 text-[11px] text-zinc-400">
-          Groepsslots tonen alleen landen uit de juiste groep.
+        <p className="hidden text-[10px] text-zinc-500 sm:block">
+          Handmatige fallback
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-2 sm:grid-cols-2">
         <SidePanel
           matchId={matchId}
           side="home"

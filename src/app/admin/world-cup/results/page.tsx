@@ -1,9 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
-import MatchResultAdminCard from "@/components/world-cup/MatchResultAdminCard";
-import ResetMatchResultButton from "@/components/world-cup/ResetMatchResultButton";
-import KnockoutOverridePanel from "@/components/world-cup/KnockoutOverridePanel";
+import AdminResultsDateGroup from "@/components/world-cup/AdminResultsDateGroup";
 import { createClient } from "@/lib/supabase";
 import type { WorldCupMatchRow } from "@/lib/world-cup/slotResolver";
 
@@ -30,6 +28,11 @@ type DateGroup = {
   key: string;
   label: string;
   matches: SyncableWorldCupMatchRow[];
+};
+
+type MatchOptions = {
+  homeOptions: string[];
+  awayOptions: string[];
 };
 
 const PHASE_OPTIONS: PhaseOption[] = [
@@ -98,10 +101,6 @@ function matchesPhase(match: WorldCupMatchRow, phase: string) {
   }
 
   return (match.stage_type ?? "").toLowerCase() === phase;
-}
-
-function isKnockoutLike(match: WorldCupMatchRow) {
-  return (match.stage_type ?? "").toLowerCase() !== "group";
 }
 
 function buildAllTournamentTeams(matches: SyncableWorldCupMatchRow[]) {
@@ -288,6 +287,23 @@ export default async function WorldCupResultsPage({
     }))
     .sort((a, b) => a.key.localeCompare(b.key));
 
+  const matchOptions: Record<string, MatchOptions> = {};
+
+  for (const match of typedMatches) {
+    matchOptions[match.id] = {
+      homeOptions: getTeamsForSlot(
+        match.home_slot,
+        allTournamentTeams,
+        groupTeamsMap
+      ),
+      awayOptions: getTeamsForSlot(
+        match.away_slot,
+        allTournamentTeams,
+        groupTeamsMap
+      ),
+    };
+  }
+
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <section className="py-6 sm:py-8">
@@ -350,68 +366,15 @@ export default async function WorldCupResultsPage({
                 Geen wedstrijden gevonden voor deze filter.
               </div>
             ) : (
-              <div className="space-y-3">
-                {groupedMatches.map((group) => (
-                  <section
+              <div className="space-y-2">
+                {groupedMatches.map((group, index) => (
+                  <AdminResultsDateGroup
                     key={group.key}
-                    className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3"
-                  >
-                    <div className="mb-2 flex items-end justify-between gap-3 border-b border-zinc-800 pb-2">
-                      <h2 className="text-sm font-semibold capitalize text-white sm:text-base">
-                        {group.label}
-                      </h2>
-                      <p className="text-[11px] text-zinc-500">
-                        {group.matches.length}{" "}
-                        {group.matches.length === 1
-                          ? "wedstrijd"
-                          : "wedstrijden"}
-                      </p>
-                    </div>
-
-                    <div className="grid gap-2 lg:grid-cols-2">
-                      {group.matches.map((match) => {
-                        const homeOptions = getTeamsForSlot(
-                          match.home_slot,
-                          allTournamentTeams,
-                          groupTeamsMap
-                        );
-                        const awayOptions = getTeamsForSlot(
-                          match.away_slot,
-                          allTournamentTeams,
-                          groupTeamsMap
-                        );
-
-                        return (
-                          <div
-                            key={match.id}
-                            className="space-y-2 rounded-xl border border-zinc-800/60 bg-zinc-950/20 p-2"
-                          >
-                            <MatchResultAdminCard match={match} />
-
-                            <ResetMatchResultButton matchId={match.id} />
-
-                            {isKnockoutLike(match) ? (
-                              <KnockoutOverridePanel
-                                matchId={match.id}
-                                homeSlot={match.home_slot}
-                                awaySlot={match.away_slot}
-                                homeTeam={match.home_team}
-                                awayTeam={match.away_team}
-                                homeTeamLockedByAdmin={
-                                  match.home_team_locked_by_admin
-                                }
-                                awayTeamLockedByAdmin={
-                                  match.away_team_locked_by_admin
-                                }
-                                homeOptions={homeOptions}
-                                awayOptions={awayOptions}
-                              />
-                            ) : null}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </section>
+                    label={group.label}
+                    matches={group.matches}
+                    matchOptions={matchOptions}
+                    defaultOpen={index === 0}
+                  />
                 ))}
               </div>
             )}

@@ -21,20 +21,35 @@ export async function POST(_request: Request, context: RouteContext) {
   const { id } = await context.params;
 
   const supabase = await createClient();
+
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
+
+  if (userError) {
+    return new NextResponse(`Auth error: ${userError.message}`, {
+      status: 500,
+    });
+  }
 
   if (!user) {
     return redirectTo("/auth");
   }
 
-  const { data: membership } = await supabase
+  const { data: membership, error: membershipError } = await supabase
     .from("pool_members")
     .select("role")
     .eq("pool_id", id)
     .eq("user_id", user.id)
     .maybeSingle();
+
+  if (membershipError) {
+    return new NextResponse(
+      `Membership lookup failed: ${membershipError.message}`,
+      { status: 500 }
+    );
+  }
 
   if (!membership) {
     return redirectTo(`/pools/${id}`);
@@ -47,8 +62,31 @@ export async function POST(_request: Request, context: RouteContext) {
     return redirectTo(`/pools/${id}`);
   }
 
-  await supabase.from("predictions").delete().eq("pool_id", id);
-  await supabase.from("bonus_question_answers").delete().eq("pool_id", id);
+  const { error: predictionsDeleteError } = await supabase
+    .from("predictions")
+    .delete()
+    .eq("pool_id", id)
+    .eq("user_id", user.id);
+
+  if (predictionsDeleteError) {
+    return new NextResponse(
+      `Predictions reset failed: ${predictionsDeleteError.message}`,
+      { status: 500 }
+    );
+  }
+
+  const { error: bonusDeleteError } = await supabase
+    .from("bonus_question_answers")
+    .delete()
+    .eq("pool_id", id)
+    .eq("user_id", user.id);
+
+  if (bonusDeleteError) {
+    return new NextResponse(
+      `Bonus answers reset failed: ${bonusDeleteError.message}`,
+      { status: 500 }
+    );
+  }
 
   revalidatePath(`/pools/${id}`);
   revalidatePath(`/pools/${id}/matches`);

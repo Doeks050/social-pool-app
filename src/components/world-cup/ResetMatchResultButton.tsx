@@ -66,9 +66,9 @@ export default function ResetMatchResultButton({
         type="button"
         onClick={resetResult}
         disabled={loading}
-        className="w-full rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:border-red-500/50 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2 text-xs font-semibold text-zinc-400 transition hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Resetten..." : "Reset uitslag en punten"}
+        {loading ? "Resetten..." : "Reset uitslag"}
       </button>
 
       {error ? (

@@ -1,9 +1,8 @@
-import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
-import MatchPredictionCard from "@/components/world-cup/MatchPredictionCard";
+import PoolMatchesDateGroup from "@/components/world-cup/PoolMatchesDateGroup";
 
 type PoolMatchesPageProps = {
   params: Promise<{
@@ -166,75 +165,6 @@ export default async function PoolMatchesPage({
     notFound();
   }
 
-  async function savePrediction(formData: FormData) {
-    "use server";
-
-    const supabase = await createClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      redirect("/auth");
-    }
-
-    const matchId = String(formData.get("match_id") ?? "");
-    const predictedHomeScore = Number(formData.get("predicted_home_score"));
-    const predictedAwayScore = Number(formData.get("predicted_away_score"));
-
-    if (!matchId) {
-      return;
-    }
-
-    const { data: latestMembership } = await supabase
-      .from("pool_members")
-      .select("id")
-      .eq("pool_id", id)
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (!latestMembership) {
-      notFound();
-    }
-
-    const { data: match } = await supabase
-      .from("matches")
-      .select("id, starts_at, status")
-      .eq("id", matchId)
-      .maybeSingle();
-
-    if (!match) {
-      return;
-    }
-
-    const isLocked =
-      match.status === "finished" ||
-      match.status === "live" ||
-      new Date(match.starts_at).getTime() <= Date.now();
-
-    if (isLocked) {
-      return;
-    }
-
-    await supabase.from("predictions").upsert(
-      {
-        pool_id: id,
-        user_id: user.id,
-        match_id: matchId,
-        predicted_home_score: predictedHomeScore,
-        predicted_away_score: predictedAwayScore,
-      },
-      {
-        onConflict: "pool_id,user_id,match_id",
-      }
-    );
-
-    revalidatePath(`/pools/${id}/matches`);
-    revalidatePath(`/pools/${id}`);
-    revalidatePath(`/pools/${id}/leaderboard`);
-  }
-
   const { data: matches } = await supabase
     .from("matches")
     .select(
@@ -254,7 +184,7 @@ export default async function PoolMatchesPage({
 
   const typedMatches = (matches ?? []) as MatchRow[];
 
-  const predictionMap = new Map(
+  const predictionsByMatchId: Record<string, PredictionRow> = Object.fromEntries(
     ((predictions ?? []) as PredictionRow[]).map((prediction) => [
       prediction.match_id,
       prediction,
@@ -364,35 +294,16 @@ export default async function PoolMatchesPage({
             </div>
 
             {groupedMatches.length > 0 ? (
-              <div className="space-y-3">
-                {groupedMatches.map((group) => (
-                  <section
+              <div className="space-y-2">
+                {groupedMatches.map((group, index) => (
+                  <PoolMatchesDateGroup
                     key={group.key}
-                    className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3"
-                  >
-                    <div className="mb-2 flex items-end justify-between gap-3 border-b border-zinc-800 pb-2">
-                      <h2 className="text-sm font-semibold capitalize text-white sm:text-base">
-                        {group.label}
-                      </h2>
-                      <p className="text-[11px] text-zinc-500">
-                        {group.matches.length}{" "}
-                        {group.matches.length === 1
-                          ? "wedstrijd"
-                          : "wedstrijden"}
-                      </p>
-                    </div>
-
-                    <div className="grid gap-2 lg:grid-cols-2">
-                      {group.matches.map((match) => (
-                        <MatchPredictionCard
-                          key={match.id}
-                          match={match}
-                          poolId={pool.id}
-                          prediction={predictionMap.get(match.id) ?? null}
-                        />
-                      ))}
-                    </div>
-                  </section>
+                    label={group.label}
+                    poolId={pool.id}
+                    matches={group.matches}
+                    predictions={predictionsByMatchId}
+                    defaultOpen={index === 0}
+                  />
                 ))}
               </div>
             ) : (

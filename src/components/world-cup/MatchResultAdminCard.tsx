@@ -28,7 +28,6 @@ function formatMatchDate(value: string) {
   return new Intl.DateTimeFormat("nl-NL", {
     day: "2-digit",
     month: "short",
-    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -43,7 +42,10 @@ function getDisplayTeam(team: string | null, slot: string | null) {
 }
 
 function getStageLabel(match: MatchResultAdminCardProps["match"]) {
-  if (match.group_label) return match.group_label;
+  if (match.group_label && match.group_label.trim()) {
+    return match.group_label.trim();
+  }
+
   if (match.round_name) return match.round_name;
   if (match.stage) return match.stage;
   return "Wedstrijd";
@@ -53,7 +55,7 @@ function getStatusLabel(status: string) {
   if (status === "finished") return "Finished";
   if (status === "live") return "Live";
   if (status === "locked") return "Locked";
-  return "Open";
+  return "Upcoming";
 }
 
 function getStatusClasses(status: string) {
@@ -69,7 +71,7 @@ function getStatusClasses(status: string) {
     return "border-amber-500/30 bg-amber-500/10 text-amber-200";
   }
 
-  return "border-emerald-500/30 bg-emerald-500/10 text-emerald-200";
+  return "border-zinc-700 bg-zinc-950 text-zinc-300";
 }
 
 export default function MatchResultAdminCard({
@@ -140,7 +142,7 @@ export default function MatchResultAdminCard({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-zinc-500">
               {getStageLabel(match)}
             </p>
 
@@ -166,45 +168,63 @@ export default function MatchResultAdminCard({
       </div>
 
       <form onSubmit={handleSubmit} className="mt-2.5">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2 rounded-lg border border-zinc-800 bg-zinc-950/60 p-2.5">
-          <div>
-            <p className="mb-1 text-sm font-semibold text-white">
-              {homeDisplay}
-            </p>
-            <input
-              name="home_score"
-              type="number"
-              min="0"
-              inputMode="numeric"
-              value={homeScore}
-              onChange={(event) => setHomeScore(event.target.value)}
-              className="h-10 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 text-center text-sm font-semibold text-white outline-none transition focus:border-white"
-              placeholder="0"
-              required
-              disabled={loading}
-            />
+        <div className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-2.5">
+          <div className="grid grid-cols-[1fr_42px_1fr] items-end gap-2">
+            <div className="min-w-0">
+              <p className="mb-1 truncate text-sm font-semibold text-white">
+                {homeDisplay}
+              </p>
+              <input
+                name="home_score"
+                type="number"
+                min="0"
+                inputMode="numeric"
+                value={homeScore}
+                onChange={(event) => setHomeScore(event.target.value)}
+                className="h-9 w-full rounded-md border border-zinc-700 bg-zinc-950 px-2 text-center text-sm font-semibold text-white outline-none transition focus:border-white"
+                placeholder="0"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div className="pb-2 text-center text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+              VS
+            </div>
+
+            <div className="min-w-0">
+              <p className="mb-1 truncate text-sm font-semibold text-white">
+                {awayDisplay}
+              </p>
+              <input
+                name="away_score"
+                type="number"
+                min="0"
+                inputMode="numeric"
+                value={awayScore}
+                onChange={(event) => setAwayScore(event.target.value)}
+                className="h-9 w-full rounded-md border border-zinc-700 bg-zinc-950 px-2 text-center text-sm font-semibold text-white outline-none transition focus:border-white"
+                placeholder="0"
+                required
+                disabled={loading}
+              />
+            </div>
           </div>
 
-          <div className="pb-2 text-center text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
-            VS
-          </div>
-
-          <div>
-            <p className="mb-1 text-sm font-semibold text-white">
-              {awayDisplay}
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <p className="text-[10px] text-zinc-500">
+              {status === "finished"
+                ? "Uitslag opgeslagen"
+                : "Nog geen uitslag"}
             </p>
-            <input
-              name="away_score"
-              type="number"
-              min="0"
-              inputMode="numeric"
-              value={awayScore}
-              onChange={(event) => setAwayScore(event.target.value)}
-              className="h-10 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 text-center text-sm font-semibold text-white outline-none transition focus:border-white"
-              placeholder="0"
-              required
+
+            <button
+              type="submit"
               disabled={loading}
-            />
+              className="rounded-md border border-zinc-700 bg-white px-3 py-1.5 text-[11px] font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? "Opslaan..." : "Opslaan"}
+            </button>
           </div>
         </div>
 
@@ -219,16 +239,6 @@ export default function MatchResultAdminCard({
             {message}
           </div>
         ) : null}
-
-        <div className="mt-2 flex justify-end">
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-md bg-white px-3 py-1.5 text-[11px] font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? "Opslaan..." : "Opslaan"}
-          </button>
-        </div>
       </form>
     </div>
   );
