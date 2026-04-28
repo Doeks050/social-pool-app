@@ -195,6 +195,12 @@ function getTeamsForSlot(
   return groupTeams;
 }
 
+function buildResetAllHref(successOrError: "success" | "error", message: string) {
+  return `/admin/world-cup/results?${successOrError}=${encodeURIComponent(
+    message
+  )}`;
+}
+
 export default async function WorldCupResultsPage({
   searchParams,
 }: ResultsPageProps) {
@@ -258,6 +264,10 @@ export default async function WorldCupResultsPage({
     matchesPhase(match, activePhase)
   );
 
+  const finishedCount = allMatches.filter(
+    (match) => match.status === "finished"
+  ).length;
+
   const dateGroupMap = new Map<string, SyncableWorldCupMatchRow[]>();
 
   for (const match of typedMatches) {
@@ -304,6 +314,39 @@ export default async function WorldCupResultsPage({
     };
   }
 
+  async function resetAllResults() {
+    "use server";
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/api/admin/world-cup/results/reset-all`,
+      {
+        method: "POST",
+      }
+    );
+
+    const result = (await response.json().catch(() => null)) as {
+      success?: boolean;
+      message?: string;
+      error?: string;
+    } | null;
+
+    if (!response.ok || !result?.success) {
+      redirect(
+        buildResetAllHref(
+          "error",
+          result?.error ?? "Alle uitslagen resetten mislukt."
+        )
+      );
+    }
+
+    redirect(
+      buildResetAllHref(
+        "success",
+        result.message ?? "Alle WK-uitslagen en punten zijn verwijderd."
+      )
+    );
+  }
+
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
       <section className="py-6 sm:py-8">
@@ -322,9 +365,27 @@ export default async function WorldCupResultsPage({
               <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
                 App admin
               </p>
-              <h1 className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">
-                WK resultaten beheren
-              </h1>
+
+              <div className="mt-1 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+                    WK resultaten beheren
+                  </h1>
+                  <p className="mt-1 text-sm text-zinc-400">
+                    {finishedCount}/{allMatches.length} wedstrijden hebben een
+                    ingevulde uitslag.
+                  </p>
+                </div>
+
+                <form action={resetAllResults}>
+                  <button
+                    type="submit"
+                    className="w-full rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-200 transition hover:border-red-400 hover:bg-red-500/20 sm:w-auto"
+                  >
+                    Verwijder alle uitslagen
+                  </button>
+                </form>
+              </div>
             </div>
 
             {successMessage ? (
