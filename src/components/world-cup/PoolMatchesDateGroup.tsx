@@ -56,6 +56,19 @@ function getMatchState(match: MatchRow): "open" | "locked" | "finished" {
   return "open";
 }
 
+function getStateSummary(matches: MatchRow[]) {
+  const openCount = matches.filter((match) => getMatchState(match) === "open")
+    .length;
+  const lockedCount = matches.filter(
+    (match) => getMatchState(match) === "locked"
+  ).length;
+  const finishedCount = matches.filter(
+    (match) => getMatchState(match) === "finished"
+  ).length;
+
+  return { openCount, lockedCount, finishedCount };
+}
+
 export default function PoolMatchesDateGroup({
   label,
   poolId,
@@ -66,41 +79,56 @@ export default function PoolMatchesDateGroup({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   const predictedCount = matches.filter((match) => predictions[match.id]).length;
-  const finishedCount = matches.filter(
-    (match) => getMatchState(match) === "finished"
-  ).length;
+  const { openCount, lockedCount, finishedCount } = getStateSummary(matches);
 
   return (
-    <section className="rounded-xl border border-zinc-800 bg-zinc-900/40">
+    <section className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] backdrop-blur">
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left transition hover:bg-zinc-900/70"
+        className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition hover:bg-white/[0.04] sm:px-5"
       >
         <div className="min-w-0">
-          <h2 className="truncate text-sm font-semibold capitalize text-white sm:text-base">
+          <p className="mb-1 text-[11px] font-black uppercase tracking-[0.2em] text-emerald-300">
+            Match day
+          </p>
+          <h2 className="truncate text-base font-black capitalize text-white sm:text-lg">
             {label}
           </h2>
-          <p className="mt-0.5 text-[11px] text-zinc-500">
-            {predictedCount}/{matches.length} voorspeld
+          <p className="mt-1 text-xs text-zinc-400">
+            {predictedCount}/{matches.length} predicted
             {finishedCount > 0 ? ` · ${finishedCount} finished` : ""}
           </p>
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <span className="rounded-full border border-zinc-700 bg-zinc-950 px-2.5 py-1 text-[11px] font-semibold text-zinc-300">
-            {matches.length} {matches.length === 1 ? "wedstrijd" : "wedstrijden"}
+          <div className="hidden items-center gap-1 sm:flex">
+            {openCount > 0 ? (
+              <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2.5 py-1 text-[11px] font-bold text-emerald-200">
+                {openCount} open
+              </span>
+            ) : null}
+
+            {lockedCount > 0 ? (
+              <span className="rounded-full border border-orange-300/20 bg-orange-300/10 px-2.5 py-1 text-[11px] font-bold text-orange-100">
+                {lockedCount} locked
+              </span>
+            ) : null}
+          </div>
+
+          <span className="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[11px] font-bold text-zinc-300">
+            {matches.length} {matches.length === 1 ? "match" : "matches"}
           </span>
 
-          <span className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-700 bg-zinc-950 text-sm text-zinc-300">
+          <span className="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-black/25 text-lg font-black text-emerald-200">
             {isOpen ? "−" : "+"}
           </span>
         </div>
       </button>
 
       {isOpen ? (
-        <div className="border-t border-zinc-800 p-3">
-          <div className="grid gap-2 lg:grid-cols-2">
+        <div className="border-t border-white/10 p-3 sm:p-4">
+          <div className="grid gap-3 lg:grid-cols-2">
             {matches.map((match) => (
               <MatchPredictionCard
                 key={match.id}

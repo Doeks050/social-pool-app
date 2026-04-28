@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { unstable_noStore as noStore } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
@@ -75,7 +76,7 @@ function getDateKey(value: string) {
 }
 
 function getDateLabel(value: string) {
-  return new Intl.DateTimeFormat("nl-NL", {
+  return new Intl.DateTimeFormat("en-GB", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -123,16 +124,31 @@ function getFilterHref(poolId: string, filter: MatchFilter) {
 
 function getFilterButtonClasses(isActive: boolean) {
   if (isActive) {
-    return "border-white bg-white text-zinc-950";
+    return "border-emerald-300 bg-emerald-300 text-zinc-950 shadow-[0_12px_35px_rgba(16,185,129,0.2)]";
   }
 
-  return "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500 hover:text-white";
+  return "border-white/10 bg-white/[0.04] text-zinc-300 hover:border-emerald-300/30 hover:text-white";
+}
+
+function getFilterLabel(filter: MatchFilter) {
+  switch (filter) {
+    case "open":
+      return "Open";
+    case "locked":
+      return "Locked";
+    case "finished":
+      return "Finished";
+    default:
+      return "All";
+  }
 }
 
 export default async function PoolMatchesPage({
   params,
   searchParams,
 }: PoolMatchesPageProps) {
+  noStore();
+
   const { id } = await params;
   const resolvedSearchParams = await searchParams;
   const activeFilter = normalizeFilter(resolvedSearchParams.filter);
@@ -187,12 +203,13 @@ export default async function PoolMatchesPage({
 
   const typedMatches = (matches ?? []) as MatchRow[];
 
-  const predictionsByMatchId: Record<string, PredictionRow> = Object.fromEntries(
-    ((predictions ?? []) as PredictionRow[]).map((prediction) => [
-      prediction.match_id,
-      prediction,
-    ])
-  );
+  const predictionsByMatchId: Record<string, PredictionRow> =
+    Object.fromEntries(
+      ((predictions ?? []) as PredictionRow[]).map((prediction) => [
+        prediction.match_id,
+        prediction,
+      ])
+    );
 
   const filteredMatches = typedMatches.filter((match) =>
     matchesFilter(match, activeFilter)
@@ -233,92 +250,134 @@ export default async function PoolMatchesPage({
   ).length;
   const totalAll = typedMatches.length;
 
+  const filterOptions: { value: MatchFilter; count: number }[] = [
+    { value: "all", count: totalAll },
+    { value: "open", count: totalOpen },
+    { value: "locked", count: totalLocked },
+    { value: "finished", count: totalFinished },
+  ];
+
   return (
-    <main className="min-h-screen bg-zinc-950 text-white">
-      <section className="py-6 sm:py-8">
+    <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
+      <section className="relative min-h-screen">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(34,255,160,0.13),transparent_32%),radial-gradient(circle_at_85%_45%,rgba(20,184,166,0.08),transparent_30%),linear-gradient(180deg,#04100c_0%,#030706_54%,#020403_100%)]" />
+        <div className="absolute inset-0 opacity-[0.11] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
+
         <Container>
-          <div className="mx-auto flex max-w-5xl flex-col gap-3">
-            <div>
+          <div className="relative z-10 py-5 sm:py-6">
+            <header className="flex items-center justify-between gap-4">
+              <Link href="/" className="flex items-center">
+                <Image
+                  src="/brand/poolr-logo-dark.png"
+                  alt="Poolr"
+                  width={340}
+                  height={100}
+                  priority
+                  className="h-[72px] w-auto sm:h-[88px] lg:h-24"
+                />
+              </Link>
+
               <Link
                 href={`/pools/${pool.id}`}
-                className="inline-flex text-sm text-zinc-400 transition hover:text-white"
+                className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur transition hover:bg-white/10"
               >
-                ← Terug naar pool
+                Pool
               </Link>
+            </header>
+
+            <div className="mx-auto mt-8 flex max-w-5xl flex-col gap-5">
+              <Link
+                href={`/pools/${pool.id}`}
+                className="inline-flex w-fit text-sm font-semibold text-zinc-400 transition hover:text-white"
+              >
+                ← Back to pool
+              </Link>
+
+              <section className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-5 shadow-2xl backdrop-blur-xl sm:p-7">
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
+                      Match predictions
+                    </p>
+                    <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+                      {pool.name}
+                    </h1>
+                    <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
+                      Submit your World Cup predictions before each match locks.
+                      Results and points update when official scores are entered.
+                    </p>
+                  </div>
+
+                  <div className="rounded-[1.5rem] border border-emerald-300/20 bg-emerald-300/10 px-5 py-4 sm:min-w-[190px]">
+                    <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-200">
+                      Active filter
+                    </p>
+                    <p className="mt-2 text-2xl font-black text-white">
+                      {getFilterLabel(activeFilter)}
+                    </p>
+                    <p className="mt-1 text-sm text-zinc-400">
+                      {filteredMatches.length} matches
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur sm:p-5">
+                <div className="mb-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
+                    Filters
+                  </p>
+                  <h2 className="mt-2 text-2xl font-black tracking-tight">
+                    Find your matches
+                  </h2>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {filterOptions.map((option) => (
+                    <Link
+                      key={option.value}
+                      href={getFilterHref(pool.id, option.value)}
+                      className={`rounded-full border px-4 py-2 text-sm font-black transition ${getFilterButtonClasses(
+                        activeFilter === option.value
+                      )}`}
+                    >
+                      {getFilterLabel(option.value)} ({option.count})
+                    </Link>
+                  ))}
+                </div>
+              </section>
+
+              {groupedMatches.length > 0 ? (
+                <div className="space-y-3">
+                  {groupedMatches.map((group, index) => (
+                    <PoolMatchesDateGroup
+                      key={group.key}
+                      label={group.label}
+                      poolId={pool.id}
+                      matches={group.matches}
+                      predictions={predictionsByMatchId}
+                      defaultOpen={index === 0}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <section className="rounded-[2rem] border border-dashed border-white/15 bg-white/[0.04] p-6 backdrop-blur">
+                  <h2 className="text-xl font-black">
+                    No matches found for this filter
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">
+                    Choose a different filter or view all matches.
+                  </p>
+
+                  <Link
+                    href={getFilterHref(pool.id, "all")}
+                    className="mt-5 inline-flex rounded-2xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
+                  >
+                    View all matches
+                  </Link>
+                </section>
+              )}
             </div>
-
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-4">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                WK wedstrijden
-              </p>
-              <h1 className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">
-                {pool.name}
-              </h1>
-            </div>
-
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-2.5">
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  href={getFilterHref(pool.id, "all")}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${getFilterButtonClasses(
-                    activeFilter === "all"
-                  )}`}
-                >
-                  Alles ({totalAll})
-                </Link>
-
-                <Link
-                  href={getFilterHref(pool.id, "open")}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${getFilterButtonClasses(
-                    activeFilter === "open"
-                  )}`}
-                >
-                  Open ({totalOpen})
-                </Link>
-
-                <Link
-                  href={getFilterHref(pool.id, "locked")}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${getFilterButtonClasses(
-                    activeFilter === "locked"
-                  )}`}
-                >
-                  Gelockt ({totalLocked})
-                </Link>
-
-                <Link
-                  href={getFilterHref(pool.id, "finished")}
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${getFilterButtonClasses(
-                    activeFilter === "finished"
-                  )}`}
-                >
-                  Finished ({totalFinished})
-                </Link>
-              </div>
-            </div>
-
-            {groupedMatches.length > 0 ? (
-              <div className="space-y-2">
-                {groupedMatches.map((group, index) => (
-                  <PoolMatchesDateGroup
-                    key={group.key}
-                    label={group.label}
-                    poolId={pool.id}
-                    matches={group.matches}
-                    predictions={predictionsByMatchId}
-                    defaultOpen={index === 0}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-xl border border-dashed border-zinc-700 bg-zinc-900/40 p-4">
-                <h2 className="text-base font-semibold">
-                  Geen wedstrijden gevonden voor deze filter
-                </h2>
-                <p className="mt-1 text-sm text-zinc-400">
-                  Kies een andere filter of bekijk alle wedstrijden.
-                </p>
-              </div>
-            )}
           </div>
         </Container>
       </section>

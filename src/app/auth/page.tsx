@@ -175,11 +175,10 @@ export default function AuthPage() {
                           setError(null);
                           setMessage(null);
                         }}
-                        className={`rounded-xl px-4 py-2 text-sm font-black transition ${
-                          mode === "login"
+                        className={`rounded-xl px-4 py-2 text-sm font-black transition ${mode === "login"
                             ? "bg-emerald-300 text-zinc-950"
                             : "text-zinc-400 hover:text-white"
-                        }`}
+                          }`}
                       >
                         Log in
                       </button>
@@ -191,11 +190,10 @@ export default function AuthPage() {
                           setError(null);
                           setMessage(null);
                         }}
-                        className={`rounded-xl px-4 py-2 text-sm font-black transition ${
-                          mode === "register"
+                        className={`rounded-xl px-4 py-2 text-sm font-black transition ${mode === "register"
                             ? "bg-emerald-300 text-zinc-950"
                             : "text-zinc-400 hover:text-white"
-                        }`}
+                          }`}
                       >
                         Sign up
                       </button>
@@ -277,8 +275,8 @@ export default function AuthPage() {
                         {loading
                           ? "Please wait..."
                           : mode === "login"
-                          ? "Log in"
-                          : "Create account"}
+                            ? "Log in"
+                            : "Create account"}
                       </button>
                     </form>
                   </div>

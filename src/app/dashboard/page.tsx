@@ -10,21 +10,21 @@ type PoolMembershipRow = {
   role: string;
   joined_at: string;
   pools:
-    | {
-        id: string;
-        name: string;
-        game_type: string;
-        invite_code: string;
-        created_at: string;
-      }
-    | {
-        id: string;
-        name: string;
-        game_type: string;
-        invite_code: string;
-        created_at: string;
-      }[]
-    | null;
+  | {
+    id: string;
+    name: string;
+    game_type: string;
+    invite_code: string;
+    created_at: string;
+  }
+  | {
+    id: string;
+    name: string;
+    game_type: string;
+    invite_code: string;
+    created_at: string;
+  }[]
+  | null;
 };
 
 type DashboardPool = {
@@ -125,10 +125,10 @@ export default async function DashboardPage() {
                 <Image
                   src="/brand/poolr-logo-dark.png"
                   alt="Poolr"
-                  width={320}
-                  height={94}
+                  width={340}
+                  height={100}
                   priority
-                  className="h-20 w-auto sm:h-24"
+                  className="h-[72px] w-auto sm:h-[88px] lg:h-24"
                 />
               </Link>
 
