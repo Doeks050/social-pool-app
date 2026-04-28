@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import AdminResultsDateGroup from "@/components/world-cup/AdminResultsDateGroup";
+import ResetAllResultsButton from "@/components/world-cup/ResetAllResultsButton";
 import { createClient } from "@/lib/supabase";
 import type { WorldCupMatchRow } from "@/lib/world-cup/slotResolver";
 
@@ -317,24 +318,59 @@ export default async function WorldCupResultsPage({
   async function resetAllResults() {
     "use server";
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/api/admin/world-cup/results/reset-all`,
-      {
-        method: "POST",
-      }
-    );
+    const supabase = await createClient();
 
-    const result = (await response.json().catch(() => null)) as {
-      success?: boolean;
-      message?: string;
-      error?: string;
-    } | null;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!response.ok || !result?.success) {
+    if (!user) {
+      redirect("/auth");
+    }
+
+    const { data: appAdmin } = await supabase
+      .from("app_admins")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!appAdmin) {
       redirect(
         buildResetAllHref(
           "error",
-          result?.error ?? "Alle uitslagen resetten mislukt."
+          "Alle uitslagen resetten mislukt: je bent geen app admin."
+        )
+      );
+    }
+
+    const { error: predictionsError } = await supabase
+      .from("predictions")
+      .delete()
+      .eq("tournament", "world_cup_2026");
+
+    if (predictionsError) {
+      redirect(
+        buildResetAllHref(
+          "error",
+          `Voorspellingen verwijderen mislukt: ${predictionsError.message}`
+        )
+      );
+    }
+
+    const { error: matchesError } = await supabase
+      .from("matches")
+      .update({
+        home_score: null,
+        away_score: null,
+        status: "upcoming",
+      })
+      .eq("tournament", "world_cup_2026");
+
+    if (matchesError) {
+      redirect(
+        buildResetAllHref(
+          "error",
+          `Wedstrijduitslagen resetten mislukt: ${matchesError.message}`
         )
       );
     }
@@ -342,7 +378,7 @@ export default async function WorldCupResultsPage({
     redirect(
       buildResetAllHref(
         "success",
-        result.message ?? "Alle WK-uitslagen en punten zijn verwijderd."
+        "Alle WK-uitslagen en punten zijn verwijderd."
       )
     );
   }
@@ -377,14 +413,7 @@ export default async function WorldCupResultsPage({
                   </p>
                 </div>
 
-                <form action={resetAllResults}>
-                  <button
-                    type="submit"
-                    className="w-full rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-200 transition hover:border-red-400 hover:bg-red-500/20 sm:w-auto"
-                  >
-                    Verwijder alle uitslagen
-                  </button>
-                </form>
+                <ResetAllResultsButton action={resetAllResults} />
               </div>
             </div>
 
