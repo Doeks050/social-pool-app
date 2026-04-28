@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
@@ -39,18 +40,18 @@ type DashboardPool = {
 
 function getPoolCardClasses(gameType: string) {
   if (gameType === "world_cup") {
-    return "border-white/15 bg-zinc-950";
+    return "border-emerald-300/25 bg-emerald-300/[0.06] hover:border-emerald-300/50";
   }
 
-  return "border-zinc-800 bg-zinc-950/60";
+  return "border-white/10 bg-white/[0.04] hover:border-white/20";
 }
 
 function getPoolTypeBadgeClasses(gameType: string) {
   if (gameType === "world_cup") {
-    return "border-white/20 bg-white/5 text-white";
+    return "border-emerald-300/30 bg-emerald-300/10 text-emerald-200";
   }
 
-  return "border-zinc-700 text-zinc-300";
+  return "border-white/10 bg-white/[0.04] text-zinc-300";
 }
 
 export default async function DashboardPage() {
@@ -84,7 +85,7 @@ export default async function DashboardPage() {
     .order("joined_at", { ascending: false });
 
   const displayName =
-    profile?.display_name?.trim() || user.email || "Gebruiker";
+    profile?.display_name?.trim() || user.email || "Player";
 
   const myPools = ((memberships ?? []) as PoolMembershipRow[])
     .map((membership) => {
@@ -112,184 +113,243 @@ export default async function DashboardPage() {
     .filter(Boolean) as DashboardPool[];
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-white">
-      <section className="py-12">
+    <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
+      <section className="relative min-h-screen">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(34,255,160,0.13),transparent_32%),radial-gradient(circle_at_85%_45%,rgba(20,184,166,0.08),transparent_30%),linear-gradient(180deg,#04100c_0%,#030706_54%,#020403_100%)]" />
+        <div className="absolute inset-0 opacity-[0.11] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
+
         <Container>
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-              <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                  Dashboard
-                </p>
-                <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
-                  Welkom, {displayName}
-                </h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-                  Hier zie je jouw pools en kun je een nieuwe pool aanmaken of
-                  een bestaande pool joinen.
-                </p>
-              </div>
+          <div className="relative z-10 py-5 sm:py-6">
+            <header className="flex items-center justify-between gap-4">
+              <Link href="/" className="flex items-center">
+                <Image
+                  src="/brand/poolr-logo-dark.png"
+                  alt="Poolr"
+                  width={320}
+                  height={94}
+                  priority
+                  className="h-20 w-auto sm:h-24"
+                />
+              </Link>
 
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/pools/new"
-                  className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200"
-                >
-                  Nieuwe pool
-                </Link>
-
-                <Link
-                  href="/join"
-                  className="rounded-xl border border-zinc-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800"
-                >
-                  Join pool
-                </Link>
-
+              <div className="flex items-center gap-3">
+                {appAdmin ? (
+                  <Link
+                    href="/admin"
+                    className="hidden rounded-full border border-emerald-300/20 bg-emerald-300/10 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-300/15 sm:inline-flex"
+                  >
+                    Admin
+                  </Link>
+                ) : null}
                 <SignOutButton />
               </div>
-            </div>
+            </header>
 
-            {appAdmin ? (
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 sm:p-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-8 grid gap-5">
+              <section className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-5 shadow-2xl backdrop-blur-xl sm:p-7">
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                   <div>
-                    <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
-                      App admin tools
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      Beheer hier de centrale WK-uitslagen en bonusvragen voor
-                      alle pools.
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
+                      Dashboard
+                    </p>
+                    <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+                      Welcome, {displayName}
+                    </h1>
+                    <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
+                      Manage your pools, join private competitions and keep
+                      track of every leaderboard from one place.
                     </p>
                   </div>
 
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <Link
-                      href="/admin/world-cup/results"
-                      className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200"
-                    >
-                      WK resultaten beheren
-                    </Link>
-
-                    <Link
-                      href="/admin/world-cup/bonus"
-                      className="rounded-xl border border-zinc-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800"
-                    >
-                      WK bonusvragen beheren
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 sm:p-6">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
-                    Mijn pools
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    Je bent momenteel lid van {myPools.length}{" "}
-                    {myPools.length === 1 ? "pool" : "pools"}.
-                  </p>
-                </div>
-
-                <div className="hidden gap-3 sm:flex">
-                  <Link
-                    href="/join"
-                    className="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800"
-                  >
-                    Join via code
-                  </Link>
-
-                  <Link
-                    href="/pools/new"
-                    className="rounded-xl border border-zinc-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800"
-                  >
-                    Pool aanmaken
-                  </Link>
-                </div>
-              </div>
-
-              {myPools.length === 0 ? (
-                <div className="mt-5 rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-5">
-                  <h3 className="text-lg font-semibold">
-                    Je hebt nog geen pools
-                  </h3>
-                  <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-400">
-                    Maak je eerste pool aan en kies direct of het een WK Poule,
-                    Office Bingo of F1 Poule moet worden.
-                  </p>
-
-                  <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                  <div className="grid gap-3 sm:grid-cols-2">
                     <Link
                       href="/pools/new"
-                      className="inline-flex rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-zinc-200"
+                      className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 shadow-[0_18px_60px_rgba(16,185,129,0.22)] transition hover:bg-emerald-200"
                     >
-                      Eerste pool maken
+                      Create pool
                     </Link>
 
                     <Link
                       href="/join"
-                      className="inline-flex rounded-xl border border-zinc-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800"
+                      className="rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
                     >
-                      Pool joinen
+                      Join pool
                     </Link>
                   </div>
                 </div>
-              ) : (
-                <div className="mt-5 grid gap-3">
-                  {myPools.map((pool) => (
+
+                <div className="mt-7 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <p className="text-3xl font-black">{myPools.length}</p>
+                    <p className="mt-1 text-sm text-zinc-400">
+                      Active {myPools.length === 1 ? "pool" : "pools"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4">
+                    <p className="text-3xl font-black text-emerald-200">
+                      WK
+                    </p>
+                    <p className="mt-1 text-sm text-zinc-400">
+                      World Cup pool ready
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <p className="text-3xl font-black">2</p>
+                    <p className="mt-1 text-sm text-zinc-400">
+                      Modes in progress
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              {appAdmin ? (
+                <section className="rounded-[2rem] border border-emerald-300/20 bg-emerald-300/[0.06] p-5 sm:p-6">
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
+                        Admin tools
+                      </p>
+                      <h2 className="mt-2 text-2xl font-black tracking-tight">
+                        Manage World Cup content
+                      </h2>
+                      <p className="mt-2 text-sm leading-6 text-zinc-400">
+                        Enter official results and manage bonus questions for
+                        all World Cup pools.
+                      </p>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Link
+                        href="/admin/world-cup/results"
+                        className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
+                      >
+                        Results
+                      </Link>
+
+                      <Link
+                        href="/admin/world-cup/bonus"
+                        className="rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
+                      >
+                        Bonus questions
+                      </Link>
+                    </div>
+                  </div>
+                </section>
+              ) : null}
+
+              <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur sm:p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
+                      Your pools
+                    </p>
+                    <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
+                      Continue playing
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      You are currently a member of {myPools.length}{" "}
+                      {myPools.length === 1 ? "pool" : "pools"}.
+                    </p>
+                  </div>
+
+                  <div className="hidden gap-3 sm:flex">
                     <Link
-                      key={pool.id}
-                      href={`/pools/${pool.id}`}
-                      className={`rounded-2xl border p-4 transition hover:border-zinc-600 hover:bg-zinc-950 ${getPoolCardClasses(
-                        pool.gameType
-                      )}`}
+                      href="/join"
+                      className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
                     >
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-lg font-semibold">
-                              {pool.name}
-                            </h3>
+                      Join via code
+                    </Link>
 
-                            <span className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs uppercase tracking-wide text-zinc-300">
-                              {pool.role}
-                            </span>
+                    <Link
+                      href="/pools/new"
+                      className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+                    >
+                      New pool
+                    </Link>
+                  </div>
+                </div>
 
-                            <span
-                              className={`rounded-full border px-2.5 py-1 text-xs uppercase tracking-wide ${getPoolTypeBadgeClasses(
-                                pool.gameType
-                              )}`}
-                            >
-                              {pool.gameTypeShortLabel}
-                            </span>
+                {myPools.length === 0 ? (
+                  <div className="mt-6 rounded-[1.5rem] border border-dashed border-white/15 bg-black/20 p-6">
+                    <h3 className="text-xl font-black">
+                      No pools yet
+                    </h3>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-400">
+                      Create your first Poolr competition or join an existing
+                      pool with a private invite code.
+                    </p>
+
+                    <div className="mt-5 grid gap-3 sm:flex">
+                      <Link
+                        href="/pools/new"
+                        className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
+                      >
+                        Create first pool
+                      </Link>
+
+                      <Link
+                        href="/join"
+                        className="rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
+                      >
+                        Join pool
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-6 grid gap-3">
+                    {myPools.map((pool) => (
+                      <Link
+                        key={pool.id}
+                        href={`/pools/${pool.id}`}
+                        className={`rounded-[1.5rem] border p-5 transition ${getPoolCardClasses(
+                          pool.gameType
+                        )}`}
+                      >
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-xl font-black">
+                                {pool.name}
+                              </h3>
+
+                              <span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-zinc-300">
+                                {pool.role}
+                              </span>
+
+                              <span
+                                className={`rounded-full border px-2.5 py-1 text-xs font-bold uppercase tracking-wide ${getPoolTypeBadgeClasses(
+                                  pool.gameType
+                                )}`}
+                              >
+                                {pool.gameTypeShortLabel}
+                              </span>
+                            </div>
+
+                            <p className="mt-2 text-sm leading-6 text-zinc-400">
+                              {pool.gameTypeLabel}
+                            </p>
                           </div>
 
-                          <p className="mt-2 text-sm leading-6 text-zinc-400">
-                            Speltype: {pool.gameTypeLabel}
-                          </p>
+                          <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-400">
+                            Invite code{" "}
+                            <span className="font-black text-white">
+                              {pool.inviteCode}
+                            </span>
+                          </div>
                         </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </section>
 
-                        <div className="text-sm text-zinc-400">
-                          Invite code:{" "}
-                          <span className="font-semibold text-white">
-                            {pool.inviteCode}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div>
               <Link
                 href="/"
-                className="inline-flex text-sm text-zinc-400 transition hover:text-white"
+                className="inline-flex text-sm font-semibold text-zinc-400 transition hover:text-white"
               >
-                ← Terug naar home
+                ← Back to home
               </Link>
             </div>
           </div>
