@@ -343,18 +343,36 @@ export default async function WorldCupResultsPage({
       );
     }
 
-    const { error: predictionsError } = await supabase
-      .from("predictions")
-      .delete()
+    const { data: worldCupMatches, error: worldCupMatchesError } = await supabase
+      .from("matches")
+      .select("id")
       .eq("tournament", "world_cup_2026");
 
-    if (predictionsError) {
+    if (worldCupMatchesError) {
       redirect(
         buildResetAllHref(
           "error",
-          `Voorspellingen verwijderen mislukt: ${predictionsError.message}`
+          `WK-wedstrijden ophalen mislukt: ${worldCupMatchesError.message}`
         )
       );
+    }
+
+    const worldCupMatchIds = (worldCupMatches ?? []).map((match) => match.id);
+
+    if (worldCupMatchIds.length > 0) {
+      const { error: predictionsError } = await supabase
+        .from("predictions")
+        .delete()
+        .in("match_id", worldCupMatchIds);
+
+      if (predictionsError) {
+        redirect(
+          buildResetAllHref(
+            "error",
+            `Voorspellingen verwijderen mislukt: ${predictionsError.message}`
+          )
+        );
+      }
     }
 
     const { error: matchesError } = await supabase
