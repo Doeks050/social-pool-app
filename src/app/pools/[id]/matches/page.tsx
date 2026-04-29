@@ -264,119 +264,139 @@ export default async function PoolMatchesPage({
         <div className="absolute inset-0 opacity-[0.11] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
 
         <Container>
-          <div className="relative z-10 py-5 sm:py-6">
-            <header className="flex items-center justify-between gap-4">
-              <Link href="/" className="flex items-center">
-                <Image
-                  src="/brand/poolr-logo-dark.png"
-                  alt="Poolr"
-                  width={340}
-                  height={100}
-                  priority
-                  className="h-[72px] w-auto sm:h-[88px] lg:h-24"
-                />
-              </Link>
+          <div className="relative z-10 py-4 sm:py-5">
+            <div className="mx-auto max-w-5xl">
+              <header className="flex items-center justify-between gap-4">
+                <Link href="/" className="flex items-center">
+                  <Image
+                    src="/brand/poolr-logo-dark.png"
+                    alt="Poolr"
+                    width={340}
+                    height={100}
+                    priority
+                    className="h-[52px] w-auto sm:h-[64px]"
+                  />
+                </Link>
 
-              <Link
-                href={`/pools/${pool.id}`}
-                className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur transition hover:bg-white/10"
-              >
-                Pool
-              </Link>
-            </header>
+                <Link
+                  href={`/pools/${pool.id}`}
+                  className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:text-sm"
+                >
+                  Pool
+                </Link>
+              </header>
 
-            <div className="mx-auto mt-8 flex max-w-5xl flex-col gap-5">
-              <Link
-                href={`/pools/${pool.id}`}
-                className="inline-flex w-fit text-sm font-semibold text-zinc-400 transition hover:text-white"
-              >
-                ← Back to pool
-              </Link>
+              <div className="mt-4 flex flex-col gap-4">
+                <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+                  <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                    <div className="min-w-0">
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-200">
+                          <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_14px_rgba(110,231,183,0.9)]" />
+                          World Cup Pool
+                        </span>
 
-              <section className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-5 shadow-2xl backdrop-blur-xl sm:p-7">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
-                      Match predictions
-                    </p>
-                    <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
-                      {pool.name}
-                    </h1>
-                    <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
-                      Submit your World Cup predictions before each match locks.
-                      Results and points update when official scores are entered.
-                    </p>
+                        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
+                          Match predictions
+                        </span>
+                      </div>
+
+                      <h1 className="truncate text-3xl font-black tracking-tight text-white sm:text-4xl">
+                        {pool.name}
+                      </h1>
+
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+                        Submit your predictions before each match locks.
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 lg:min-w-[190px]">
+                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
+                        Active filter
+                      </p>
+                      <p className="mt-1 text-2xl font-black text-white">
+                        {getFilterLabel(activeFilter)}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-zinc-400">
+                        {filteredMatches.length} matches
+                      </p>
+                    </div>
                   </div>
-
-                  <div className="rounded-[1.5rem] border border-emerald-300/20 bg-emerald-300/10 px-5 py-4 sm:min-w-[190px]">
-                    <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-200">
-                      Active filter
-                    </p>
-                    <p className="mt-2 text-2xl font-black text-white">
-                      {getFilterLabel(activeFilter)}
-                    </p>
-                    <p className="mt-1 text-sm text-zinc-400">
-                      {filteredMatches.length} matches
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur sm:p-5">
-                <div className="mb-4">
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
-                    Filters
-                  </p>
-                  <h2 className="mt-2 text-2xl font-black tracking-tight">
-                    Find your matches
-                  </h2>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {filterOptions.map((option) => (
-                    <Link
-                      key={option.value}
-                      href={getFilterHref(pool.id, option.value)}
-                      className={`rounded-full border px-4 py-2 text-sm font-black transition ${getFilterButtonClasses(
-                        activeFilter === option.value
-                      )}`}
-                    >
-                      {getFilterLabel(option.value)} ({option.count})
-                    </Link>
-                  ))}
-                </div>
-              </section>
-
-              {groupedMatches.length > 0 ? (
-                <div className="space-y-3">
-                  {groupedMatches.map((group, index) => (
-                    <PoolMatchesDateGroup
-                      key={group.key}
-                      label={group.label}
-                      poolId={pool.id}
-                      matches={group.matches}
-                      predictions={predictionsByMatchId}
-                      defaultOpen={index === 0}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <section className="rounded-[2rem] border border-dashed border-white/15 bg-white/[0.04] p-6 backdrop-blur">
-                  <h2 className="text-xl font-black">
-                    No matches found for this filter
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    Choose a different filter or view all matches.
-                  </p>
-
-                  <Link
-                    href={getFilterHref(pool.id, "all")}
-                    className="mt-5 inline-flex rounded-2xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
-                  >
-                    View all matches
-                  </Link>
                 </section>
-              )}
+
+                <details
+                  className="group rounded-[1.5rem] border border-white/10 bg-white/[0.04] backdrop-blur-xl"
+                  open={activeFilter !== "all"}
+                >
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5 transition hover:bg-white/[0.035] sm:px-5 [&::-webkit-details-marker]:hidden">
+                    <div className="min-w-0">
+                      <h2 className="text-base font-black tracking-tight text-white sm:text-lg">
+                        Filters
+                      </h2>
+                      <p className="mt-0.5 text-xs font-semibold text-zinc-500">
+                        Current: {getFilterLabel(activeFilter)} ·{" "}
+                        {filteredMatches.length} matches
+                      </p>
+                    </div>
+
+                    <span className="shrink-0 rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-black text-zinc-300 transition group-open:bg-emerald-300 group-open:text-zinc-950">
+                      <span className="group-open:hidden">Show</span>
+                      <span className="hidden group-open:inline">Hide</span>
+                    </span>
+                  </summary>
+
+                  <div className="border-t border-white/10 px-4 pb-4 pt-3 sm:px-5">
+                    <p className="mb-3 text-center text-sm leading-5 text-zinc-400">
+                      Choose which matches you want to view.
+                    </p>
+
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {filterOptions.map((option) => (
+                        <Link
+                          key={option.value}
+                          href={getFilterHref(pool.id, option.value)}
+                          className={`rounded-full border px-4 py-2 text-sm font-black transition ${getFilterButtonClasses(
+                            activeFilter === option.value
+                          )}`}
+                        >
+                          {getFilterLabel(option.value)} ({option.count})
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </details>
+
+                {groupedMatches.length > 0 ? (
+                  <div className="space-y-3">
+                    {groupedMatches.map((group, index) => (
+                      <PoolMatchesDateGroup
+                        key={group.key}
+                        label={group.label}
+                        poolId={pool.id}
+                        matches={group.matches}
+                        predictions={predictionsByMatchId}
+                        defaultOpen={index === 0}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <section className="rounded-[1.5rem] border border-dashed border-white/15 bg-white/[0.04] p-6 text-center backdrop-blur">
+                    <h2 className="text-xl font-black">
+                      No matches found for this filter
+                    </h2>
+                    <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-zinc-400">
+                      Choose a different filter or view all matches.
+                    </p>
+
+                    <Link
+                      href={getFilterHref(pool.id, "all")}
+                      className="mt-5 inline-flex rounded-2xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
+                    >
+                      View all matches
+                    </Link>
+                  </section>
+                )}
+              </div>
             </div>
           </div>
         </Container>

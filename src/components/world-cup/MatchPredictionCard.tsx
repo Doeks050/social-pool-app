@@ -154,15 +154,15 @@ function TeamPredictionRow({
   const flagSrc = getTeamFlagSrc(teamName);
 
   return (
-    <div className="grid grid-cols-[2rem_minmax(0,1fr)_2.35rem] items-center gap-2 rounded-lg border border-white/10 bg-[#06110d]/90 px-2 py-1.5">
-      <div className="flex h-7 w-8 items-center justify-center rounded-md border border-white/10 bg-black/35">
+    <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_3rem] items-center gap-2.5 rounded-xl border border-white/10 bg-[#06110d]/95 px-2.5 py-2">
+      <div className="flex h-8 w-10 items-center justify-center rounded-lg border border-white/10 bg-black/35">
         {flagSrc ? (
           <img
             src={flagSrc}
             alt={getTeamFlagAlt(teamName)}
             width={80}
             height={60}
-            className="h-[18px] w-[26px] rounded-[3px] object-cover shadow-[0_0_0_1px_rgba(255,255,255,0.14)]"
+            className="h-[21px] w-[31px] rounded object-cover shadow-[0_0_0_1px_rgba(255,255,255,0.14)]"
             loading="lazy"
           />
         ) : (
@@ -172,7 +172,7 @@ function TeamPredictionRow({
         )}
       </div>
 
-      <p className="min-w-0 truncate text-[12px] font-black leading-none text-white">
+      <p className="min-w-0 truncate text-sm font-black leading-none text-white">
         {teamName}
       </p>
 
@@ -184,7 +184,7 @@ function TeamPredictionRow({
         value={score}
         onChange={(event) => onScoreChange(event.target.value)}
         disabled={!editable || loading}
-        className="h-7 w-9 rounded-md border border-emerald-300/20 bg-black/45 px-1 text-center text-xs font-black text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/80 focus:bg-black/70 disabled:cursor-not-allowed disabled:opacity-50"
+        className="h-9 w-12 rounded-lg border border-emerald-300/20 bg-black/45 px-1 text-center text-sm font-black text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/80 focus:bg-black/70 disabled:cursor-not-allowed disabled:opacity-50"
         placeholder="-"
         required={editable}
       />
@@ -283,28 +283,28 @@ export default function MatchPredictionCard({
   }
 
   return (
-    <article className="rounded-xl border border-white/10 bg-black/20 p-2 transition hover:border-emerald-300/25 hover:bg-white/[0.04]">
-      <div className="flex items-start justify-between gap-2">
+    <article className="rounded-2xl border border-white/10 bg-black/20 p-3.5 transition hover:border-emerald-300/25 hover:bg-white/[0.04]">
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-1">
-            <p className="text-[8px] font-black uppercase tracking-[0.14em] text-emerald-300">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-300">
               {getStageLabel(match)}
             </p>
 
             {match.match_number !== null ? (
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-1 py-0.5 text-[8px] font-bold uppercase tracking-wide text-zinc-300">
+              <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-zinc-300">
                 Match {match.match_number}
               </span>
             ) : null}
           </div>
 
-          <p className="mt-0.5 text-[9px] font-medium text-zinc-500">
+          <p className="mt-1 text-[11px] font-medium text-zinc-500">
             {formatMatchDate(match.starts_at)}
           </p>
         </div>
 
         <div
-          className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide ${getStatusClasses(
+          className={`shrink-0 rounded-full border px-2 py-1 text-[9px] font-black uppercase tracking-wide ${getStatusClasses(
             editable ? "open" : match.status
           )}`}
         >
@@ -313,28 +313,28 @@ export default function MatchPredictionCard({
       </div>
 
       {showCountdown ? (
-        <div className="mt-2 flex items-center justify-between rounded-lg border border-emerald-300/25 bg-emerald-300/[0.08] px-2.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-          <span className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-200/80">
+        <div className="mt-3 flex items-center justify-between rounded-xl border border-emerald-300/25 bg-emerald-300/[0.08] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-200/80">
             Starts in
           </span>
-          <span className="font-mono text-sm font-black leading-none text-emerald-100">
+          <span className="font-mono text-base font-black leading-none text-emerald-100">
             {formatCountdown(match.starts_at, now)}
           </span>
         </div>
       ) : null}
 
-      <form onSubmit={handleSubmit} className="mt-2">
-        <div className="rounded-xl border border-white/10 bg-black/20 p-1.5">
-          <div className="grid grid-cols-[1fr_2.35rem] items-center gap-2 px-1 pb-1">
-            <span className="text-[8px] font-black uppercase tracking-[0.16em] text-zinc-500">
+      <form onSubmit={handleSubmit} className="mt-3">
+        <div className="rounded-2xl border border-white/10 bg-black/20 p-2">
+          <div className="grid grid-cols-[1fr_3rem] items-center gap-2 px-1 pb-1.5">
+            <span className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500">
               Prediction
             </span>
-            <span className="text-center text-[8px] font-black uppercase tracking-[0.12em] text-zinc-500">
+            <span className="text-center text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500">
               Score
             </span>
           </div>
 
-          <div className="grid gap-1">
+          <div className="grid gap-1.5">
             <TeamPredictionRow
               teamName={homeDisplay}
               score={homeScore}
@@ -356,13 +356,13 @@ export default function MatchPredictionCard({
         </div>
 
         {error ? (
-          <div className="mt-1.5 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1 text-[10px] text-red-200">
+          <div className="mt-2 rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-1.5 text-xs text-red-200">
             {error}
           </div>
         ) : null}
 
         {message ? (
-          <div className="mt-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[10px] text-emerald-200">
+          <div className="mt-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-xs text-emerald-200">
             {message}
           </div>
         ) : null}
@@ -370,7 +370,7 @@ export default function MatchPredictionCard({
         {match.status === "finished" &&
         match.home_score !== null &&
         match.away_score !== null ? (
-          <div className="mt-1.5 rounded-md border border-sky-400/20 bg-sky-400/10 px-2 py-1 text-[10px] text-sky-100">
+          <div className="mt-2 rounded-lg border border-sky-400/20 bg-sky-400/10 px-2.5 py-1.5 text-xs text-sky-100">
             Final: <span className="font-black">{match.home_score}</span> -{" "}
             <span className="font-black">{match.away_score}</span>
             {prediction?.points_awarded !== null &&
@@ -382,8 +382,8 @@ export default function MatchPredictionCard({
           </div>
         ) : null}
 
-        <div className="mt-1.5 flex items-center justify-between gap-2">
-          <div className="truncate text-[9px] font-medium text-zinc-500">
+        <div className="mt-2.5 flex items-center justify-between gap-2">
+          <div className="truncate text-[11px] font-medium text-zinc-500">
             {hasPrediction
               ? "Saved"
               : editable
@@ -394,7 +394,7 @@ export default function MatchPredictionCard({
           <button
             type="submit"
             disabled={!editable || loading}
-            className="shrink-0 rounded-md bg-emerald-300 px-2.5 py-1 text-[10px] font-black text-zinc-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-50"
+            className="shrink-0 rounded-lg bg-emerald-300 px-3.5 py-2 text-xs font-black text-zinc-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Saving..." : hasPrediction ? "Update" : "Save"}
           </button>

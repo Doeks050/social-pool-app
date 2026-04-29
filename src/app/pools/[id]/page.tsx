@@ -1,9 +1,11 @@
 import Image from "next/image";
+import { unstable_noStore as noStore } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
 import { getPoolTypeMeta } from "@/lib/pool-types";
+import NextMatchHighlight from "@/components/world-cup/NextMatchHighlight";
 
 type PoolPageProps = {
   params: Promise<{
@@ -22,19 +24,52 @@ type ProfileRow = {
   display_name: string | null;
 };
 
-function getDisplayName(
-  userId: string,
-  profilesMap: Map<string, string>,
-  currentUserId: string
-) {
+type NextMatchRow = {
+  id: string;
+  starts_at: string;
+  stage: string | null;
+  round_name: string | null;
+  group_label: string | null;
+  match_number: number | null;
+  home_team: string | null;
+  away_team: string | null;
+  home_slot: string | null;
+  away_slot: string | null;
+};
+
+function getDisplayName(userId: string, profilesMap: Map<string, string>) {
   const profileName = profilesMap.get(userId)?.trim();
 
   if (profileName) {
-    return userId === currentUserId ? `${profileName} (you)` : profileName;
+    return profileName;
   }
 
-  const fallback = `User ${userId.slice(0, 8)}`;
-  return userId === currentUserId ? `${fallback} (you)` : fallback;
+  return `User ${userId.slice(0, 8)}`;
+}
+
+function getInitials(name: string) {
+  const cleanName = name.trim();
+
+  if (!cleanName) {
+    return "U";
+  }
+
+  const parts = cleanName.split(/\s+/).filter(Boolean);
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+}
+
+function formatJoinedDate(value: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "Europe/Amsterdam",
+  }).format(new Date(value));
 }
 
 function getRoleLabel(role: string) {
@@ -65,37 +100,124 @@ type ActionCardProps = {
   href: string;
   title: string;
   description: string;
-  label?: string;
+  label: string;
+  primary?: boolean;
 };
 
-function ActionCard({ href, title, description, label }: ActionCardProps) {
+function ActionCard({
+  href,
+  title,
+  description,
+  label,
+  primary = false,
+}: ActionCardProps) {
   return (
     <Link
       href={href}
-      className="group rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5 transition hover:border-emerald-300/35 hover:bg-emerald-300/[0.06] active:scale-[0.99]"
+      className={`group relative flex min-h-[132px] flex-col items-center justify-center overflow-hidden rounded-2xl border p-4 text-center transition active:scale-[0.99] ${
+        primary
+          ? "border-emerald-300/35 bg-emerald-300/[0.10] hover:border-emerald-200/50 hover:bg-emerald-300/[0.14]"
+          : "border-white/10 bg-black/20 hover:border-emerald-300/30 hover:bg-emerald-300/[0.05]"
+      }`}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          {label ? (
-            <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-emerald-300">
-              {label}
-            </p>
-          ) : null}
-          <h2 className="text-lg font-black text-white">{title}</h2>
-          <p className="mt-2 text-sm leading-6 text-zinc-400">
-            {description}
-          </p>
-        </div>
+      <div
+        className={`absolute inset-x-0 top-0 h-px ${
+          primary
+            ? "bg-gradient-to-r from-transparent via-emerald-200/70 to-transparent"
+            : "bg-gradient-to-r from-transparent via-white/15 to-transparent"
+        }`}
+      />
 
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/20 text-emerald-200 transition group-hover:border-emerald-300/30 group-hover:bg-emerald-300/10">
-          →
-        </div>
-      </div>
+      <p
+        className={`text-[10px] font-black uppercase tracking-[0.22em] ${
+          primary ? "text-emerald-200" : "text-zinc-500"
+        }`}
+      >
+        {label}
+      </p>
+
+      <h3 className="mt-2 text-lg font-black tracking-tight text-white">
+        {title}
+      </h3>
+
+      <p className="mx-auto mt-2 max-w-[220px] text-sm leading-5 text-zinc-400">
+        {description}
+      </p>
     </Link>
   );
 }
 
+type MemberCardProps = {
+  member: PoolMemberRow;
+  displayName: string;
+  isCurrentUser: boolean;
+};
+
+function MemberCard({ member, displayName, isCurrentUser }: MemberCardProps) {
+  return (
+    <div
+      className={`relative overflow-hidden rounded-2xl border p-4 ${
+        isCurrentUser
+          ? "border-emerald-300/35 bg-emerald-300/[0.09]"
+          : "border-white/10 bg-black/20"
+      }`}
+    >
+      <div
+        className={`absolute inset-x-0 top-0 h-px ${
+          isCurrentUser
+            ? "bg-gradient-to-r from-transparent via-emerald-200/70 to-transparent"
+            : "bg-gradient-to-r from-transparent via-white/15 to-transparent"
+        }`}
+      />
+
+      <div className="flex items-center gap-3">
+        <div
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-sm font-black ${
+            isCurrentUser
+              ? "border-emerald-200/30 bg-emerald-300/15 text-emerald-100"
+              : "border-white/10 bg-white/[0.04] text-zinc-200"
+          }`}
+        >
+          {getInitials(displayName)}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <p className="truncate text-sm font-black text-white">
+              {displayName}
+            </p>
+
+            {isCurrentUser ? (
+              <span className="shrink-0 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-emerald-200">
+                You
+              </span>
+            ) : null}
+          </div>
+
+          <p className="mt-1 text-xs font-semibold text-zinc-500">
+            Joined {formatJoinedDate(member.joined_at)}
+          </p>
+        </div>
+
+        <span
+          className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
+            member.role === "owner"
+              ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-200"
+              : member.role === "admin"
+              ? "border-sky-300/25 bg-sky-300/10 text-sky-200"
+              : "border-white/10 bg-white/[0.04] text-zinc-400"
+          }`}
+        >
+          {getRoleLabel(member.role)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default async function PoolDetailPage({ params }: PoolPageProps) {
+  noStore();
+
   const { id } = await params;
 
   const supabase = await createClient();
@@ -155,17 +277,33 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
 
   const poolType = getPoolTypeMeta(pool.game_type);
   const isWorldCup = pool.game_type === "world_cup";
-  const canManageTestData =
-    membership.role === "owner" || membership.role === "admin";
+
+  let nextMatch: NextMatchRow | null = null;
+
+  if (isWorldCup) {
+    const { data: nextMatchData } = await supabase
+      .from("matches")
+      .select(
+        "id, starts_at, stage, round_name, group_label, match_number, home_team, away_team, home_slot, away_slot"
+      )
+      .eq("tournament", "world_cup_2026")
+      .gt("starts_at", new Date().toISOString())
+      .order("starts_at", { ascending: true })
+      .order("match_number", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    nextMatch = (nextMatchData ?? null) as NextMatchRow | null;
+  }
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
       <section className="relative min-h-screen">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(34,255,160,0.13),transparent_32%),radial-gradient(circle_at_85%_45%,rgba(20,184,166,0.08),transparent_30%),linear-gradient(180deg,#04100c_0%,#030706_54%,#020403_100%)]" />
-        <div className="absolute inset-0 opacity-[0.11] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,255,160,0.13),transparent_34%),radial-gradient(circle_at_85%_38%,rgba(20,184,166,0.08),transparent_30%),linear-gradient(180deg,#04100c_0%,#030706_52%,#020403_100%)]" />
+        <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
 
         <Container>
-          <div className="relative z-10 py-5 sm:py-6">
+          <div className="relative z-10 py-4 sm:py-5">
             <header className="flex items-center justify-between gap-4">
               <Link href="/" className="flex items-center">
                 <Image
@@ -174,128 +312,113 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                   width={340}
                   height={100}
                   priority
-                  className="h-[72px] w-auto sm:h-[88px] lg:h-24"
+                  className="h-[52px] w-auto sm:h-[64px]"
                 />
               </Link>
 
               <Link
                 href="/dashboard"
-                className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur transition hover:bg-white/10"
+                className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:text-sm"
               >
                 Dashboard
               </Link>
             </header>
 
-            <div
-              className={`mx-auto mt-8 flex flex-col gap-5 ${isWorldCup ? "max-w-4xl" : "max-w-5xl"
-                }`}
-            >
-              <Link
-                href="/dashboard"
-                className="inline-flex w-fit text-sm font-semibold text-zinc-400 transition hover:text-white"
-              >
-                ← Back to dashboard
-              </Link>
-
-              <section className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-5 shadow-2xl backdrop-blur-xl sm:p-7">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="mx-auto mt-4 flex max-w-6xl flex-col gap-4">
+              <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+                <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
                   <div className="min-w-0">
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-4 py-2 text-sm font-semibold text-emerald-200">
-                      <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_18px_rgba(110,231,183,0.9)]" />
-                      {isWorldCup ? "World Cup Pool" : "Private Pool"}
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-200">
+                        <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_14px_rgba(110,231,183,0.9)]" />
+                        {getPoolTypeDisplay(pool.game_type)}
+                      </span>
+
+                      <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
+                        {getRoleLabel(membership.role)}
+                      </span>
+
+                      <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
+                        {typedMembers.length} members
+                      </span>
                     </div>
 
-                    <h1 className="text-4xl font-black tracking-tight sm:text-5xl">
+                    <h1 className="truncate text-3xl font-black tracking-tight text-white sm:text-4xl">
                       {pool.name}
                     </h1>
 
-                    <p className="mt-3 text-sm leading-6 text-zinc-400 sm:text-base">
-                      {getPoolTypeDisplay(pool.game_type)}
+                    <p className="mt-1 text-sm font-semibold text-zinc-400">
+                      {poolType.shortLabel} pool dashboard
                     </p>
                   </div>
 
-                  <div className="rounded-[1.5rem] border border-emerald-300/20 bg-emerald-300/10 px-5 py-4 sm:min-w-[210px]">
-                    <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-200">
-                      Invite code
+                  <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 lg:min-w-[260px]">
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
+                      Join code
                     </p>
-                    <p className="mt-2 text-2xl font-black tracking-widest text-white">
-                      {pool.invite_code}
-                    </p>
-                  </div>
-                </div>
 
-                <div className="mt-7 grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <p className="text-xs font-black uppercase tracking-[0.18em] text-zinc-500">
-                      Role
-                    </p>
-                    <p className="mt-2 text-lg font-black text-white">
-                      {getRoleLabel(membership.role)}
-                    </p>
-                  </div>
+                    <div className="mt-1 flex items-end justify-between gap-3">
+                      <p className="text-2xl font-black tracking-widest text-white">
+                        {pool.invite_code}
+                      </p>
 
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <p className="text-xs font-black uppercase tracking-[0.18em] text-zinc-500">
-                      Members
-                    </p>
-                    <p className="mt-2 text-lg font-black text-white">
-                      {typedMembers.length}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <p className="text-xs font-black uppercase tracking-[0.18em] text-zinc-500">
-                      Game
-                    </p>
-                    <p className="mt-2 text-lg font-black text-white">
-                      {poolType.shortLabel}
-                    </p>
+                      {isWorldCup ? (
+                        <Link
+                          href={`/pools/${pool.id}/matches`}
+                          className="hidden rounded-xl bg-emerald-300 px-3 py-2 text-xs font-black text-zinc-950 transition hover:bg-emerald-200 sm:inline-flex"
+                        >
+                          Predict
+                        </Link>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
               </section>
 
-              <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur sm:p-6">
-                <div className="mb-5">
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
-                    Quick actions
-                  </p>
-                  <h2 className="mt-2 text-2xl font-black tracking-tight">
-                    Everything for this pool
+              {isWorldCup ? (
+                <NextMatchHighlight poolId={pool.id} match={nextMatch} />
+              ) : null}
+
+              <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
+                <div className="mb-4 text-center">
+                  <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+                    Pool menu
                   </h2>
-                  <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    Make predictions, check standings and follow the leaderboard.
+                  <p className="mx-auto mt-2 max-w-xl text-sm leading-5 text-zinc-400">
+                    Navigate to the main parts of this pool.
                   </p>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {pool.game_type === "world_cup" ? (
                     <>
                       <ActionCard
                         href={`/pools/${pool.id}/matches`}
                         label="Predict"
                         title="Matches"
-                        description="View fixtures and submit your match predictions."
+                        description="Submit and review match predictions."
+                        primary
                       />
 
                       <ActionCard
                         href={`/pools/${pool.id}/bonus`}
-                        label="Extra points"
-                        title="Bonus questions"
-                        description="Answer bonus questions before the first match starts."
+                        label="Bonus"
+                        title="Questions"
+                        description="Extra predictions for bonus points."
                       />
 
                       <ActionCard
                         href={`/pools/${pool.id}/standings`}
                         label="Groups"
-                        title="Group standings"
-                        description="Follow the current group tables based on official results."
+                        title="Standings"
+                        description="View group tables and progress."
                       />
 
                       <ActionCard
                         href={`/pools/${pool.id}/leaderboard`}
                         label="Ranking"
                         title="Leaderboard"
-                        description="Track match points, bonus points and total score."
+                        description="Follow the pool ranking."
                       />
                     </>
                   ) : pool.game_type === "office_bingo" ? (
@@ -303,22 +426,23 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                       <ActionCard
                         href={`/pools/${pool.id}`}
                         label="Setup"
-                        title="Bingo settings"
-                        description="Board size, items and rules will be managed here soon."
+                        title="Settings"
+                        description="Manage board size and rules."
+                        primary
                       />
 
                       <ActionCard
                         href={`/pools/${pool.id}`}
                         label="Cards"
                         title="Player cards"
-                        description="Players will receive unique bingo cards inside this pool."
+                        description="View unique player bingo cards."
                       />
 
                       <ActionCard
                         href={`/pools/${pool.id}`}
                         label="Claims"
                         title="Bingo claims"
-                        description="Claim review and manual verification will be added later."
+                        description="Review submitted claims."
                       />
                     </>
                   ) : (
@@ -327,116 +451,64 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                         href={`/pools/${pool.id}`}
                         label="Weekends"
                         title="Race weekends"
-                        description="F1 weekends and sessions will be managed here soon."
+                        description="Manage F1 sessions."
+                        primary
                       />
 
                       <ActionCard
                         href={`/pools/${pool.id}`}
                         label="Predict"
                         title="Predictions"
-                        description="F1 prediction forms will be added later."
+                        description="Open prediction forms."
                       />
 
                       <ActionCard
                         href={`/pools/${pool.id}`}
                         label="Ranking"
                         title="Standings"
-                        description="The F1 leaderboard will follow later."
+                        description="View the leaderboard."
                       />
                     </>
                   )}
                 </div>
               </section>
 
-              {isWorldCup && canManageTestData ? (
-                <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur sm:p-6">
-                  <div className="mb-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
-                      Test tools
-                    </p>
-                    <h2 className="mt-2 text-2xl font-black tracking-tight">
-                      Fill or reset sample data
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      Use this while testing your World Cup pool flow.
-                    </p>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <form method="post" action={`/api/pools/${id}/fill-testdata`}>
-                      <button
-                        type="submit"
-                        className="w-full rounded-2xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
-                      >
-                        Fill test data
-                      </button>
-                    </form>
-
-                    <form method="post" action={`/api/pools/${id}/reset-testdata`}>
-                      <button
-                        type="submit"
-                        className="w-full rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-3 text-sm font-black text-red-200 transition hover:border-red-500/50 hover:bg-red-500/15"
-                      >
-                        Reset test data
-                      </button>
-                    </form>
-                  </div>
-                </section>
-              ) : null}
-
-              <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur sm:p-6">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
-                      Members
-                    </p>
-                    <h2 className="mt-2 text-2xl font-black tracking-tight">
-                      Pool members
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      Everyone currently inside this pool.
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-lg font-black">
-                    {typedMembers.length}
-                  </div>
+              <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
+                <div className="mb-4 text-center">
+                  <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+                    Pool members
+                  </h2>
+                  <p className="mx-auto mt-2 max-w-xl text-sm leading-5 text-zinc-400">
+                    {typedMembers.length}{" "}
+                    {typedMembers.length === 1 ? "member" : "members"} in this
+                    pool.
+                  </p>
                 </div>
 
                 {typedMembers.length > 0 ? (
-                  <div className="mt-5 grid gap-2">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {typedMembers.map((member) => {
                       const displayName = getDisplayName(
                         member.user_id,
-                        profilesMap,
-                        user.id
+                        profilesMap
                       );
 
                       return (
-                        <div
+                        <MemberCard
                           key={member.user_id}
-                          className={`rounded-2xl border px-4 py-3 ${member.user_id === user.id
-                            ? "border-emerald-300/40 bg-emerald-300/10"
-                            : "border-white/10 bg-black/20"
-                            }`}
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="min-w-0 truncate text-sm font-bold text-white">
-                              {displayName}
-                            </p>
-
-                            <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-zinc-300">
-                              {getRoleLabel(member.role)}
-                            </span>
-                          </div>
-                        </div>
+                          member={member}
+                          displayName={displayName}
+                          isCurrentUser={member.user_id === user.id}
+                        />
                       );
                     })}
                   </div>
                 ) : (
-                  <p className="mt-4 text-sm text-zinc-400">
-                    No members found yet.
-                  </p>
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-5 text-center">
+                    <p className="text-sm font-semibold text-zinc-400">
+                      No members found yet.
+                    </p>
+                  </div>
                 )}
               </section>
             </div>

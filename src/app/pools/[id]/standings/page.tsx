@@ -113,6 +113,7 @@ function applyMatchToTable(
 
   home.goalsFor += homeScore;
   home.goalsAgainst += awayScore;
+
   away.goalsFor += awayScore;
   away.goalsAgainst += homeScore;
 
@@ -178,6 +179,9 @@ function buildGroupStandings(matches: MatchRow[]): GroupStanding[] {
           return b.goalDifference - a.goalDifference;
         }
         if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+        if (a.goalsAgainst !== b.goalsAgainst) {
+          return a.goalsAgainst - b.goalsAgainst;
+        }
         return a.team.localeCompare(b.team);
       }),
     }))
@@ -194,6 +198,7 @@ export default async function PoolStandingsPage({
   const { id } = await params;
 
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -233,9 +238,18 @@ export default async function PoolStandingsPage({
 
   const typedMatches = (matches ?? []) as MatchRow[];
   const groupStandings = buildGroupStandings(typedMatches);
+
   const finishedGroupMatches = typedMatches.filter(isFinishedGroupMatch).length;
+
   const totalTeams = groupStandings.reduce(
     (count, group) => count + group.teams.length,
+    0
+  );
+
+  const totalGoals = groupStandings.reduce(
+    (total, group) =>
+      total +
+      group.teams.reduce((groupTotal, team) => groupTotal + team.goalsFor, 0),
     0
   );
 
@@ -246,141 +260,158 @@ export default async function PoolStandingsPage({
         <div className="absolute inset-0 opacity-[0.11] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
 
         <Container>
-          <div className="relative z-10 py-5 sm:py-6">
-            <header className="flex items-center justify-between gap-4">
-              <Link href="/" className="flex items-center">
-                <Image
-                  src="/brand/poolr-logo-dark.png"
-                  alt="Poolr"
-                  width={340}
-                  height={100}
-                  priority
-                  className="h-[72px] w-auto sm:h-[88px] lg:h-24"
-                />
-              </Link>
+          <div className="relative z-10 py-4 sm:py-5">
+            <div className="mx-auto max-w-5xl">
+              <header className="flex items-center justify-between gap-4">
+                <Link href="/" className="flex items-center">
+                  <Image
+                    src="/brand/poolr-logo-dark.png"
+                    alt="Poolr"
+                    width={340}
+                    height={100}
+                    priority
+                    className="h-[52px] w-auto sm:h-[64px]"
+                  />
+                </Link>
 
-              <Link
-                href={`/pools/${pool.id}`}
-                className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur transition hover:bg-white/10"
-              >
-                Pool
-              </Link>
-            </header>
+                <Link
+                  href={`/pools/${pool.id}`}
+                  className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:text-sm"
+                >
+                  Pool
+                </Link>
+              </header>
 
-            <div className="mx-auto mt-8 flex max-w-5xl flex-col gap-5">
-              <Link
-                href={`/pools/${pool.id}`}
-                className="inline-flex w-fit text-sm font-semibold text-zinc-400 transition hover:text-white"
-              >
-                ← Back to pool
-              </Link>
+              <div className="mt-4 flex flex-col gap-4">
+                <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+                  <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                    <div className="min-w-0">
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-200">
+                          <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_14px_rgba(110,231,183,0.9)]" />
+                          World Cup Pool
+                        </span>
 
-              <section className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-5 shadow-2xl backdrop-blur-xl sm:p-7">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
-                      Group standings
-                    </p>
-                    <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
-                      {pool.name}
-                    </h1>
-                    <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
-                      Group tables are calculated automatically from official
-                      World Cup results entered by the admin.
-                    </p>
-                  </div>
-
-                  <div className="rounded-[1.5rem] border border-emerald-300/20 bg-emerald-300/10 px-5 py-4 sm:min-w-[210px]">
-                    <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-200">
-                      Status
-                    </p>
-                    <p className="mt-2 text-lg font-black text-white">
-                      Automatic
-                    </p>
-                    <p className="mt-1 text-sm text-zinc-400">
-                      From match results
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur">
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-zinc-500">
-                    Groups
-                  </p>
-                  <p className="mt-2 text-2xl font-black text-white">
-                    {groupStandings.length}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur">
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-zinc-500">
-                    Teams
-                  </p>
-                  <p className="mt-2 text-2xl font-black text-white">
-                    {totalTeams}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur">
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-zinc-500">
-                    Processed matches
-                  </p>
-                  <p className="mt-2 text-2xl font-black text-white">
-                    {finishedGroupMatches}
-                  </p>
-                </div>
-              </div>
-
-              {groupStandings.length > 0 ? (
-                <div className="grid gap-4 lg:grid-cols-2">
-                  {groupStandings.map((group) => (
-                    <section
-                      key={group.groupKey}
-                      className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] backdrop-blur"
-                    >
-                      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-4 sm:px-5">
-                        <div>
-                          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-300">
-                            World Cup 2026
-                          </p>
-                          <h2 className="mt-1 text-xl font-black text-white">
-                            {group.groupKey}
-                          </h2>
-                        </div>
-
-                        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-black text-zinc-300">
-                          {group.teams.length} teams
+                        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
+                          Group standings
                         </span>
                       </div>
 
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full text-sm">
+                      <h1 className="truncate text-3xl font-black tracking-tight text-white sm:text-4xl">
+                        {pool.name}
+                      </h1>
+
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+                        Group tables are calculated automatically from official
+                        World Cup results entered by the admin.
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-center lg:min-w-[210px]">
+                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
+                        Status
+                      </p>
+                      <p className="mt-1 text-2xl font-black text-white">
+                        Automatic
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-zinc-400">
+                        From results
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                <div className="grid gap-2 sm:grid-cols-4">
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center backdrop-blur">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                      Groups
+                    </p>
+                    <p className="mt-1 text-xl font-black text-white">
+                      {groupStandings.length}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center backdrop-blur">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                      Teams
+                    </p>
+                    <p className="mt-1 text-xl font-black text-white">
+                      {totalTeams}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center backdrop-blur">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                      Played
+                    </p>
+                    <p className="mt-1 text-xl font-black text-white">
+                      {finishedGroupMatches}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center backdrop-blur">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                      Goals
+                    </p>
+                    <p className="mt-1 text-xl font-black text-white">
+                      {totalGoals}
+                    </p>
+                  </div>
+                </div>
+
+                {groupStandings.length > 0 ? (
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {groupStandings.map((group) => (
+                      <section
+                        key={group.groupKey}
+                        className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] shadow-xl backdrop-blur-xl"
+                      >
+                        <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-black/15 px-4 py-3 sm:px-5">
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">
+                              World Cup 2026
+                            </p>
+                            <h2 className="mt-1 text-xl font-black text-white">
+                              {group.groupKey}
+                            </h2>
+                          </div>
+
+                          <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-xs font-bold text-zinc-300">
+                            {group.teams.length} teams
+                          </span>
+                        </div>
+
+                        <table className="w-full table-fixed text-[11px] font-bold tabular-nums text-zinc-200 sm:text-xs">
                           <thead>
-                            <tr className="border-b border-white/10 bg-black/20 text-zinc-500">
-                              <th className="px-3 py-3 text-left text-xs font-black uppercase tracking-wide">
+                            <tr className="border-b border-white/10 bg-black/25 text-zinc-500">
+                              <th className="w-[30px] px-1 py-2 text-center font-bold uppercase">
                                 #
                               </th>
-                              <th className="px-3 py-3 text-left text-xs font-black uppercase tracking-wide">
+                              <th className="px-1 py-2 text-left font-bold uppercase">
                                 Team
                               </th>
-                              <th className="px-2 py-3 text-right text-xs font-black uppercase tracking-wide">
+                              <th className="w-[26px] px-0.5 py-2 text-center font-bold uppercase">
                                 P
                               </th>
-                              <th className="px-2 py-3 text-right text-xs font-black uppercase tracking-wide">
+                              <th className="w-[26px] px-0.5 py-2 text-center font-bold uppercase">
                                 W
                               </th>
-                              <th className="px-2 py-3 text-right text-xs font-black uppercase tracking-wide">
+                              <th className="w-[26px] px-0.5 py-2 text-center font-bold uppercase">
                                 D
                               </th>
-                              <th className="px-2 py-3 text-right text-xs font-black uppercase tracking-wide">
+                              <th className="w-[26px] px-0.5 py-2 text-center font-bold uppercase">
                                 L
                               </th>
-                              <th className="px-2 py-3 text-right text-xs font-black uppercase tracking-wide">
+                              <th className="w-[30px] px-0.5 py-2 text-center font-bold uppercase">
+                                GF
+                              </th>
+                              <th className="w-[30px] px-0.5 py-2 text-center font-bold uppercase">
+                                GA
+                              </th>
+                              <th className="w-[34px] px-0.5 py-2 text-center font-bold uppercase">
                                 GD
                               </th>
-                              <th className="px-3 py-3 text-right text-xs font-black uppercase tracking-wide">
+                              <th className="w-[34px] px-1 py-2 text-center font-bold uppercase text-white">
                                 Pts
                               </th>
                             </tr>
@@ -393,15 +424,15 @@ export default async function PoolStandingsPage({
                               return (
                                 <tr
                                   key={team.team}
-                                  className={`border-b border-white/10 last:border-b-0 ${
+                                  className={`border-b border-white/10 transition last:border-b-0 ${
                                     isQualifiedSpot
-                                      ? "bg-emerald-300/[0.045]"
-                                      : ""
+                                      ? "bg-emerald-300/[0.055]"
+                                      : "hover:bg-white/[0.025]"
                                   }`}
                                 >
-                                  <td className="px-3 py-3 text-left">
+                                  <td className="px-1 py-2 text-center">
                                     <span
-                                      className={`inline-flex h-7 w-7 items-center justify-center rounded-xl border text-xs font-black ${
+                                      className={`inline-flex h-6 w-6 items-center justify-center rounded-lg border text-[11px] font-bold ${
                                         isQualifiedSpot
                                           ? "border-emerald-300/25 bg-emerald-300/10 text-emerald-200"
                                           : "border-white/10 bg-black/20 text-zinc-400"
@@ -411,32 +442,36 @@ export default async function PoolStandingsPage({
                                     </span>
                                   </td>
 
-                                  <td className="px-3 py-3 font-black text-white">
-                                    <div className="flex flex-col">
-                                      <span>{team.team}</span>
-                                      <span className="mt-0.5 text-xs font-medium text-zinc-500">
-                                        GF {team.goalsFor} · GA{" "}
-                                        {team.goalsAgainst}
-                                      </span>
-                                    </div>
+                                  <td className="min-w-0 px-1 py-2 text-left">
+                                    <p className="truncate font-bold leading-tight text-white">
+                                      {team.team}
+                                    </p>
                                   </td>
 
-                                  <td className="px-2 py-3 text-right text-zinc-200">
+                                  <td className="px-0.5 py-2 text-center font-bold text-zinc-200">
                                     {team.played}
                                   </td>
-                                  <td className="px-2 py-3 text-right text-zinc-200">
+                                  <td className="px-0.5 py-2 text-center font-bold text-zinc-200">
                                     {team.wins}
                                   </td>
-                                  <td className="px-2 py-3 text-right text-zinc-200">
+                                  <td className="px-0.5 py-2 text-center font-bold text-zinc-200">
                                     {team.draws}
                                   </td>
-                                  <td className="px-2 py-3 text-right text-zinc-200">
+                                  <td className="px-0.5 py-2 text-center font-bold text-zinc-200">
                                     {team.losses}
                                   </td>
-                                  <td className="px-2 py-3 text-right text-zinc-200">
-                                    {formatGoalDifference(team.goalDifference)}
+                                  <td className="px-0.5 py-2 text-center font-bold text-zinc-200">
+                                    {team.goalsFor}
                                   </td>
-                                  <td className="px-3 py-3 text-right text-base font-black text-white">
+                                  <td className="px-0.5 py-2 text-center font-bold text-zinc-200">
+                                    {team.goalsAgainst}
+                                  </td>
+                                  <td className="px-0.5 py-2 text-center font-bold text-zinc-200">
+                                    {formatGoalDifference(
+                                      team.goalDifference
+                                    )}
+                                  </td>
+                                  <td className="px-1 py-2 text-center font-bold text-white">
                                     {team.points}
                                   </td>
                                 </tr>
@@ -444,21 +479,21 @@ export default async function PoolStandingsPage({
                             })}
                           </tbody>
                         </table>
-                      </div>
-                    </section>
-                  ))}
-                </div>
-              ) : (
-                <section className="rounded-[2rem] border border-dashed border-white/15 bg-white/[0.04] p-6 backdrop-blur">
-                  <h2 className="text-xl font-black">
-                    No group standings available yet
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    Once group-stage matches exist in the World Cup schedule,
-                    standings will appear here automatically.
-                  </p>
-                </section>
-              )}
+                      </section>
+                    ))}
+                  </div>
+                ) : (
+                  <section className="rounded-[1.5rem] border border-dashed border-white/15 bg-white/[0.04] p-6 text-center backdrop-blur">
+                    <h2 className="text-xl font-black">
+                      No group standings available yet
+                    </h2>
+                    <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-zinc-400">
+                      Once group-stage matches exist in the World Cup schedule,
+                      standings will appear here automatically.
+                    </p>
+                  </section>
+                )}
+              </div>
             </div>
           </div>
         </Container>

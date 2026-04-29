@@ -60,7 +60,7 @@ function getDisplayName(
   return userId === currentUserId ? `${fallback} (you)` : fallback;
 }
 
-function getRankClasses(index: number, isCurrentUser: boolean) {
+function getRowClasses(index: number, isCurrentUser: boolean) {
   if (isCurrentUser) {
     return "border-emerald-300/45 bg-emerald-300/[0.09]";
   }
@@ -69,12 +69,24 @@ function getRankClasses(index: number, isCurrentUser: boolean) {
     return "border-yellow-300/30 bg-yellow-300/[0.07]";
   }
 
+  if (index === 1) {
+    return "border-zinc-300/20 bg-zinc-300/[0.045]";
+  }
+
+  if (index === 2) {
+    return "border-orange-300/25 bg-orange-300/[0.055]";
+  }
+
   return "border-white/10 bg-white/[0.04]";
 }
 
-function getRankBadgeClasses(index: number) {
+function getRankBadgeClasses(index: number, isCurrentUser: boolean) {
+  if (isCurrentUser) {
+    return "border-emerald-300/35 bg-emerald-300/15 text-emerald-100";
+  }
+
   if (index === 0) {
-    return "border-yellow-300/30 bg-yellow-300/15 text-yellow-100";
+    return "border-yellow-300/35 bg-yellow-300/15 text-yellow-100";
   }
 
   if (index === 1) {
@@ -85,7 +97,14 @@ function getRankBadgeClasses(index: number) {
     return "border-orange-300/25 bg-orange-300/10 text-orange-100";
   }
 
-  return "border-white/10 bg-black/25 text-white";
+  return "border-white/10 bg-black/25 text-zinc-300";
+}
+
+function getRankLabel(index: number) {
+  if (index === 0) return "Leader";
+  if (index === 1) return "Second";
+  if (index === 2) return "Third";
+  return "Player";
 }
 
 export default async function PoolLeaderboardPage({
@@ -94,6 +113,7 @@ export default async function PoolLeaderboardPage({
   const { id } = await params;
 
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -242,10 +262,25 @@ export default async function PoolLeaderboardPage({
   }
 
   const leader = leaderboard[0] ?? null;
+  const topThree = leaderboard.slice(0, 3);
+
   const currentUserRank =
     leaderboard.findIndex((entry) => entry.user_id === user.id) + 1;
-  const currentUserScore =
-    leaderboard.find((entry) => entry.user_id === user.id)?.total_points ?? 0;
+
+  const currentUserEntry =
+    leaderboard.find((entry) => entry.user_id === user.id) ?? null;
+
+  const currentUserScore = currentUserEntry?.total_points ?? 0;
+
+  const totalMatchPoints = leaderboard.reduce(
+    (total, entry) => total + entry.match_points,
+    0
+  );
+
+  const totalBonusPoints = leaderboard.reduce(
+    (total, entry) => total + entry.bonus_points,
+    0
+  );
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
@@ -254,131 +289,206 @@ export default async function PoolLeaderboardPage({
         <div className="absolute inset-0 opacity-[0.11] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
 
         <Container>
-          <div className="relative z-10 py-5 sm:py-6">
-            <header className="flex items-center justify-between gap-4">
-              <Link href="/" className="flex items-center">
-                <Image
-                  src="/brand/poolr-logo-dark.png"
-                  alt="Poolr"
-                  width={340}
-                  height={100}
-                  priority
-                  className="h-[72px] w-auto sm:h-[88px] lg:h-24"
-                />
-              </Link>
+          <div className="relative z-10 py-4 sm:py-5">
+            <div className="mx-auto max-w-5xl">
+              <header className="flex items-center justify-between gap-4">
+                <Link href="/" className="flex items-center">
+                  <Image
+                    src="/brand/poolr-logo-dark.png"
+                    alt="Poolr"
+                    width={340}
+                    height={100}
+                    priority
+                    className="h-[52px] w-auto sm:h-[64px]"
+                  />
+                </Link>
 
-              <Link
-                href={`/pools/${pool.id}`}
-                className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur transition hover:bg-white/10"
-              >
-                Pool
-              </Link>
-            </header>
+                <Link
+                  href={`/pools/${pool.id}`}
+                  className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:text-sm"
+                >
+                  Pool
+                </Link>
+              </header>
 
-            <div className="mx-auto mt-8 flex max-w-4xl flex-col gap-5">
-              <Link
-                href={`/pools/${pool.id}`}
-                className="inline-flex w-fit text-sm font-semibold text-zinc-400 transition hover:text-white"
-              >
-                ← Back to pool
-              </Link>
+              <div className="mt-4 flex flex-col gap-4">
+                <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+                  <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                    <div className="min-w-0">
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-200">
+                          <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_14px_rgba(110,231,183,0.9)]" />
+                          World Cup Pool
+                        </span>
 
-              <section className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-5 shadow-2xl backdrop-blur-xl sm:p-7">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
-                      Leaderboard
-                    </p>
-                    <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
-                      {pool.name}
-                    </h1>
-                    <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
-                      Match points and bonus points are combined automatically
-                      into the total ranking.
-                    </p>
-                  </div>
+                        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
+                          Leaderboard
+                        </span>
+                      </div>
 
-                  <div className="rounded-[1.5rem] border border-emerald-300/20 bg-emerald-300/10 px-5 py-4 sm:min-w-[190px]">
-                    <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-200">
-                      Your rank
-                    </p>
-                    <p className="mt-2 text-3xl font-black text-white">
-                      {currentUserRank > 0 ? `#${currentUserRank}` : "-"}
-                    </p>
-                    <p className="mt-1 text-sm text-zinc-400">
-                      {currentUserScore} pts
-                    </p>
-                  </div>
-                </div>
-              </section>
+                      <h1 className="truncate text-3xl font-black tracking-tight text-white sm:text-4xl">
+                        {pool.name}
+                      </h1>
 
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur">
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-zinc-500">
-                    Players
-                  </p>
-                  <p className="mt-2 text-2xl font-black text-white">
-                    {leaderboard.length}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur">
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-zinc-500">
-                    Leader
-                  </p>
-                  <p className="mt-2 truncate text-lg font-black text-white">
-                    {leader
-                      ? getDisplayName(leader.user_id, profilesMap, user.id)
-                      : "-"}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur">
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-zinc-500">
-                    Top score
-                  </p>
-                  <p className="mt-2 text-2xl font-black text-white">
-                    {leader ? leader.total_points : 0}
-                  </p>
-                </div>
-              </div>
-
-              {leaderboard.length > 0 ? (
-                <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur sm:p-5">
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
-                        Ranking
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+                        Match points and bonus points are combined into one
+                        live pool ranking.
                       </p>
-                      <h2 className="mt-2 text-2xl font-black tracking-tight">
-                        Current standings
-                      </h2>
+                    </div>
+
+                    <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-center lg:min-w-[220px]">
+                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
+                        Your rank
+                      </p>
+                      <p className="mt-1 text-3xl font-black text-white">
+                        {currentUserRank > 0 ? `#${currentUserRank}` : "-"}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-zinc-400">
+                        {currentUserScore} pts
+                      </p>
                     </div>
                   </div>
+                </section>
 
-                  <div className="grid gap-3">
-                    {leaderboard.map((entry, index) => {
-                      const displayName = getDisplayName(
-                        entry.user_id,
-                        profilesMap,
-                        user.id
-                      );
-                      const isCurrentUser = entry.user_id === user.id;
-                      const isLeader = index === 0;
+                <div className="grid gap-2 sm:grid-cols-4">
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center backdrop-blur">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                      Players
+                    </p>
+                    <p className="mt-1 text-xl font-black text-white">
+                      {leaderboard.length}
+                    </p>
+                  </div>
 
-                      return (
-                        <div
-                          key={entry.user_id}
-                          className={`rounded-[1.5rem] border p-4 ${getRankClasses(
-                            index,
-                            isCurrentUser
-                          )}`}
-                        >
-                          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex min-w-0 items-center gap-3">
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center backdrop-blur">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                      Leader
+                    </p>
+                    <p className="mt-1 truncate text-base font-black text-white">
+                      {leader
+                        ? getDisplayName(leader.user_id, profilesMap, user.id)
+                        : "-"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center backdrop-blur">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                      Match pts
+                    </p>
+                    <p className="mt-1 text-xl font-black text-white">
+                      {totalMatchPoints}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center backdrop-blur">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                      Bonus pts
+                    </p>
+                    <p className="mt-1 text-xl font-black text-white">
+                      {totalBonusPoints}
+                    </p>
+                  </div>
+                </div>
+
+                {topThree.length > 0 ? (
+                  <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 shadow-xl backdrop-blur-xl sm:p-5">
+                    <div className="mb-4 text-center">
+                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300">
+                        Top players
+                      </p>
+                      <h2 className="mt-1 text-2xl font-black tracking-tight text-white">
+                        Current podium
+                      </h2>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-3">
+                      {topThree.map((entry, index) => {
+                        const isCurrentUser = entry.user_id === user.id;
+                        const displayName = getDisplayName(
+                          entry.user_id,
+                          profilesMap,
+                          user.id
+                        );
+
+                        return (
+                          <div
+                            key={entry.user_id}
+                            className={`rounded-2xl border p-4 text-center ${getRowClasses(
+                              index,
+                              isCurrentUser
+                            )}`}
+                          >
+                            <div
+                              className={`mx-auto flex h-11 w-11 items-center justify-center rounded-2xl border text-sm font-black ${getRankBadgeClasses(
+                                index,
+                                isCurrentUser
+                              )}`}
+                            >
+                              #{index + 1}
+                            </div>
+
+                            <p className="mt-3 truncate text-base font-black text-white">
+                              {displayName}
+                            </p>
+
+                            <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+                              {getRankLabel(index)}
+                            </p>
+
+                            <div className="mt-4 rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+                              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                                Total points
+                              </p>
+                              <p className="mt-1 text-2xl font-black text-white">
+                                {entry.total_points}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ) : null}
+
+                {leaderboard.length > 0 ? (
+                  <section className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] shadow-xl backdrop-blur-xl">
+                    <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-black/15 px-4 py-3 sm:px-5">
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">
+                          Ranking
+                        </p>
+                        <h2 className="mt-1 text-xl font-black text-white">
+                          Full leaderboard
+                        </h2>
+                      </div>
+
+                      <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-xs font-bold text-zinc-300">
+                        {leaderboard.length} players
+                      </span>
+                    </div>
+
+                    <div className="grid gap-2 p-3 sm:p-4">
+                      {leaderboard.map((entry, index) => {
+                        const displayName = getDisplayName(
+                          entry.user_id,
+                          profilesMap,
+                          user.id
+                        );
+                        const isCurrentUser = entry.user_id === user.id;
+
+                        return (
+                          <div
+                            key={entry.user_id}
+                            className={`rounded-2xl border px-3 py-3 ${getRowClasses(
+                              index,
+                              isCurrentUser
+                            )}`}
+                          >
+                            <div className="grid grid-cols-[auto_1fr] gap-3 sm:grid-cols-[auto_1fr_330px] sm:items-center">
                               <div
-                                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border text-sm font-black ${getRankBadgeClasses(
-                                  index
+                                className={`flex h-10 w-10 items-center justify-center rounded-xl border text-xs font-black ${getRankBadgeClasses(
+                                  index,
+                                  isCurrentUser
                                 )}`}
                               >
                                 #{index + 1}
@@ -388,59 +498,56 @@ export default async function PoolLeaderboardPage({
                                 <p className="truncate text-sm font-black text-white sm:text-base">
                                   {displayName}
                                 </p>
-                                <p className="mt-1 text-xs text-zinc-500">
-                                  {isLeader
-                                    ? "Current leader"
-                                    : isCurrentUser
-                                      ? "Your position"
-                                      : "Pool member"}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-2 sm:min-w-[310px]">
-                              <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-right">
-                                <p className="text-[11px] font-bold uppercase tracking-wide text-zinc-500">
-                                  Match
-                                </p>
-                                <p className="mt-1 text-base font-black text-white">
-                                  {entry.match_points}
+                                <p className="mt-0.5 text-xs font-semibold text-zinc-500">
+                                  {getRankLabel(index)}
+                                  {isCurrentUser ? " • your position" : ""}
                                 </p>
                               </div>
 
-                              <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-right">
-                                <p className="text-[11px] font-bold uppercase tracking-wide text-zinc-500">
-                                  Bonus
-                                </p>
-                                <p className="mt-1 text-base font-black text-white">
-                                  {entry.bonus_points}
-                                </p>
-                              </div>
+                              <div className="col-span-2 grid grid-cols-3 gap-2 sm:col-span-1">
+                                <div className="rounded-xl border border-white/10 bg-black/20 px-2 py-2 text-center">
+                                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-500">
+                                    Match
+                                  </p>
+                                  <p className="mt-1 text-sm font-black text-white">
+                                    {entry.match_points}
+                                  </p>
+                                </div>
 
-                              <div className="rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-3 py-2 text-right">
-                                <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-200">
-                                  Total
-                                </p>
-                                <p className="mt-1 text-lg font-black text-white">
-                                  {entry.total_points}
-                                </p>
+                                <div className="rounded-xl border border-white/10 bg-black/20 px-2 py-2 text-center">
+                                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-500">
+                                    Bonus
+                                  </p>
+                                  <p className="mt-1 text-sm font-black text-white">
+                                    {entry.bonus_points}
+                                  </p>
+                                </div>
+
+                                <div className="rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-2 py-2 text-center">
+                                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-200">
+                                    Total
+                                  </p>
+                                  <p className="mt-1 text-sm font-black text-white">
+                                    {entry.total_points}
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </section>
-              ) : (
-                <section className="rounded-[2rem] border border-dashed border-white/15 bg-white/[0.04] p-6 backdrop-blur">
-                  <h2 className="text-xl font-black">No players yet</h2>
-                  <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    Once members join this pool, the leaderboard will appear
-                    here.
-                  </p>
-                </section>
-              )}
+                        );
+                      })}
+                    </div>
+                  </section>
+                ) : (
+                  <section className="rounded-[1.5rem] border border-dashed border-white/15 bg-white/[0.04] p-6 text-center backdrop-blur">
+                    <h2 className="text-xl font-black">No players yet</h2>
+                    <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-zinc-400">
+                      Once members join this pool, the leaderboard will appear
+                      here.
+                    </p>
+                  </section>
+                )}
+              </div>
             </div>
           </div>
         </Container>

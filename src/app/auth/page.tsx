@@ -1,24 +1,37 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase-browser";
 
 type Mode = "login" | "register";
 
-export default function AuthPage() {
+function AuthPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = useMemo(() => createClient(), []);
-  const [mode, setMode] = useState<Mode>("login");
+
+  const initialMode: Mode =
+    searchParams.get("mode") === "register" ? "register" : "login";
+
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("mode") === "register") {
+      setMode("register");
+      setError(null);
+      setMessage(null);
+    }
+  }, [searchParams]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -175,10 +188,11 @@ export default function AuthPage() {
                           setError(null);
                           setMessage(null);
                         }}
-                        className={`rounded-xl px-4 py-2 text-sm font-black transition ${mode === "login"
+                        className={`rounded-xl px-4 py-2 text-sm font-black transition ${
+                          mode === "login"
                             ? "bg-emerald-300 text-zinc-950"
                             : "text-zinc-400 hover:text-white"
-                          }`}
+                        }`}
                       >
                         Log in
                       </button>
@@ -190,10 +204,11 @@ export default function AuthPage() {
                           setError(null);
                           setMessage(null);
                         }}
-                        className={`rounded-xl px-4 py-2 text-sm font-black transition ${mode === "register"
+                        className={`rounded-xl px-4 py-2 text-sm font-black transition ${
+                          mode === "register"
                             ? "bg-emerald-300 text-zinc-950"
                             : "text-zinc-400 hover:text-white"
-                          }`}
+                        }`}
                       >
                         Sign up
                       </button>
@@ -212,7 +227,9 @@ export default function AuthPage() {
                             id="displayName"
                             type="text"
                             value={displayName}
-                            onChange={(e) => setDisplayName(e.target.value)}
+                            onChange={(event) =>
+                              setDisplayName(event.target.value)
+                            }
                             placeholder="For example: Alex"
                             className="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-emerald-300/70"
                           />
@@ -230,7 +247,7 @@ export default function AuthPage() {
                           id="email"
                           type="email"
                           value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          onChange={(event) => setEmail(event.target.value)}
                           placeholder="you@email.com"
                           required
                           className="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-emerald-300/70"
@@ -248,7 +265,9 @@ export default function AuthPage() {
                           id="password"
                           type="password"
                           value={password}
-                          onChange={(e) => setPassword(e.target.value)}
+                          onChange={(event) =>
+                            setPassword(event.target.value)
+                          }
                           placeholder="At least 6 characters"
                           required
                           className="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-emerald-300/70"
@@ -292,5 +311,13 @@ export default function AuthPage() {
         </Container>
       </section>
     </main>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense>
+      <AuthPageContent />
+    </Suspense>
   );
 }
