@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useLanguage } from "@/hooks/useLanguage";
 import { getTeamFlagAlt, getTeamFlagSrc } from "@/lib/world-cup-flags";
 
 type NextMatchHighlightProps = {
@@ -21,8 +22,41 @@ type NextMatchHighlightProps = {
   } | null;
 };
 
-function formatMatchDate(value: string) {
-  return new Intl.DateTimeFormat("en-GB", {
+const copy = {
+  en: {
+    nextMatch: "Next match",
+    noUpcomingMatches: "No upcoming matches",
+    noOpenMatch: "There is currently no open World Cup match available.",
+    group: "Group",
+    match: "Match",
+    startsIn: "Starts in",
+    days: "days",
+    hours: "hours",
+    min: "min",
+    sec: "sec",
+    hour: "hour",
+    predictionLocks: "Your prediction locks when the match starts.",
+    predictMatch: "Predict match",
+  },
+  nl: {
+    nextMatch: "Volgende wedstrijd",
+    noUpcomingMatches: "Geen aankomende wedstrijden",
+    noOpenMatch: "Er is momenteel geen open WK-wedstrijd beschikbaar.",
+    group: "Groep",
+    match: "Wedstrijd",
+    startsIn: "Start over",
+    days: "dagen",
+    hours: "uren",
+    min: "min",
+    sec: "sec",
+    hour: "uur",
+    predictionLocks: "Je voorspelling sluit zodra de wedstrijd begint.",
+    predictMatch: "Wedstrijd voorspellen",
+  },
+};
+
+function formatMatchDate(value: string, language: "en" | "nl") {
+  return new Intl.DateTimeFormat(language === "nl" ? "nl-NL" : "en-GB", {
     weekday: "long",
     day: "2-digit",
     month: "short",
@@ -39,23 +73,35 @@ function getDisplayTeam(team: string | null, slot: string | null) {
   return "TBD";
 }
 
-function getStageLabel(match: NonNullable<NextMatchHighlightProps["match"]>) {
+function getStageLabel(
+  match: NonNullable<NextMatchHighlightProps["match"]>,
+  language: "en" | "nl"
+) {
+  const t = copy[language];
+
   if (match.group_label && match.group_label.trim()) {
     const value = match.group_label.trim();
 
     if (value.toLowerCase().startsWith("group ")) {
-      return value;
+      return language === "nl"
+        ? value.replace(/^group/i, t.group)
+        : value;
     }
 
-    return `Group ${value}`;
+    return `${t.group} ${value}`;
   }
 
   if (match.round_name) return match.round_name;
   if (match.stage) return match.stage;
-  return "Next match";
+  return t.nextMatch;
 }
 
-function formatCountdown(targetDate: string, now: number) {
+function formatCountdown(
+  targetDate: string,
+  now: number,
+  language: "en" | "nl"
+) {
+  const t = copy[language];
   const target = new Date(targetDate).getTime();
   const diff = target - now;
 
@@ -63,9 +109,9 @@ function formatCountdown(targetDate: string, now: number) {
     return {
       expired: true,
       blocks: [
-        { value: "0", label: "days" },
-        { value: "0", label: "hours" },
-        { value: "0", label: "min" },
+        { value: "0", label: t.days },
+        { value: "0", label: t.hours },
+        { value: "0", label: t.min },
       ],
     };
   }
@@ -80,9 +126,9 @@ function formatCountdown(targetDate: string, now: number) {
     return {
       expired: false,
       blocks: [
-        { value: String(days), label: "days" },
-        { value: String(hours), label: "hours" },
-        { value: String(minutes), label: "min" },
+        { value: String(days), label: t.days },
+        { value: String(hours), label: t.hours },
+        { value: String(minutes), label: t.min },
       ],
     };
   }
@@ -91,9 +137,9 @@ function formatCountdown(targetDate: string, now: number) {
     return {
       expired: false,
       blocks: [
-        { value: String(hours), label: "hours" },
-        { value: String(minutes), label: "min" },
-        { value: String(seconds), label: "sec" },
+        { value: String(hours), label: t.hours },
+        { value: String(minutes), label: t.min },
+        { value: String(seconds), label: t.sec },
       ],
     };
   }
@@ -101,9 +147,9 @@ function formatCountdown(targetDate: string, now: number) {
   return {
     expired: false,
     blocks: [
-      { value: String(minutes), label: "min" },
-      { value: String(seconds), label: "sec" },
-      { value: "<1", label: "hour" },
+      { value: String(minutes), label: t.min },
+      { value: String(seconds), label: t.sec },
+      { value: "<1", label: t.hour },
     ],
   };
 }
@@ -148,6 +194,9 @@ export default function NextMatchHighlight({
   match,
 }: NextMatchHighlightProps) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const t = copy[language];
+
   const [now, setNow] = useState(Date.now());
   const [hasRefreshed, setHasRefreshed] = useState(false);
 
@@ -161,8 +210,8 @@ export default function NextMatchHighlight({
 
   const countdown = useMemo(() => {
     if (!match) return null;
-    return formatCountdown(match.starts_at, now);
-  }, [match, now]);
+    return formatCountdown(match.starts_at, now, language);
+  }, [match, now, language]);
 
   useEffect(() => {
     if (!match || !countdown?.expired || hasRefreshed) {
@@ -182,13 +231,15 @@ export default function NextMatchHighlight({
     return (
       <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5 text-center backdrop-blur-xl">
         <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300">
-          Next match
+          {t.nextMatch}
         </p>
+
         <h2 className="mt-2 text-2xl font-black tracking-tight text-white">
-          No upcoming matches
+          {t.noUpcomingMatches}
         </h2>
+
         <p className="mt-2 text-sm leading-6 text-zinc-400">
-          There is currently no open World Cup match available.
+          {t.noOpenMatch}
         </p>
       </section>
     );
@@ -206,16 +257,16 @@ export default function NextMatchHighlight({
         <div className="text-center">
           <div className="flex flex-wrap items-center justify-center gap-2">
             <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-200">
-              Next match
+              {t.nextMatch}
             </span>
 
             <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-zinc-300">
-              {getStageLabel(match)}
+              {getStageLabel(match, language)}
             </span>
 
             {match.match_number !== null ? (
               <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-zinc-300">
-                Match {match.match_number}
+                {t.match} {match.match_number}
               </span>
             ) : null}
           </div>
@@ -225,7 +276,7 @@ export default function NextMatchHighlight({
           </h2>
 
           <p className="mt-1.5 text-sm font-semibold text-zinc-400">
-            {formatMatchDate(match.starts_at)}
+            {formatMatchDate(match.starts_at, language)}
           </p>
         </div>
 
@@ -245,18 +296,19 @@ export default function NextMatchHighlight({
 
         <div className="mx-auto mt-4 max-w-3xl rounded-[1.5rem] border border-emerald-300/25 bg-emerald-300/[0.08] p-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-200/90">
-            Starts in
+            {t.startsIn}
           </p>
 
           <div className="mt-3 grid grid-cols-3 gap-2">
             {countdown?.blocks.map((block) => (
               <div
-                key={block.label}
+                key={`${block.label}-${block.value}`}
                 className="rounded-2xl border border-white/10 bg-black/35 px-3 py-3 text-center"
               >
                 <p className="font-mono text-3xl font-black leading-none tracking-tight text-emerald-100 sm:text-4xl">
                   {block.value}
                 </p>
+
                 <p className="mt-1.5 text-[9px] font-black uppercase tracking-[0.16em] text-emerald-200/75">
                   {block.label}
                 </p>
@@ -265,7 +317,7 @@ export default function NextMatchHighlight({
           </div>
 
           <p className="mt-3 text-xs font-semibold text-zinc-400">
-            Your prediction locks when the match starts.
+            {t.predictionLocks}
           </p>
         </div>
 
@@ -274,7 +326,7 @@ export default function NextMatchHighlight({
             href={`/pools/${poolId}/matches`}
             className="inline-flex w-full max-w-xs items-center justify-center rounded-2xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200 active:scale-[0.99]"
           >
-            Predict match
+            {t.predictMatch}
           </Link>
         </div>
       </div>

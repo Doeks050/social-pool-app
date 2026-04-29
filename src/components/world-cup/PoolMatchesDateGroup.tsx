@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MatchPredictionCard from "@/components/world-cup/MatchPredictionCard";
+import type { Language } from "@/lib/i18n";
 
 type MatchRow = {
   id: string;
@@ -37,7 +38,29 @@ type PoolMatchesDateGroupProps = {
   matches: MatchRow[];
   predictions: Record<string, PredictionRow>;
   defaultOpen?: boolean;
+  language: Language;
 };
+
+const copy = {
+  en: {
+    matchDay: "Match day",
+    predicted: "predicted",
+    finished: "finished",
+    open: "open",
+    locked: "locked",
+    match: "match",
+    matches: "matches",
+  },
+  nl: {
+    matchDay: "Wedstrijddag",
+    predicted: "voorspeld",
+    finished: "afgelopen",
+    open: "open",
+    locked: "gesloten",
+    match: "wedstrijd",
+    matches: "wedstrijden",
+  },
+} satisfies Record<Language, Record<string, string>>;
 
 function getMatchState(match: MatchRow): "open" | "locked" | "finished" {
   const hasResult =
@@ -75,8 +98,10 @@ export default function PoolMatchesDateGroup({
   matches,
   predictions,
   defaultOpen = false,
+  language,
 }: PoolMatchesDateGroupProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const t = copy[language];
 
   const predictedCount = matches.filter((match) => predictions[match.id]).length;
   const { openCount, lockedCount, finishedCount } = getStateSummary(matches);
@@ -90,14 +115,16 @@ export default function PoolMatchesDateGroup({
       >
         <div className="min-w-0">
           <p className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-300">
-            Match day
+            {t.matchDay}
           </p>
+
           <h2 className="mt-0.5 truncate text-sm font-black capitalize text-white sm:text-base">
             {label}
           </h2>
+
           <p className="mt-0.5 text-[11px] text-zinc-400">
-            {predictedCount}/{matches.length} predicted
-            {finishedCount > 0 ? ` · ${finishedCount} finished` : ""}
+            {predictedCount}/{matches.length} {t.predicted}
+            {finishedCount > 0 ? ` · ${finishedCount} ${t.finished}` : ""}
           </p>
         </div>
 
@@ -105,19 +132,19 @@ export default function PoolMatchesDateGroup({
           <div className="hidden items-center gap-1 md:flex">
             {openCount > 0 ? (
               <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-[10px] font-bold text-emerald-200">
-                {openCount} open
+                {openCount} {t.open}
               </span>
             ) : null}
 
             {lockedCount > 0 ? (
               <span className="rounded-full border border-orange-300/20 bg-orange-300/10 px-2 py-0.5 text-[10px] font-bold text-orange-100">
-                {lockedCount} locked
+                {lockedCount} {t.locked}
               </span>
             ) : null}
           </div>
 
           <span className="rounded-full border border-white/10 bg-black/25 px-2 py-0.5 text-[10px] font-bold text-zinc-300">
-            {matches.length} {matches.length === 1 ? "match" : "matches"}
+            {matches.length} {matches.length === 1 ? t.match : t.matches}
           </span>
 
           <span className="flex h-7 w-7 items-center justify-center rounded-xl border border-white/10 bg-black/25 text-sm font-black text-emerald-200">
@@ -135,6 +162,7 @@ export default function PoolMatchesDateGroup({
                 match={match}
                 poolId={poolId}
                 prediction={predictions[match.id] ?? null}
+                language={language}
               />
             ))}
           </div>

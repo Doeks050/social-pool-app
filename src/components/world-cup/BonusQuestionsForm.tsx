@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
+import type { Language } from "@/lib/i18n";
 
 type BonusQuestion = {
   id: string;
@@ -18,8 +19,90 @@ type BonusQuestion = {
 type BonusQuestionsFormProps = {
   poolId: string;
   isLocked: boolean;
+  language: Language;
   questions: BonusQuestion[];
 };
+
+const copy = {
+  en: {
+    bonusPredictions: "Bonus predictions",
+    intro: "These answers count toward your personal score in this pool.",
+    progress: "Progress",
+    of: "of",
+    answered: "answered",
+    complete: "Complete",
+    incomplete: "Incomplete",
+    tournamentPrediction: "Tournament prediction",
+    pt: "pt",
+    pts: "pts",
+    chooseCountry: "Choose a country",
+    open: "Open",
+    locked: "Locked",
+    saving: "Saving...",
+    saveBonusAnswers: "Save bonus answers",
+    completeAllAnswers: "Complete all answers",
+    lockedError:
+      "Bonus answers are locked because the first World Cup match has started.",
+    missingError: "Please answer all bonus questions before saving.",
+    sessionError: "Your session could not be loaded. Please log in again.",
+    savedMessage: "Bonus answers saved.",
+    winnerLabel: "Who will win the World Cup?",
+    winnerDescription: "Pick the country you think will lift the trophy.",
+    runnerUpLabel: "Who will finish as runner-up?",
+    runnerUpDescription: "Pick the country you think will lose the final.",
+    topScorerLabel: "Which country will have the tournament top scorer?",
+    topScorerDescription:
+      "Pick the country of the player you expect to finish as top scorer.",
+    bestPlayerLabel: "Which country will have the player of the tournament?",
+    bestPlayerDescription:
+      "Pick the country of the player you expect to be named player of the tournament.",
+    mostGoalsTeamLabel: "Which country will score the most goals?",
+    mostGoalsTeamDescription:
+      "Pick the country you expect to score the most goals across the tournament.",
+    fairPlayLabel: "Which country will win the fair play award?",
+    fairPlayDescription:
+      "Pick the country you expect to receive the fair play award.",
+  },
+  nl: {
+    bonusPredictions: "Bonusvoorspellingen",
+    intro: "Deze antwoorden tellen mee voor jouw persoonlijke score in deze poule.",
+    progress: "Voortgang",
+    of: "van",
+    answered: "beantwoord",
+    complete: "Compleet",
+    incomplete: "Niet compleet",
+    tournamentPrediction: "Toernooi voorspelling",
+    pt: "pt",
+    pts: "ptn",
+    chooseCountry: "Kies een land",
+    open: "Open",
+    locked: "Gesloten",
+    saving: "Opslaan...",
+    saveBonusAnswers: "Bonusantwoorden opslaan",
+    completeAllAnswers: "Vul alle antwoorden in",
+    lockedError:
+      "Bonusantwoorden zijn gesloten omdat de eerste WK-wedstrijd is begonnen.",
+    missingError: "Beantwoord eerst alle bonusvragen voordat je opslaat.",
+    sessionError: "Je sessie kon niet worden geladen. Log opnieuw in.",
+    savedMessage: "Bonusantwoorden opgeslagen.",
+    winnerLabel: "Wie wint het WK?",
+    winnerDescription: "Kies het land waarvan jij denkt dat het de beker wint.",
+    runnerUpLabel: "Wie wordt tweede?",
+    runnerUpDescription: "Kies het land waarvan jij denkt dat het de finale verliest.",
+    topScorerLabel: "Welk land heeft de topscorer van het toernooi?",
+    topScorerDescription:
+      "Kies het land van de speler waarvan jij verwacht dat hij topscorer wordt.",
+    bestPlayerLabel: "Welk land heeft de beste speler van het toernooi?",
+    bestPlayerDescription:
+      "Kies het land van de speler waarvan jij verwacht dat hij speler van het toernooi wordt.",
+    mostGoalsTeamLabel: "Welk land maakt de meeste doelpunten?",
+    mostGoalsTeamDescription:
+      "Kies het land waarvan jij verwacht dat het de meeste doelpunten maakt tijdens het toernooi.",
+    fairPlayLabel: "Welk land wint de fair play award?",
+    fairPlayDescription:
+      "Kies het land waarvan jij verwacht dat het de fair play award krijgt.",
+  },
+} satisfies Record<Language, Record<string, string>>;
 
 function getAnsweredCount(
   questions: BonusQuestion[],
@@ -28,7 +111,8 @@ function getAnsweredCount(
   return questions.filter((question) => answers[question.id]?.trim()).length;
 }
 
-function getQuestionLabel(question: BonusQuestion) {
+function getQuestionLabel(question: BonusQuestion, language: Language) {
+  const t = copy[language];
   const key = question.questionKey.toLowerCase();
 
   if (
@@ -37,7 +121,7 @@ function getQuestionLabel(question: BonusQuestion) {
     key === "world_cup_winner" ||
     key === "tournament_winner"
   ) {
-    return "Who will win the World Cup?";
+    return t.winnerLabel;
   }
 
   if (
@@ -46,7 +130,7 @@ function getQuestionLabel(question: BonusQuestion) {
     key === "losing_finalist" ||
     key === "second_place"
   ) {
-    return "Who will finish as runner-up?";
+    return t.runnerUpLabel;
   }
 
   if (
@@ -54,7 +138,7 @@ function getQuestionLabel(question: BonusQuestion) {
     key === "golden_boot" ||
     key === "most_goals"
   ) {
-    return "Which country will have the tournament top scorer?";
+    return t.topScorerLabel;
   }
 
   if (
@@ -62,7 +146,7 @@ function getQuestionLabel(question: BonusQuestion) {
     key === "golden_ball" ||
     key === "player_of_the_tournament"
   ) {
-    return "Which country will have the player of the tournament?";
+    return t.bestPlayerLabel;
   }
 
   if (
@@ -70,7 +154,7 @@ function getQuestionLabel(question: BonusQuestion) {
     key === "highest_scoring_team" ||
     key === "team_most_goals"
   ) {
-    return "Which country will score the most goals?";
+    return t.mostGoalsTeamLabel;
   }
 
   if (
@@ -78,13 +162,14 @@ function getQuestionLabel(question: BonusQuestion) {
     key === "fair_play_winner" ||
     key === "fairplay"
   ) {
-    return "Which country will win the fair play award?";
+    return t.fairPlayLabel;
   }
 
   return question.label;
 }
 
-function getQuestionDescription(question: BonusQuestion) {
+function getQuestionDescription(question: BonusQuestion, language: Language) {
+  const t = copy[language];
   const key = question.questionKey.toLowerCase();
 
   if (
@@ -93,7 +178,7 @@ function getQuestionDescription(question: BonusQuestion) {
     key === "world_cup_winner" ||
     key === "tournament_winner"
   ) {
-    return "Pick the country you think will lift the trophy.";
+    return t.winnerDescription;
   }
 
   if (
@@ -102,7 +187,7 @@ function getQuestionDescription(question: BonusQuestion) {
     key === "losing_finalist" ||
     key === "second_place"
   ) {
-    return "Pick the country you think will lose the final.";
+    return t.runnerUpDescription;
   }
 
   if (
@@ -110,7 +195,7 @@ function getQuestionDescription(question: BonusQuestion) {
     key === "golden_boot" ||
     key === "most_goals"
   ) {
-    return "Pick the country of the player you expect to finish as top scorer.";
+    return t.topScorerDescription;
   }
 
   if (
@@ -118,7 +203,7 @@ function getQuestionDescription(question: BonusQuestion) {
     key === "golden_ball" ||
     key === "player_of_the_tournament"
   ) {
-    return "Pick the country of the player you expect to be named player of the tournament.";
+    return t.bestPlayerDescription;
   }
 
   if (
@@ -126,7 +211,7 @@ function getQuestionDescription(question: BonusQuestion) {
     key === "highest_scoring_team" ||
     key === "team_most_goals"
   ) {
-    return "Pick the country you expect to score the most goals across the tournament.";
+    return t.mostGoalsTeamDescription;
   }
 
   if (
@@ -134,7 +219,7 @@ function getQuestionDescription(question: BonusQuestion) {
     key === "fair_play_winner" ||
     key === "fairplay"
   ) {
-    return "Pick the country you expect to receive the fair play award.";
+    return t.fairPlayDescription;
   }
 
   return question.description;
@@ -143,10 +228,12 @@ function getQuestionDescription(question: BonusQuestion) {
 export default function BonusQuestionsForm({
   poolId,
   isLocked,
+  language,
   questions,
 }: BonusQuestionsFormProps) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
+  const t = copy[language];
 
   const [answers, setAnswers] = useState<Record<string, string>>(
     Object.fromEntries(
@@ -175,9 +262,7 @@ export default function BonusQuestionsForm({
     event.preventDefault();
 
     if (isLocked) {
-      setError(
-        "Bonus answers are locked because the first World Cup match has started."
-      );
+      setError(t.lockedError);
       return;
     }
 
@@ -186,7 +271,7 @@ export default function BonusQuestionsForm({
     );
 
     if (missingQuestion) {
-      setError("Please answer all bonus questions before saving.");
+      setError(t.missingError);
       return;
     }
 
@@ -200,7 +285,7 @@ export default function BonusQuestionsForm({
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      setError("Your session could not be loaded. Please log in again.");
+      setError(t.sessionError);
       setLoading(false);
       router.push("/auth");
       return;
@@ -225,7 +310,7 @@ export default function BonusQuestionsForm({
       return;
     }
 
-    setMessage("Bonus answers saved.");
+    setMessage(t.savedMessage);
     setLoading(false);
     router.refresh();
   }
@@ -235,10 +320,10 @@ export default function BonusQuestionsForm({
       <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
         <div className="mb-4 text-center">
           <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
-            Bonus predictions
+            {t.bonusPredictions}
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-sm leading-5 text-zinc-400">
-            These answers count toward your personal score in this pool.
+            {t.intro}
           </p>
         </div>
 
@@ -246,10 +331,10 @@ export default function BonusQuestionsForm({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
-                Progress
+                {t.progress}
               </p>
               <p className="mt-1 text-sm font-bold text-white">
-                {answeredCount} of {questions.length} answered
+                {answeredCount} {t.of} {questions.length} {t.answered}
               </p>
             </div>
 
@@ -260,7 +345,7 @@ export default function BonusQuestionsForm({
                   : "border-white/10 bg-white/[0.04] text-zinc-400"
               }`}
             >
-              {allAnswered ? "Complete" : "Incomplete"}
+              {allAnswered ? t.complete : t.incomplete}
             </div>
           </div>
 
@@ -280,8 +365,8 @@ export default function BonusQuestionsForm({
         <div className="grid gap-3">
           {questions.map((question) => {
             const hasAnswer = Boolean(answers[question.id]?.trim());
-            const label = getQuestionLabel(question);
-            const description = getQuestionDescription(question);
+            const label = getQuestionLabel(question, language);
+            const description = getQuestionDescription(question, language);
 
             return (
               <div
@@ -303,7 +388,7 @@ export default function BonusQuestionsForm({
                 <div className="mb-4 flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">
-                      Tournament prediction
+                      {t.tournamentPrediction}
                     </p>
 
                     <h3 className="mt-1 text-base font-black leading-snug text-white sm:text-lg">
@@ -313,7 +398,7 @@ export default function BonusQuestionsForm({
 
                   <div className="shrink-0 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-black text-emerald-200">
                     {question.pointsValue}{" "}
-                    {question.pointsValue === 1 ? "pt" : "pts"}
+                    {question.pointsValue === 1 ? t.pt : t.pts}
                   </div>
                 </div>
 
@@ -332,7 +417,7 @@ export default function BonusQuestionsForm({
                     disabled={isLocked || loading}
                     className="h-12 w-full rounded-xl border border-white/10 bg-[#06110d] px-4 text-sm font-bold text-white outline-none transition focus:border-emerald-300/70 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <option value="">Choose a country</option>
+                    <option value="">{t.chooseCountry}</option>
 
                     {question.options.map((option) => (
                       <option key={option} value={option}>
@@ -348,7 +433,7 @@ export default function BonusQuestionsForm({
                         : "border-white/10 bg-white/[0.04] text-zinc-500"
                     }`}
                   >
-                    {hasAnswer ? "Answered" : "Open"}
+                    {hasAnswer ? t.answered : t.open}
                   </div>
                 </div>
               </div>
@@ -376,12 +461,12 @@ export default function BonusQuestionsForm({
           className="w-full rounded-xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-[220px]"
         >
           {isLocked
-            ? "Locked"
+            ? t.locked
             : loading
-            ? "Saving..."
+            ? t.saving
             : allAnswered
-            ? "Save bonus answers"
-            : "Complete all answers"}
+            ? t.saveBonusAnswers
+            : t.completeAllAnswers}
         </button>
       </div>
     </form>

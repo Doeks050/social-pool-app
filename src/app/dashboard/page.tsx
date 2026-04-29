@@ -1,30 +1,32 @@
 import Image from "next/image";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import SignOutButton from "@/components/SignOutButton";
 import { createClient } from "@/lib/supabase";
+import { getLanguageFromCookieValue } from "@/lib/i18n";
 import { getPoolTypeMeta } from "@/lib/pool-types";
 
 type PoolMembershipRow = {
   role: string;
   joined_at: string;
   pools:
-  | {
-    id: string;
-    name: string;
-    game_type: string;
-    invite_code: string;
-    created_at: string;
-  }
-  | {
-    id: string;
-    name: string;
-    game_type: string;
-    invite_code: string;
-    created_at: string;
-  }[]
-  | null;
+    | {
+        id: string;
+        name: string;
+        game_type: string;
+        invite_code: string;
+        created_at: string;
+      }
+    | {
+        id: string;
+        name: string;
+        game_type: string;
+        invite_code: string;
+        created_at: string;
+      }[]
+    | null;
 };
 
 type DashboardPool = {
@@ -36,6 +38,87 @@ type DashboardPool = {
   inviteCode: string;
   createdAt: string;
   role: string;
+};
+
+const copy = {
+  en: {
+    playerFallback: "Player",
+    dashboard: "Dashboard",
+    welcome: "Welcome",
+    intro:
+      "Manage your pools, join private competitions and keep track of every leaderboard from one place.",
+    createPool: "Create pool",
+    joinPool: "Join pool",
+    activePool: "Active pool",
+    activePools: "Active pools",
+    worldCupReady: "World Cup pool ready",
+    modesInProgress: "Modes in progress",
+    adminTools: "Admin tools",
+    manageWorldCup: "Manage World Cup content",
+    adminIntro:
+      "Enter official results and manage bonus questions for all World Cup pools.",
+    results: "Results",
+    bonusQuestions: "Bonus questions",
+    yourPools: "Your pools",
+    continuePlaying: "Continue playing",
+    memberOfStart: "You are currently a member of",
+    pool: "pool",
+    pools: "pools",
+    joinViaCode: "Join via code",
+    newPool: "New pool",
+    noPoolsYet: "No pools yet",
+    noPoolsIntro:
+      "Create your first Poolr competition or join an existing pool with a private invite code.",
+    createFirstPool: "Create first pool",
+    inviteCode: "Invite code",
+    backHome: "← Back to home",
+    owner: "Owner",
+    admin: "Admin",
+    member: "Member",
+    worldCupPool: "World Cup pool",
+    officeBingo: "Office Bingo",
+    f1Pool: "F1 Pool",
+    wkShort: "WC",
+  },
+  nl: {
+    playerFallback: "Speler",
+    dashboard: "Dashboard",
+    welcome: "Welkom",
+    intro:
+      "Beheer je poules, doe mee aan privécompetities en volg al je ranglijsten vanaf één plek.",
+    createPool: "Poule maken",
+    joinPool: "Poule joinen",
+    activePool: "Actieve poule",
+    activePools: "Actieve poules",
+    worldCupReady: "WK-poule klaar voor gebruik",
+    modesInProgress: "Speltypes in ontwikkeling",
+    adminTools: "Admin tools",
+    manageWorldCup: "WK-content beheren",
+    adminIntro:
+      "Vul officiële uitslagen in en beheer bonusvragen voor alle WK-poules.",
+    results: "Uitslagen",
+    bonusQuestions: "Bonusvragen",
+    yourPools: "Jouw poules",
+    continuePlaying: "Verder spelen",
+    memberOfStart: "Je bent momenteel lid van",
+    pool: "poule",
+    pools: "poules",
+    joinViaCode: "Join via code",
+    newPool: "Nieuwe poule",
+    noPoolsYet: "Nog geen poules",
+    noPoolsIntro:
+      "Maak je eerste Poolr-competitie of doe mee met een bestaande poule via een privé invite code.",
+    createFirstPool: "Eerste poule maken",
+    inviteCode: "Invite code",
+    backHome: "← Terug naar home",
+    owner: "Eigenaar",
+    admin: "Admin",
+    member: "Lid",
+    worldCupPool: "WK-poule",
+    officeBingo: "Office Bingo",
+    f1Pool: "F1-poule",
+    wkShort: "WK",
+  },
 };
 
 function getPoolCardClasses(gameType: string) {
@@ -54,8 +137,69 @@ function getPoolTypeBadgeClasses(gameType: string) {
   return "border-white/10 bg-white/[0.04] text-zinc-300";
 }
 
+function getRoleLabel(role: string, language: "en" | "nl") {
+  const t = copy[language];
+
+  if (role === "owner") {
+    return t.owner;
+  }
+
+  if (role === "admin") {
+    return t.admin;
+  }
+
+  return t.member;
+}
+
+function getPoolTypeLabel(gameType: string, fallback: string, language: "en" | "nl") {
+  const t = copy[language];
+
+  if (gameType === "world_cup") {
+    return t.worldCupPool;
+  }
+
+  if (gameType === "office_bingo") {
+    return t.officeBingo;
+  }
+
+  if (gameType === "f1") {
+    return t.f1Pool;
+  }
+
+  return fallback;
+}
+
+function getPoolTypeShortLabel(
+  gameType: string,
+  fallback: string,
+  language: "en" | "nl"
+) {
+  const t = copy[language];
+
+  if (gameType === "world_cup") {
+    return t.wkShort;
+  }
+
+  if (gameType === "office_bingo") {
+    return "Bingo";
+  }
+
+  if (gameType === "f1") {
+    return "F1";
+  }
+
+  return fallback;
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
+
+  const cookieStore = await cookies();
+  const language = getLanguageFromCookieValue(
+    cookieStore.get("poolr-language")?.value
+  );
+  const t = copy[language];
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -84,8 +228,7 @@ export default async function DashboardPage() {
     .eq("user_id", user.id)
     .order("joined_at", { ascending: false });
 
-  const displayName =
-    profile?.display_name?.trim() || user.email || "Player";
+  const displayName = profile?.display_name?.trim() || user.email || t.playerFallback;
 
   const myPools = ((memberships ?? []) as PoolMembershipRow[])
     .map((membership) => {
@@ -103,8 +246,12 @@ export default async function DashboardPage() {
         id: pool.id,
         name: pool.name,
         gameType: pool.game_type,
-        gameTypeLabel: typeMeta.label,
-        gameTypeShortLabel: typeMeta.shortLabel,
+        gameTypeLabel: getPoolTypeLabel(pool.game_type, typeMeta.label, language),
+        gameTypeShortLabel: getPoolTypeShortLabel(
+          pool.game_type,
+          typeMeta.shortLabel,
+          language
+        ),
         inviteCode: pool.invite_code,
         createdAt: pool.created_at,
         role: membership.role,
@@ -150,14 +297,13 @@ export default async function DashboardPage() {
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
-                      Dashboard
+                      {t.dashboard}
                     </p>
                     <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
-                      Welcome, {displayName}
+                      {t.welcome}, {displayName}
                     </h1>
                     <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
-                      Manage your pools, join private competitions and keep
-                      track of every leaderboard from one place.
+                      {t.intro}
                     </p>
                   </div>
 
@@ -166,14 +312,14 @@ export default async function DashboardPage() {
                       href="/pools/new"
                       className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 shadow-[0_18px_60px_rgba(16,185,129,0.22)] transition hover:bg-emerald-200"
                     >
-                      Create pool
+                      {t.createPool}
                     </Link>
 
                     <Link
                       href="/join"
                       className="rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
                     >
-                      Join pool
+                      {t.joinPool}
                     </Link>
                   </div>
                 </div>
@@ -182,23 +328,21 @@ export default async function DashboardPage() {
                   <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                     <p className="text-3xl font-black">{myPools.length}</p>
                     <p className="mt-1 text-sm text-zinc-400">
-                      Active {myPools.length === 1 ? "pool" : "pools"}
+                      {myPools.length === 1 ? t.activePool : t.activePools}
                     </p>
                   </div>
 
                   <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4">
-                    <p className="text-3xl font-black text-emerald-200">
-                      WK
-                    </p>
+                    <p className="text-3xl font-black text-emerald-200">WK</p>
                     <p className="mt-1 text-sm text-zinc-400">
-                      World Cup pool ready
+                      {t.worldCupReady}
                     </p>
                   </div>
 
                   <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                     <p className="text-3xl font-black">2</p>
                     <p className="mt-1 text-sm text-zinc-400">
-                      Modes in progress
+                      {t.modesInProgress}
                     </p>
                   </div>
                 </div>
@@ -209,14 +353,13 @@ export default async function DashboardPage() {
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
-                        Admin tools
+                        {t.adminTools}
                       </p>
                       <h2 className="mt-2 text-2xl font-black tracking-tight">
-                        Manage World Cup content
+                        {t.manageWorldCup}
                       </h2>
                       <p className="mt-2 text-sm leading-6 text-zinc-400">
-                        Enter official results and manage bonus questions for
-                        all World Cup pools.
+                        {t.adminIntro}
                       </p>
                     </div>
 
@@ -225,14 +368,14 @@ export default async function DashboardPage() {
                         href="/admin/world-cup/results"
                         className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
                       >
-                        Results
+                        {t.results}
                       </Link>
 
                       <Link
                         href="/admin/world-cup/bonus"
                         className="rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
                       >
-                        Bonus questions
+                        {t.bonusQuestions}
                       </Link>
                     </div>
                   </div>
@@ -243,14 +386,14 @@ export default async function DashboardPage() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
-                      Your pools
+                      {t.yourPools}
                     </p>
                     <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
-                      Continue playing
+                      {t.continuePlaying}
                     </h2>
                     <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      You are currently a member of {myPools.length}{" "}
-                      {myPools.length === 1 ? "pool" : "pools"}.
+                      {t.memberOfStart} {myPools.length}{" "}
+                      {myPools.length === 1 ? t.pool : t.pools}.
                     </p>
                   </div>
 
@@ -259,26 +402,23 @@ export default async function DashboardPage() {
                       href="/join"
                       className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
                     >
-                      Join via code
+                      {t.joinViaCode}
                     </Link>
 
                     <Link
                       href="/pools/new"
                       className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
                     >
-                      New pool
+                      {t.newPool}
                     </Link>
                   </div>
                 </div>
 
                 {myPools.length === 0 ? (
                   <div className="mt-6 rounded-[1.5rem] border border-dashed border-white/15 bg-black/20 p-6">
-                    <h3 className="text-xl font-black">
-                      No pools yet
-                    </h3>
+                    <h3 className="text-xl font-black">{t.noPoolsYet}</h3>
                     <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-400">
-                      Create your first Poolr competition or join an existing
-                      pool with a private invite code.
+                      {t.noPoolsIntro}
                     </p>
 
                     <div className="mt-5 grid gap-3 sm:flex">
@@ -286,14 +426,14 @@ export default async function DashboardPage() {
                         href="/pools/new"
                         className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
                       >
-                        Create first pool
+                        {t.createFirstPool}
                       </Link>
 
                       <Link
                         href="/join"
                         className="rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
                       >
-                        Join pool
+                        {t.joinPool}
                       </Link>
                     </div>
                   </div>
@@ -315,7 +455,7 @@ export default async function DashboardPage() {
                               </h3>
 
                               <span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-zinc-300">
-                                {pool.role}
+                                {getRoleLabel(pool.role, language)}
                               </span>
 
                               <span
@@ -333,7 +473,7 @@ export default async function DashboardPage() {
                           </div>
 
                           <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-400">
-                            Invite code{" "}
+                            {t.inviteCode}{" "}
                             <span className="font-black text-white">
                               {pool.inviteCode}
                             </span>
@@ -349,7 +489,7 @@ export default async function DashboardPage() {
                 href="/"
                 className="inline-flex text-sm font-semibold text-zinc-400 transition hover:text-white"
               >
-                ← Back to home
+                {t.backHome}
               </Link>
             </div>
           </div>

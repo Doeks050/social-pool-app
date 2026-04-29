@@ -1,9 +1,11 @@
 import Image from "next/image";
 import { unstable_noStore as noStore } from "next/cache";
+import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
+import { getLanguageFromCookieValue, type Language } from "@/lib/i18n";
 import PoolMatchesDateGroup from "@/components/world-cup/PoolMatchesDateGroup";
 
 export const dynamic = "force-dynamic";
@@ -53,6 +55,49 @@ type DateGroup = {
 
 type MatchFilter = "all" | "open" | "locked" | "finished";
 
+const copy = {
+  en: {
+    pool: "Pool",
+    worldCupPool: "World Cup Pool",
+    matchPredictions: "Match predictions",
+    intro: "Submit your predictions before each match locks.",
+    activeFilter: "Active filter",
+    matches: "matches",
+    filters: "Filters",
+    current: "Current",
+    show: "Show",
+    hide: "Hide",
+    filterIntro: "Choose which matches you want to view.",
+    noMatchesTitle: "No matches found for this filter",
+    noMatchesIntro: "Choose a different filter or view all matches.",
+    viewAllMatches: "View all matches",
+    all: "All",
+    open: "Open",
+    locked: "Locked",
+    finished: "Finished",
+  },
+  nl: {
+    pool: "Poule",
+    worldCupPool: "WK-poule",
+    matchPredictions: "Wedstrijdvoorspellingen",
+    intro: "Vul je voorspellingen in voordat elke wedstrijd sluit.",
+    activeFilter: "Actieve filter",
+    matches: "wedstrijden",
+    filters: "Filters",
+    current: "Huidig",
+    show: "Toon",
+    hide: "Verberg",
+    filterIntro: "Kies welke wedstrijden je wilt bekijken.",
+    noMatchesTitle: "Geen wedstrijden gevonden voor deze filter",
+    noMatchesIntro: "Kies een andere filter of bekijk alle wedstrijden.",
+    viewAllMatches: "Bekijk alle wedstrijden",
+    all: "Alles",
+    open: "Open",
+    locked: "Gesloten",
+    finished: "Afgelopen",
+  },
+} satisfies Record<Language, Record<string, string>>;
+
 function getAmsterdamDateParts(value: string) {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/Amsterdam",
@@ -75,8 +120,8 @@ function getDateKey(value: string) {
   return `${year}-${month}-${day}`;
 }
 
-function getDateLabel(value: string) {
-  return new Intl.DateTimeFormat("en-GB", {
+function getDateLabel(value: string, language: Language) {
+  return new Intl.DateTimeFormat(language === "nl" ? "nl-NL" : "en-GB", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -130,16 +175,18 @@ function getFilterButtonClasses(isActive: boolean) {
   return "border-white/10 bg-white/[0.04] text-zinc-300 hover:border-emerald-300/30 hover:text-white";
 }
 
-function getFilterLabel(filter: MatchFilter) {
+function getFilterLabel(filter: MatchFilter, language: Language) {
+  const t = copy[language];
+
   switch (filter) {
     case "open":
-      return "Open";
+      return t.open;
     case "locked":
-      return "Locked";
+      return t.locked;
     case "finished":
-      return "Finished";
+      return t.finished;
     default:
-      return "All";
+      return t.all;
   }
 }
 
@@ -152,6 +199,12 @@ export default async function PoolMatchesPage({
   const { id } = await params;
   const resolvedSearchParams = await searchParams;
   const activeFilter = normalizeFilter(resolvedSearchParams.filter);
+
+  const cookieStore = await cookies();
+  const language = getLanguageFromCookieValue(
+    cookieStore.get("poolr-language")?.value
+  );
+  const t = copy[language];
 
   const supabase = await createClient();
 
@@ -227,7 +280,7 @@ export default async function PoolMatchesPage({
   const groupedMatches: DateGroup[] = Array.from(dateGroupMap.entries())
     .map(([key, dateMatches]) => ({
       key,
-      label: getDateLabel(dateMatches[0].starts_at),
+      label: getDateLabel(dateMatches[0].starts_at, language),
       matches: [...dateMatches].sort((a, b) => {
         const timeDiff =
           new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime();
@@ -282,7 +335,7 @@ export default async function PoolMatchesPage({
                   href={`/pools/${pool.id}`}
                   className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:text-sm"
                 >
-                  Pool
+                  {t.pool}
                 </Link>
               </header>
 
@@ -293,11 +346,11 @@ export default async function PoolMatchesPage({
                       <div className="mb-3 flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-200">
                           <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_14px_rgba(110,231,183,0.9)]" />
-                          World Cup Pool
+                          {t.worldCupPool}
                         </span>
 
                         <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
-                          Match predictions
+                          {t.matchPredictions}
                         </span>
                       </div>
 
@@ -306,19 +359,19 @@ export default async function PoolMatchesPage({
                       </h1>
 
                       <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-                        Submit your predictions before each match locks.
+                        {t.intro}
                       </p>
                     </div>
 
                     <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 lg:min-w-[190px]">
                       <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
-                        Active filter
+                        {t.activeFilter}
                       </p>
                       <p className="mt-1 text-2xl font-black text-white">
-                        {getFilterLabel(activeFilter)}
+                        {getFilterLabel(activeFilter, language)}
                       </p>
                       <p className="mt-1 text-sm font-semibold text-zinc-400">
-                        {filteredMatches.length} matches
+                        {filteredMatches.length} {t.matches}
                       </p>
                     </div>
                   </div>
@@ -331,23 +384,23 @@ export default async function PoolMatchesPage({
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5 transition hover:bg-white/[0.035] sm:px-5 [&::-webkit-details-marker]:hidden">
                     <div className="min-w-0">
                       <h2 className="text-base font-black tracking-tight text-white sm:text-lg">
-                        Filters
+                        {t.filters}
                       </h2>
                       <p className="mt-0.5 text-xs font-semibold text-zinc-500">
-                        Current: {getFilterLabel(activeFilter)} ·{" "}
-                        {filteredMatches.length} matches
+                        {t.current}: {getFilterLabel(activeFilter, language)} ·{" "}
+                        {filteredMatches.length} {t.matches}
                       </p>
                     </div>
 
                     <span className="shrink-0 rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-black text-zinc-300 transition group-open:bg-emerald-300 group-open:text-zinc-950">
-                      <span className="group-open:hidden">Show</span>
-                      <span className="hidden group-open:inline">Hide</span>
+                      <span className="group-open:hidden">{t.show}</span>
+                      <span className="hidden group-open:inline">{t.hide}</span>
                     </span>
                   </summary>
 
                   <div className="border-t border-white/10 px-4 pb-4 pt-3 sm:px-5">
                     <p className="mb-3 text-center text-sm leading-5 text-zinc-400">
-                      Choose which matches you want to view.
+                      {t.filterIntro}
                     </p>
 
                     <div className="flex flex-wrap justify-center gap-2">
@@ -359,7 +412,8 @@ export default async function PoolMatchesPage({
                             activeFilter === option.value
                           )}`}
                         >
-                          {getFilterLabel(option.value)} ({option.count})
+                          {getFilterLabel(option.value, language)} (
+                          {option.count})
                         </Link>
                       ))}
                     </div>
@@ -376,23 +430,24 @@ export default async function PoolMatchesPage({
                         matches={group.matches}
                         predictions={predictionsByMatchId}
                         defaultOpen={index === 0}
+                        language={language}
                       />
                     ))}
                   </div>
                 ) : (
                   <section className="rounded-[1.5rem] border border-dashed border-white/15 bg-white/[0.04] p-6 text-center backdrop-blur">
                     <h2 className="text-xl font-black">
-                      No matches found for this filter
+                      {t.noMatchesTitle}
                     </h2>
                     <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-zinc-400">
-                      Choose a different filter or view all matches.
+                      {t.noMatchesIntro}
                     </p>
 
                     <Link
                       href={getFilterHref(pool.id, "all")}
                       className="mt-5 inline-flex rounded-2xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
                     >
-                      View all matches
+                      {t.viewAllMatches}
                     </Link>
                   </section>
                 )}

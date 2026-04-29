@@ -6,10 +6,64 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase-browser";
+import { useLanguage } from "@/hooks/useLanguage";
+
+const copy = {
+  en: {
+    dashboard: "Dashboard",
+    backToDashboard: "← Back to dashboard",
+    joinPool: "Join pool",
+    title: "Enter your invite code",
+    intro:
+      "Join a private Poolr group with the code shared by the pool owner. Once the code is verified, you will be added instantly.",
+    inviteCode: "Invite code",
+    invitePlaceholder: "A1B2C3D4",
+    findingPool: "Finding pool...",
+    joinButton: "Join pool",
+    enterInviteCode: "Enter an invite code.",
+    sessionError: "Your session could not be loaded. Please log in again.",
+    noPool: "No pool found with this invite code.",
+    howItWorks: "How it works",
+    stepOneTitle: "1. Get the code",
+    stepOneText: "Ask the pool owner for the private invite code.",
+    stepTwoTitle: "2. Join instantly",
+    stepTwoText: "Poolr checks the code and adds you as a member.",
+    stepThreeTitle: "3. Make predictions",
+    stepThreeText: "Submit your predictions before matches lock.",
+    createOwnPool: "Create your own pool",
+  },
+  nl: {
+    dashboard: "Dashboard",
+    backToDashboard: "← Terug naar dashboard",
+    joinPool: "Poule joinen",
+    title: "Vul je invite code in",
+    intro:
+      "Doe mee met een privé Poolr-groep via de code die je van de poulebeheerder hebt gekregen. Zodra de code klopt, word je direct toegevoegd.",
+    inviteCode: "Invite code",
+    invitePlaceholder: "A1B2C3D4",
+    findingPool: "Poule zoeken...",
+    joinButton: "Poule joinen",
+    enterInviteCode: "Vul een invite code in.",
+    sessionError: "Je sessie kon niet worden geladen. Log opnieuw in.",
+    noPool: "Geen poule gevonden met deze invite code.",
+    howItWorks: "Hoe het werkt",
+    stepOneTitle: "1. Krijg de code",
+    stepOneText: "Vraag de poulebeheerder om de privé invite code.",
+    stepTwoTitle: "2. Join direct",
+    stepTwoText: "Poolr controleert de code en voegt je toe als lid.",
+    stepThreeTitle: "3. Voorspel mee",
+    stepThreeText: "Vul je voorspellingen in voordat wedstrijden sluiten.",
+    createOwnPool: "Maak je eigen poule",
+  },
+};
 
 export default function JoinPoolPage() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
+  const { language, setLanguage } = useLanguage();
+
+  const t = copy[language];
+
   const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +74,7 @@ export default function JoinPoolPage() {
     const cleanedCode = inviteCode.trim().toUpperCase();
 
     if (!cleanedCode) {
-      setError("Enter an invite code.");
+      setError(t.enterInviteCode);
       return;
     }
 
@@ -33,7 +87,7 @@ export default function JoinPoolPage() {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      setError("Your session could not be loaded. Please log in again.");
+      setError(t.sessionError);
       setLoading(false);
       router.push("/auth");
       return;
@@ -52,7 +106,7 @@ export default function JoinPoolPage() {
     }
 
     if (!pool) {
-      setError("No pool found with this invite code.");
+      setError(t.noPool);
       setLoading(false);
       return;
     }
@@ -113,12 +167,40 @@ export default function JoinPoolPage() {
                 />
               </Link>
 
-              <Link
-                href="/dashboard"
-                className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur transition hover:bg-white/10"
-              >
-                Dashboard
-              </Link>
+              <div className="flex items-center gap-2">
+                <div className="flex rounded-full border border-white/15 bg-white/5 p-1 backdrop-blur">
+                  <button
+                    type="button"
+                    onClick={() => setLanguage("en")}
+                    className={`rounded-full px-3 py-1.5 text-xs font-black transition ${
+                      language === "en"
+                        ? "bg-emerald-300 text-zinc-950"
+                        : "text-white/70 hover:text-white"
+                    }`}
+                  >
+                    EN
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setLanguage("nl")}
+                    className={`rounded-full px-3 py-1.5 text-xs font-black transition ${
+                      language === "nl"
+                        ? "bg-emerald-300 text-zinc-950"
+                        : "text-white/70 hover:text-white"
+                    }`}
+                  >
+                    NL
+                  </button>
+                </div>
+
+                <Link
+                  href="/dashboard"
+                  className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur transition hover:bg-white/10"
+                >
+                  {t.dashboard}
+                </Link>
+              </div>
             </header>
 
             <div className="mx-auto mt-8 grid max-w-5xl gap-5 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
@@ -127,20 +209,19 @@ export default function JoinPoolPage() {
                   href="/dashboard"
                   className="inline-flex text-sm font-semibold text-zinc-400 transition hover:text-white"
                 >
-                  ← Back to dashboard
+                  {t.backToDashboard}
                 </Link>
 
                 <p className="mt-8 text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
-                  Join pool
+                  {t.joinPool}
                 </p>
 
                 <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
-                  Enter your invite code
+                  {t.title}
                 </h1>
 
                 <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
-                  Join a private Poolr group with the code shared by the pool
-                  owner. Once the code is verified, you will be added instantly.
+                  {t.intro}
                 </p>
 
                 <form onSubmit={handleSubmit} className="mt-8 space-y-5">
@@ -149,7 +230,7 @@ export default function JoinPoolPage() {
                       htmlFor="inviteCode"
                       className="mb-2 block text-sm font-black text-white"
                     >
-                      Invite code
+                      {t.inviteCode}
                     </label>
 
                     <input
@@ -159,7 +240,7 @@ export default function JoinPoolPage() {
                       required
                       value={inviteCode}
                       onChange={(event) => setInviteCode(event.target.value)}
-                      placeholder="A1B2C3D4"
+                      placeholder={t.invitePlaceholder}
                       className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-center text-lg font-black uppercase tracking-[0.26em] text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/70"
                     />
                   </div>
@@ -175,41 +256,41 @@ export default function JoinPoolPage() {
                     disabled={loading}
                     className="w-full rounded-2xl bg-emerald-300 px-5 py-4 text-sm font-black text-zinc-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {loading ? "Finding pool..." : "Join pool"}
+                    {loading ? t.findingPool : t.joinButton}
                   </button>
                 </form>
               </section>
 
               <aside className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur sm:p-6">
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
-                  How it works
+                  {t.howItWorks}
                 </p>
 
                 <div className="mt-5 grid gap-3">
                   <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                     <p className="text-sm font-black text-white">
-                      1. Get the code
+                      {t.stepOneTitle}
                     </p>
                     <p className="mt-1 text-sm leading-6 text-zinc-400">
-                      Ask the pool owner for the private invite code.
+                      {t.stepOneText}
                     </p>
                   </div>
 
                   <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                     <p className="text-sm font-black text-white">
-                      2. Join instantly
+                      {t.stepTwoTitle}
                     </p>
                     <p className="mt-1 text-sm leading-6 text-zinc-400">
-                      Poolr checks the code and adds you as a member.
+                      {t.stepTwoText}
                     </p>
                   </div>
 
                   <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                     <p className="text-sm font-black text-white">
-                      3. Make predictions
+                      {t.stepThreeTitle}
                     </p>
                     <p className="mt-1 text-sm leading-6 text-zinc-400">
-                      Submit your predictions before matches lock.
+                      {t.stepThreeText}
                     </p>
                   </div>
                 </div>
@@ -218,7 +299,7 @@ export default function JoinPoolPage() {
                   href="/pools/new"
                   className="mt-5 inline-flex w-full justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-black text-white transition hover:bg-white/[0.08]"
                 >
-                  Create your own pool
+                  {t.createOwnPool}
                 </Link>
               </aside>
             </div>

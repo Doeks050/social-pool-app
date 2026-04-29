@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import type { Language } from "@/lib/i18n";
 import { getTeamFlagAlt, getTeamFlagSrc } from "@/lib/world-cup-flags";
 
 type MatchPredictionCardProps = {
@@ -30,6 +31,7 @@ type MatchPredictionCardProps = {
     predicted_away_score: number | null;
     points_awarded?: number | null;
   } | null;
+  language: Language;
 };
 
 type TeamPredictionRowProps = {
@@ -41,8 +43,57 @@ type TeamPredictionRowProps = {
   onScoreChange: (value: string) => void;
 };
 
-function formatMatchDate(value: string) {
-  return new Intl.DateTimeFormat("en-GB", {
+const copy = {
+  en: {
+    group: "Group",
+    match: "Match",
+    finished: "Finished",
+    live: "Live",
+    locked: "Locked",
+    open: "Open",
+    startsIn: "Starts in",
+    prediction: "Prediction",
+    score: "Score",
+    savingPredictionFailed: "Saving prediction failed.",
+    predictionSaved: "Prediction saved.",
+    unknownSaveError: "Unknown error while saving.",
+    final: "Final",
+    points: "pts",
+    saved: "Saved",
+    noPrediction: "No prediction",
+    saving: "Saving...",
+    update: "Update",
+    save: "Save",
+    tbd: "TBD",
+    locking: "locking...",
+  },
+  nl: {
+    group: "Groep",
+    match: "Wedstrijd",
+    finished: "Afgelopen",
+    live: "Live",
+    locked: "Gesloten",
+    open: "Open",
+    startsIn: "Start over",
+    prediction: "Voorspelling",
+    score: "Score",
+    savingPredictionFailed: "Opslaan van voorspelling mislukt.",
+    predictionSaved: "Voorspelling opgeslagen.",
+    unknownSaveError: "Onbekende fout tijdens opslaan.",
+    final: "Eindstand",
+    points: "ptn",
+    saved: "Opgeslagen",
+    noPrediction: "Geen voorspelling",
+    saving: "Opslaan...",
+    update: "Bijwerken",
+    save: "Opslaan",
+    tbd: "N.t.b.",
+    locking: "sluit...",
+  },
+} satisfies Record<Language, Record<string, string>>;
+
+function formatMatchDate(value: string, language: Language) {
+  return new Intl.DateTimeFormat(language === "nl" ? "nl-NL" : "en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -53,33 +104,48 @@ function formatMatchDate(value: string) {
   }).format(new Date(value));
 }
 
-function getDisplayTeam(team: string | null, slot: string | null) {
+function getDisplayTeam(
+  team: string | null,
+  slot: string | null,
+  language: Language
+) {
+  const t = copy[language];
+
   if (team && team.trim()) return team;
   if (slot && slot.trim()) return slot;
-  return "TBD";
+  return t.tbd;
 }
 
-function getStageLabel(match: MatchPredictionCardProps["match"]) {
+function getStageLabel(
+  match: MatchPredictionCardProps["match"],
+  language: Language
+) {
+  const t = copy[language];
+
   if (match.group_label && match.group_label.trim()) {
     const value = match.group_label.trim();
 
     if (value.toLowerCase().startsWith("group ")) {
-      return value;
+      return language === "nl"
+        ? value.replace(/^group/i, t.group)
+        : value;
     }
 
-    return `Group ${value}`;
+    return `${t.group} ${value}`;
   }
 
   if (match.round_name) return match.round_name;
   if (match.stage) return match.stage;
-  return "Match";
+  return t.match;
 }
 
-function getStatusLabel(status: string) {
-  if (status === "finished") return "Finished";
-  if (status === "live") return "Live";
-  if (status === "locked") return "Locked";
-  return "Open";
+function getStatusLabel(status: string, language: Language) {
+  const t = copy[language];
+
+  if (status === "finished") return t.finished;
+  if (status === "live") return t.live;
+  if (status === "locked") return t.locked;
+  return t.open;
 }
 
 function getStatusClasses(status: string) {
@@ -114,12 +180,13 @@ function getScoreValue(value: number | null | undefined) {
   return value === null || value === undefined ? "" : String(value);
 }
 
-function formatCountdown(targetDate: string, now: number) {
+function formatCountdown(targetDate: string, now: number, language: Language) {
+  const t = copy[language];
   const target = new Date(targetDate).getTime();
   const diff = target - now;
 
   if (diff <= 0) {
-    return "locking...";
+    return t.locking;
   }
 
   const totalSeconds = Math.floor(diff / 1000);
@@ -196,9 +263,12 @@ export default function MatchPredictionCard({
   match,
   poolId,
   prediction,
+  language,
 }: MatchPredictionCardProps) {
-  const homeDisplay = getDisplayTeam(match.home_team, match.home_slot);
-  const awayDisplay = getDisplayTeam(match.away_team, match.away_slot);
+  const t = copy[language];
+
+  const homeDisplay = getDisplayTeam(match.home_team, match.home_slot, language);
+  const awayDisplay = getDisplayTeam(match.away_team, match.away_slot, language);
 
   const [now, setNow] = useState(Date.now());
   const editable = isEditable(match, now);
@@ -266,17 +336,15 @@ export default function MatchPredictionCard({
       };
 
       if (!response.ok || !result.ok) {
-        setError(result.error ?? "Saving prediction failed.");
+        setError(result.error ?? t.savingPredictionFailed);
         setLoading(false);
         return;
       }
 
       setHasPrediction(true);
-      setMessage(result.message ?? "Prediction saved.");
+      setMessage(result.message ?? t.predictionSaved);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unknown error while saving."
-      );
+      setError(err instanceof Error ? err.message : t.unknownSaveError);
     }
 
     setLoading(false);
@@ -288,18 +356,18 @@ export default function MatchPredictionCard({
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
             <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-300">
-              {getStageLabel(match)}
+              {getStageLabel(match, language)}
             </p>
 
             {match.match_number !== null ? (
               <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-zinc-300">
-                Match {match.match_number}
+                {t.match} {match.match_number}
               </span>
             ) : null}
           </div>
 
           <p className="mt-1 text-[11px] font-medium text-zinc-500">
-            {formatMatchDate(match.starts_at)}
+            {formatMatchDate(match.starts_at, language)}
           </p>
         </div>
 
@@ -308,17 +376,17 @@ export default function MatchPredictionCard({
             editable ? "open" : match.status
           )}`}
         >
-          {editable ? "Open" : getStatusLabel(match.status)}
+          {editable ? t.open : getStatusLabel(match.status, language)}
         </div>
       </div>
 
       {showCountdown ? (
         <div className="mt-3 flex items-center justify-between rounded-xl border border-emerald-300/25 bg-emerald-300/[0.08] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
           <span className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-200/80">
-            Starts in
+            {t.startsIn}
           </span>
           <span className="font-mono text-base font-black leading-none text-emerald-100">
-            {formatCountdown(match.starts_at, now)}
+            {formatCountdown(match.starts_at, now, language)}
           </span>
         </div>
       ) : null}
@@ -327,10 +395,10 @@ export default function MatchPredictionCard({
         <div className="rounded-2xl border border-white/10 bg-black/20 p-2">
           <div className="grid grid-cols-[1fr_3rem] items-center gap-2 px-1 pb-1.5">
             <span className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500">
-              Prediction
+              {t.prediction}
             </span>
             <span className="text-center text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500">
-              Score
+              {t.score}
             </span>
           </div>
 
@@ -371,12 +439,12 @@ export default function MatchPredictionCard({
         match.home_score !== null &&
         match.away_score !== null ? (
           <div className="mt-2 rounded-lg border border-sky-400/20 bg-sky-400/10 px-2.5 py-1.5 text-xs text-sky-100">
-            Final: <span className="font-black">{match.home_score}</span> -{" "}
+            {t.final}: <span className="font-black">{match.home_score}</span> -{" "}
             <span className="font-black">{match.away_score}</span>
             {prediction?.points_awarded !== null &&
             prediction?.points_awarded !== undefined ? (
               <span className="ml-1.5 text-sky-200">
-                · {prediction.points_awarded} pts
+                · {prediction.points_awarded} {t.points}
               </span>
             ) : null}
           </div>
@@ -384,11 +452,7 @@ export default function MatchPredictionCard({
 
         <div className="mt-2.5 flex items-center justify-between gap-2">
           <div className="truncate text-[11px] font-medium text-zinc-500">
-            {hasPrediction
-              ? "Saved"
-              : editable
-              ? "No prediction"
-              : "Locked"}
+            {hasPrediction ? t.saved : editable ? t.noPrediction : t.locked}
           </div>
 
           <button
@@ -396,7 +460,7 @@ export default function MatchPredictionCard({
             disabled={!editable || loading}
             className="shrink-0 rounded-lg bg-emerald-300 px-3.5 py-2 text-xs font-black text-zinc-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Saving..." : hasPrediction ? "Update" : "Save"}
+            {loading ? t.saving : hasPrediction ? t.update : t.save}
           </button>
         </div>
       </form>

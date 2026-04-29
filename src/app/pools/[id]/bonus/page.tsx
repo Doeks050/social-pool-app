@@ -1,8 +1,10 @@
 import Image from "next/image";
+import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
+import { getLanguageFromCookieValue, type Language } from "@/lib/i18n";
 import BonusQuestionsForm from "@/components/world-cup/BonusQuestionsForm";
 import BonusDeadlineCountdown from "@/components/world-cup/BonusDeadlineCountdown";
 
@@ -34,8 +36,49 @@ type FirstMatchRow = {
   starts_at: string;
 };
 
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("en-GB", {
+const copy = {
+  en: {
+    pool: "Pool",
+    worldCupPool: "World Cup Pool",
+    bonusQuestions: "Bonus questions",
+    intro:
+      "Bonus answers lock exactly when the first World Cup match kicks off. Submit them before the countdown reaches zero.",
+    questions: "Questions",
+    answered: "Answered",
+    maxPoints: "Max points",
+    deadlineTime: "Deadline time",
+    notAvailable: "Not available",
+    lockedWarning:
+      "Bonus answers are locked because the first World Cup match has started.",
+    scheduleWarning:
+      "The first World Cup match could not be found yet. Check the imported match schedule.",
+    noQuestionsTitle: "No bonus questions yet",
+    noQuestionsIntro:
+      "Add active World Cup bonus questions in the bonus_question_templates table first.",
+  },
+  nl: {
+    pool: "Poule",
+    worldCupPool: "WK-poule",
+    bonusQuestions: "Bonusvragen",
+    intro:
+      "Bonusantwoorden sluiten precies wanneer de eerste WK-wedstrijd begint. Vul ze in voordat de countdown op nul staat.",
+    questions: "Vragen",
+    answered: "Beantwoord",
+    maxPoints: "Max punten",
+    deadlineTime: "Deadline",
+    notAvailable: "Niet beschikbaar",
+    lockedWarning:
+      "Bonusantwoorden zijn gesloten omdat de eerste WK-wedstrijd is begonnen.",
+    scheduleWarning:
+      "De eerste WK-wedstrijd kon nog niet worden gevonden. Controleer de geïmporteerde wedstrijdplanning.",
+    noQuestionsTitle: "Nog geen bonusvragen",
+    noQuestionsIntro:
+      "Voeg eerst actieve WK-bonusvragen toe in de bonus_question_templates tabel.",
+  },
+} satisfies Record<Language, Record<string, string>>;
+
+function formatDateTime(value: string, language: Language) {
+  return new Intl.DateTimeFormat(language === "nl" ? "nl-NL" : "en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -49,7 +92,14 @@ function formatDateTime(value: string) {
 export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
   const { id } = await params;
 
+  const cookieStore = await cookies();
+  const language = getLanguageFromCookieValue(
+    cookieStore.get("poolr-language")?.value
+  );
+  const t = copy[language];
+
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -112,7 +162,7 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
 
   const lockAt = typedFirstMatch?.starts_at ?? null;
   const isLocked = lockAt ? new Date(lockAt).getTime() <= Date.now() : false;
-  const formattedLockAt = lockAt ? formatDateTime(lockAt) : null;
+  const formattedLockAt = lockAt ? formatDateTime(lockAt, language) : null;
 
   const answeredCount = typedTemplates.filter((question) =>
     answersMap.get(question.id)?.trim()
@@ -148,7 +198,7 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
                   href={`/pools/${pool.id}`}
                   className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:text-sm"
                 >
-                  Pool
+                  {t.pool}
                 </Link>
               </header>
 
@@ -159,11 +209,11 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
                       <div className="mb-3 flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-200">
                           <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_14px_rgba(110,231,183,0.9)]" />
-                          World Cup Pool
+                          {t.worldCupPool}
                         </span>
 
                         <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
-                          Bonus questions
+                          {t.bonusQuestions}
                         </span>
                       </div>
 
@@ -172,15 +222,13 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
                       </h1>
 
                       <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-                        Bonus answers lock exactly when the first World Cup
-                        match kicks off. Submit them before the countdown reaches
-                        zero.
+                        {t.intro}
                       </p>
 
                       <div className="mt-4 grid gap-2 sm:grid-cols-3">
                         <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-center">
                           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
-                            Questions
+                            {t.questions}
                           </p>
                           <p className="mt-1 text-xl font-black text-white">
                             {typedTemplates.length}
@@ -189,7 +237,7 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
 
                         <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-center">
                           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
-                            Answered
+                            {t.answered}
                           </p>
                           <p className="mt-1 text-xl font-black text-white">
                             {answeredCount}
@@ -198,7 +246,7 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
 
                         <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-center">
                           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
-                            Max points
+                            {t.maxPoints}
                           </p>
                           <p className="mt-1 text-xl font-black text-white">
                             {totalPoints}
@@ -211,14 +259,15 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
                       <BonusDeadlineCountdown
                         lockAt={lockAt}
                         isLocked={isLocked}
+                        language={language}
                       />
 
                       <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-center">
                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
-                          Deadline time
+                          {t.deadlineTime}
                         </p>
                         <p className="mt-1 text-sm font-black text-white">
-                          {formattedLockAt ?? "Not available"}
+                          {formattedLockAt ?? t.notAvailable}
                         </p>
                       </div>
                     </div>
@@ -226,15 +275,13 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
 
                   {isLocked ? (
                     <div className="mt-4 rounded-2xl border border-orange-300/25 bg-orange-300/10 px-4 py-3 text-center text-sm font-semibold text-orange-100">
-                      Bonus answers are locked because the first World Cup match
-                      has started.
+                      {t.lockedWarning}
                     </div>
                   ) : null}
 
                   {!formattedLockAt ? (
                     <div className="mt-4 rounded-2xl border border-orange-300/25 bg-orange-300/10 px-4 py-3 text-center text-sm font-semibold text-orange-100">
-                      The first World Cup match could not be found yet. Check
-                      the imported match schedule.
+                      {t.scheduleWarning}
                     </div>
                   ) : null}
                 </section>
@@ -243,6 +290,7 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
                   <BonusQuestionsForm
                     poolId={pool.id}
                     isLocked={isLocked}
+                    language={language}
                     questions={typedTemplates.map((question) => ({
                       id: question.id,
                       questionKey: question.question_key,
@@ -257,11 +305,10 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
                 ) : (
                   <section className="rounded-[1.5rem] border border-dashed border-white/15 bg-white/[0.04] p-6 text-center backdrop-blur">
                     <h2 className="text-xl font-black">
-                      No bonus questions yet
+                      {t.noQuestionsTitle}
                     </h2>
                     <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-zinc-400">
-                      Add active World Cup bonus questions in the
-                      bonus_question_templates table first.
+                      {t.noQuestionsIntro}
                     </p>
                   </section>
                 )}

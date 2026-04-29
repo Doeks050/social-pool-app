@@ -1,9 +1,11 @@
 import Image from "next/image";
 import { unstable_noStore as noStore } from "next/cache";
+import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
+import { getLanguageFromCookieValue, type Language } from "@/lib/i18n";
 import { getPoolTypeMeta } from "@/lib/pool-types";
 import NextMatchHighlight from "@/components/world-cup/NextMatchHighlight";
 
@@ -37,14 +39,117 @@ type NextMatchRow = {
   away_slot: string | null;
 };
 
-function getDisplayName(userId: string, profilesMap: Map<string, string>) {
+const copy = {
+  en: {
+    dashboard: "Dashboard",
+    you: "You",
+    joined: "Joined",
+    owner: "Owner",
+    admin: "Admin",
+    member: "Member",
+    members: "members",
+    oneMember: "member",
+    worldCupPool: "World Cup Pool",
+    officeBingo: "Office Bingo",
+    f1Pool: "F1 Pool",
+    poolDashboard: "pool dashboard",
+    joinCode: "Join code",
+    predict: "Predict",
+    poolMenu: "Pool menu",
+    poolMenuIntro: "Navigate to the main parts of this pool.",
+    predictLabel: "Predict",
+    matchesTitle: "Matches",
+    matchesDescription: "Submit and review match predictions.",
+    bonusLabel: "Bonus",
+    questionsTitle: "Questions",
+    questionsDescription: "Extra predictions for bonus points.",
+    groupsLabel: "Groups",
+    standingsTitle: "Standings",
+    standingsDescription: "View group tables and progress.",
+    rankingLabel: "Ranking",
+    leaderboardTitle: "Leaderboard",
+    leaderboardDescription: "Follow the pool ranking.",
+    setupLabel: "Setup",
+    settingsTitle: "Settings",
+    settingsDescription: "Manage board size and rules.",
+    cardsLabel: "Cards",
+    playerCardsTitle: "Player cards",
+    playerCardsDescription: "View unique player bingo cards.",
+    claimsLabel: "Claims",
+    bingoClaimsTitle: "Bingo claims",
+    bingoClaimsDescription: "Review submitted claims.",
+    weekendsLabel: "Weekends",
+    raceWeekendsTitle: "Race weekends",
+    raceWeekendsDescription: "Manage F1 sessions.",
+    predictionsTitle: "Predictions",
+    predictionsDescription: "Open prediction forms.",
+    poolMembers: "Pool members",
+    inThisPool: "in this pool.",
+    noMembers: "No members found yet.",
+    unknownUserPrefix: "User",
+  },
+  nl: {
+    dashboard: "Dashboard",
+    you: "Jij",
+    joined: "Lid sinds",
+    owner: "Eigenaar",
+    admin: "Admin",
+    member: "Lid",
+    members: "leden",
+    oneMember: "lid",
+    worldCupPool: "WK-poule",
+    officeBingo: "Office Bingo",
+    f1Pool: "F1-poule",
+    poolDashboard: "poule dashboard",
+    joinCode: "Join code",
+    predict: "Voorspellen",
+    poolMenu: "Poule menu",
+    poolMenuIntro: "Ga naar de belangrijkste onderdelen van deze poule.",
+    predictLabel: "Voorspel",
+    matchesTitle: "Wedstrijden",
+    matchesDescription: "Vul voorspellingen in en bekijk ze terug.",
+    bonusLabel: "Bonus",
+    questionsTitle: "Vragen",
+    questionsDescription: "Extra voorspellingen voor bonuspunten.",
+    groupsLabel: "Groepen",
+    standingsTitle: "Standen",
+    standingsDescription: "Bekijk poulestanden en voortgang.",
+    rankingLabel: "Ranking",
+    leaderboardTitle: "Ranglijst",
+    leaderboardDescription: "Volg de ranking binnen deze poule.",
+    setupLabel: "Instellen",
+    settingsTitle: "Instellingen",
+    settingsDescription: "Beheer kaartgrootte en regels.",
+    cardsLabel: "Kaarten",
+    playerCardsTitle: "Spelerskaarten",
+    playerCardsDescription: "Bekijk unieke bingo kaarten per speler.",
+    claimsLabel: "Claims",
+    bingoClaimsTitle: "Bingo claims",
+    bingoClaimsDescription: "Controleer ingediende claims.",
+    weekendsLabel: "Weekends",
+    raceWeekendsTitle: "Raceweekends",
+    raceWeekendsDescription: "Beheer F1-sessies.",
+    predictionsTitle: "Voorspellingen",
+    predictionsDescription: "Open voorspelformulieren.",
+    poolMembers: "Pouleleden",
+    inThisPool: "in deze poule.",
+    noMembers: "Nog geen leden gevonden.",
+    unknownUserPrefix: "Gebruiker",
+  },
+} satisfies Record<Language, Record<string, string>>;
+
+function getDisplayName(
+  userId: string,
+  profilesMap: Map<string, string>,
+  language: Language
+) {
   const profileName = profilesMap.get(userId)?.trim();
 
   if (profileName) {
     return profileName;
   }
 
-  return `User ${userId.slice(0, 8)}`;
+  return `${copy[language].unknownUserPrefix} ${userId.slice(0, 8)}`;
 }
 
 function getInitials(name: string) {
@@ -63,8 +168,8 @@ function getInitials(name: string) {
   return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
 }
 
-function formatJoinedDate(value: string) {
-  return new Intl.DateTimeFormat("en-GB", {
+function formatJoinedDate(value: string, language: Language) {
+  return new Intl.DateTimeFormat(language === "nl" ? "nl-NL" : "en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -72,25 +177,29 @@ function formatJoinedDate(value: string) {
   }).format(new Date(value));
 }
 
-function getRoleLabel(role: string) {
+function getRoleLabel(role: string, language: Language) {
+  const t = copy[language];
+
   switch (role) {
     case "owner":
-      return "Owner";
+      return t.owner;
     case "admin":
-      return "Admin";
+      return t.admin;
     default:
-      return "Member";
+      return t.member;
   }
 }
 
-function getPoolTypeDisplay(poolType: string) {
+function getPoolTypeDisplay(poolType: string, language: Language) {
+  const t = copy[language];
+
   switch (poolType) {
     case "world_cup":
-      return "World Cup Pool";
+      return t.worldCupPool;
     case "office_bingo":
-      return "Office Bingo";
+      return t.officeBingo;
     case "f1":
-      return "F1 Pool";
+      return t.f1Pool;
     default:
       return poolType;
   }
@@ -151,9 +260,17 @@ type MemberCardProps = {
   member: PoolMemberRow;
   displayName: string;
   isCurrentUser: boolean;
+  language: Language;
 };
 
-function MemberCard({ member, displayName, isCurrentUser }: MemberCardProps) {
+function MemberCard({
+  member,
+  displayName,
+  isCurrentUser,
+  language,
+}: MemberCardProps) {
+  const t = copy[language];
+
   return (
     <div
       className={`relative overflow-hidden rounded-2xl border p-4 ${
@@ -189,13 +306,13 @@ function MemberCard({ member, displayName, isCurrentUser }: MemberCardProps) {
 
             {isCurrentUser ? (
               <span className="shrink-0 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-emerald-200">
-                You
+                {t.you}
               </span>
             ) : null}
           </div>
 
           <p className="mt-1 text-xs font-semibold text-zinc-500">
-            Joined {formatJoinedDate(member.joined_at)}
+            {t.joined} {formatJoinedDate(member.joined_at, language)}
           </p>
         </div>
 
@@ -208,7 +325,7 @@ function MemberCard({ member, displayName, isCurrentUser }: MemberCardProps) {
               : "border-white/10 bg-white/[0.04] text-zinc-400"
           }`}
         >
-          {getRoleLabel(member.role)}
+          {getRoleLabel(member.role, language)}
         </span>
       </div>
     </div>
@@ -220,7 +337,14 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
 
   const { id } = await params;
 
+  const cookieStore = await cookies();
+  const language = getLanguageFromCookieValue(
+    cookieStore.get("poolr-language")?.value
+  );
+  const t = copy[language];
+
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -320,7 +444,7 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                 href="/dashboard"
                 className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:text-sm"
               >
-                Dashboard
+                {t.dashboard}
               </Link>
             </header>
 
@@ -331,15 +455,16 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                     <div className="mb-3 flex flex-wrap items-center gap-2">
                       <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-200">
                         <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_14px_rgba(110,231,183,0.9)]" />
-                        {getPoolTypeDisplay(pool.game_type)}
+                        {getPoolTypeDisplay(pool.game_type, language)}
                       </span>
 
                       <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
-                        {getRoleLabel(membership.role)}
+                        {getRoleLabel(membership.role, language)}
                       </span>
 
                       <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
-                        {typedMembers.length} members
+                        {typedMembers.length}{" "}
+                        {typedMembers.length === 1 ? t.oneMember : t.members}
                       </span>
                     </div>
 
@@ -348,13 +473,13 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                     </h1>
 
                     <p className="mt-1 text-sm font-semibold text-zinc-400">
-                      {poolType.shortLabel} pool dashboard
+                      {poolType.shortLabel} {t.poolDashboard}
                     </p>
                   </div>
 
                   <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 lg:min-w-[260px]">
                     <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
-                      Join code
+                      {t.joinCode}
                     </p>
 
                     <div className="mt-1 flex items-end justify-between gap-3">
@@ -367,7 +492,7 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                           href={`/pools/${pool.id}/matches`}
                           className="hidden rounded-xl bg-emerald-300 px-3 py-2 text-xs font-black text-zinc-950 transition hover:bg-emerald-200 sm:inline-flex"
                         >
-                          Predict
+                          {t.predict}
                         </Link>
                       ) : null}
                     </div>
@@ -382,10 +507,10 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
               <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
                 <div className="mb-4 text-center">
                   <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
-                    Pool menu
+                    {t.poolMenu}
                   </h2>
                   <p className="mx-auto mt-2 max-w-xl text-sm leading-5 text-zinc-400">
-                    Navigate to the main parts of this pool.
+                    {t.poolMenuIntro}
                   </p>
                 </div>
 
@@ -394,79 +519,79 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                     <>
                       <ActionCard
                         href={`/pools/${pool.id}/matches`}
-                        label="Predict"
-                        title="Matches"
-                        description="Submit and review match predictions."
+                        label={t.predictLabel}
+                        title={t.matchesTitle}
+                        description={t.matchesDescription}
                         primary
                       />
 
                       <ActionCard
                         href={`/pools/${pool.id}/bonus`}
-                        label="Bonus"
-                        title="Questions"
-                        description="Extra predictions for bonus points."
+                        label={t.bonusLabel}
+                        title={t.questionsTitle}
+                        description={t.questionsDescription}
                       />
 
                       <ActionCard
                         href={`/pools/${pool.id}/standings`}
-                        label="Groups"
-                        title="Standings"
-                        description="View group tables and progress."
+                        label={t.groupsLabel}
+                        title={t.standingsTitle}
+                        description={t.standingsDescription}
                       />
 
                       <ActionCard
                         href={`/pools/${pool.id}/leaderboard`}
-                        label="Ranking"
-                        title="Leaderboard"
-                        description="Follow the pool ranking."
+                        label={t.rankingLabel}
+                        title={t.leaderboardTitle}
+                        description={t.leaderboardDescription}
                       />
                     </>
                   ) : pool.game_type === "office_bingo" ? (
                     <>
                       <ActionCard
                         href={`/pools/${pool.id}`}
-                        label="Setup"
-                        title="Settings"
-                        description="Manage board size and rules."
+                        label={t.setupLabel}
+                        title={t.settingsTitle}
+                        description={t.settingsDescription}
                         primary
                       />
 
                       <ActionCard
                         href={`/pools/${pool.id}`}
-                        label="Cards"
-                        title="Player cards"
-                        description="View unique player bingo cards."
+                        label={t.cardsLabel}
+                        title={t.playerCardsTitle}
+                        description={t.playerCardsDescription}
                       />
 
                       <ActionCard
                         href={`/pools/${pool.id}`}
-                        label="Claims"
-                        title="Bingo claims"
-                        description="Review submitted claims."
+                        label={t.claimsLabel}
+                        title={t.bingoClaimsTitle}
+                        description={t.bingoClaimsDescription}
                       />
                     </>
                   ) : (
                     <>
                       <ActionCard
                         href={`/pools/${pool.id}`}
-                        label="Weekends"
-                        title="Race weekends"
-                        description="Manage F1 sessions."
+                        label={t.weekendsLabel}
+                        title={t.raceWeekendsTitle}
+                        description={t.raceWeekendsDescription}
                         primary
                       />
 
                       <ActionCard
                         href={`/pools/${pool.id}`}
-                        label="Predict"
-                        title="Predictions"
-                        description="Open prediction forms."
+                        label={t.predictLabel}
+                        title={t.predictionsTitle}
+                        description={t.predictionsDescription}
                       />
 
                       <ActionCard
                         href={`/pools/${pool.id}`}
-                        label="Ranking"
-                        title="Standings"
-                        description="View the leaderboard."
+                        label={t.rankingLabel}
+                        title={t.standingsTitle}
+                        description={t.leaderboardDescription}
                       />
                     </>
                   )}
@@ -476,12 +601,12 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
               <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
                 <div className="mb-4 text-center">
                   <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
-                    Pool members
+                    {t.poolMembers}
                   </h2>
                   <p className="mx-auto mt-2 max-w-xl text-sm leading-5 text-zinc-400">
                     {typedMembers.length}{" "}
-                    {typedMembers.length === 1 ? "member" : "members"} in this
-                    pool.
+                    {typedMembers.length === 1 ? t.oneMember : t.members}{" "}
+                    {t.inThisPool}
                   </p>
                 </div>
 
@@ -490,7 +615,8 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                     {typedMembers.map((member) => {
                       const displayName = getDisplayName(
                         member.user_id,
-                        profilesMap
+                        profilesMap,
+                        language
                       );
 
                       return (
@@ -499,6 +625,7 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                           member={member}
                           displayName={displayName}
                           isCurrentUser={member.user_id === user.id}
+                          language={language}
                         />
                       );
                     })}
@@ -506,7 +633,7 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                 ) : (
                   <div className="rounded-2xl border border-white/10 bg-black/20 p-5 text-center">
                     <p className="text-sm font-semibold text-zinc-400">
-                      No members found yet.
+                      {t.noMembers}
                     </p>
                   </div>
                 )}
