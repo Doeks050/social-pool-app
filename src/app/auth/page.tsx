@@ -25,6 +25,8 @@ function AuthPageContent() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const isRegister = mode === "register";
+
   useEffect(() => {
     if (searchParams.get("mode") === "register") {
       setMode("register");
@@ -32,6 +34,12 @@ function AuthPageContent() {
       setMessage(null);
     }
   }, [searchParams]);
+
+  function switchMode(nextMode: Mode) {
+    setMode(nextMode);
+    setError(null);
+    setMessage(null);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,9 +65,7 @@ function AuthPageContent() {
           return;
         }
 
-        setMessage(
-          "Account created. If email confirmation is disabled, you can log in right away."
-        );
+        setMessage("Account created. You can now log in and start your first pool.");
         setMode("login");
         setPassword("");
         setLoading(false);
@@ -133,31 +139,44 @@ function AuthPageContent() {
               <div className="max-w-2xl">
                 <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-4 py-2 text-sm font-semibold text-emerald-200">
                   <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_18px_rgba(110,231,183,0.9)]" />
-                  Private pools. Real competition.
+                  {isRegister ? "Create your Poolr account" : "Welcome back"}
                 </div>
 
                 <h1 className="text-5xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl">
-                  Welcome to
-                  <br />
-                  your pool hub.
+                  {isRegister ? (
+                    <>
+                      Start your
+                      <br />
+                      first pool.
+                    </>
+                  ) : (
+                    <>
+                      Continue your
+                      <br />
+                      competition.
+                    </>
+                  )}
                 </h1>
 
                 <p className="mt-6 max-w-xl text-lg leading-8 text-zinc-300">
-                  Log in to manage your pools, make predictions and follow the
-                  leaderboard with friends or colleagues.
+                  {isRegister
+                    ? "Create your account, join private pools and compete with friends or colleagues in World Cup 2026, Office Bingo and more."
+                    : "Log in to manage your pools, make predictions and follow the leaderboard with friends or colleagues."}
                 </p>
 
-                <div className="mt-7 hidden grid-cols-3 gap-3 text-sm text-zinc-400 sm:grid">
+                <div className="mt-7 grid gap-3 text-sm text-zinc-400 sm:grid-cols-3">
                   <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                    <p className="font-bold text-white">Football</p>
-                    <p className="mt-1 text-xs">World Cup pools</p>
+                    <p className="font-bold text-white">World Cup 2026</p>
+                    <p className="mt-1 text-xs">Launching first</p>
                   </div>
+
                   <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                    <p className="font-bold text-white">Bingo</p>
+                    <p className="font-bold text-white">Office Bingo</p>
                     <p className="mt-1 text-xs">Coming soon</p>
                   </div>
+
                   <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                    <p className="font-bold text-white">F1</p>
+                    <p className="font-bold text-white">F1 Pool</p>
                     <p className="mt-1 text-xs">Coming soon</p>
                   </div>
                 </div>
@@ -165,29 +184,25 @@ function AuthPageContent() {
 
               <div className="mx-auto w-full max-w-md">
                 <div className="rounded-[2rem] border border-white/15 bg-white/[0.06] p-3 shadow-2xl backdrop-blur-xl">
-                  <div className="rounded-[1.55rem] border border-white/10 bg-[#06110d]/95 p-6 sm:p-8">
+                  <div className="rounded-[1.55rem] border border-white/10 bg-[#06110d]/95 p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-8">
                     <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
                       Poolr account
                     </p>
 
                     <h2 className="text-3xl font-black tracking-tight">
-                      {mode === "login" ? "Log in" : "Create account"}
+                      {isRegister ? "Create account" : "Log in"}
                     </h2>
 
                     <p className="mt-3 text-sm leading-6 text-zinc-400">
-                      {mode === "login"
-                        ? "Continue to your dashboard and pick up where you left off."
-                        : "Create your account and start building your first private pool."}
+                      {isRegister
+                        ? "Create your account and start building or joining private pools."
+                        : "Continue to your dashboard and pick up where you left off."}
                     </p>
 
                     <div className="mt-6 grid grid-cols-2 rounded-2xl border border-white/10 bg-black/25 p-1">
                       <button
                         type="button"
-                        onClick={() => {
-                          setMode("login");
-                          setError(null);
-                          setMessage(null);
-                        }}
+                        onClick={() => switchMode("login")}
                         className={`rounded-xl px-4 py-2 text-sm font-black transition ${
                           mode === "login"
                             ? "bg-emerald-300 text-zinc-950"
@@ -199,11 +214,7 @@ function AuthPageContent() {
 
                       <button
                         type="button"
-                        onClick={() => {
-                          setMode("register");
-                          setError(null);
-                          setMessage(null);
-                        }}
+                        onClick={() => switchMode("register")}
                         className={`rounded-xl px-4 py-2 text-sm font-black transition ${
                           mode === "register"
                             ? "bg-emerald-300 text-zinc-950"
@@ -215,7 +226,7 @@ function AuthPageContent() {
                     </div>
 
                     <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-                      {mode === "register" && (
+                      {isRegister && (
                         <div>
                           <label
                             htmlFor="displayName"
@@ -223,6 +234,7 @@ function AuthPageContent() {
                           >
                             Display name
                           </label>
+
                           <input
                             id="displayName"
                             type="text"
@@ -243,6 +255,7 @@ function AuthPageContent() {
                         >
                           Email
                         </label>
+
                         <input
                           id="email"
                           type="email"
@@ -261,13 +274,12 @@ function AuthPageContent() {
                         >
                           Password
                         </label>
+
                         <input
                           id="password"
                           type="password"
                           value={password}
-                          onChange={(event) =>
-                            setPassword(event.target.value)
-                          }
+                          onChange={(event) => setPassword(event.target.value)}
                           placeholder="At least 6 characters"
                           required
                           className="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-500 focus:border-emerald-300/70"
@@ -293,11 +305,28 @@ function AuthPageContent() {
                       >
                         {loading
                           ? "Please wait..."
-                          : mode === "login"
-                            ? "Log in"
-                            : "Create account"}
+                          : isRegister
+                            ? "Create account"
+                            : "Log in"}
                       </button>
                     </form>
+
+                    <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.035] p-4 text-center">
+                      <p className="text-xs leading-5 text-zinc-400">
+                        {isRegister
+                          ? "Already have an account?"
+                          : "New to Poolr?"}{" "}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            switchMode(isRegister ? "login" : "register")
+                          }
+                          className="font-black text-emerald-300 transition hover:text-emerald-200"
+                        >
+                          {isRegister ? "Log in" : "Create an account"}
+                        </button>
+                      </p>
+                    </div>
                   </div>
                 </div>
 

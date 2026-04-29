@@ -99,10 +99,10 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const primaryHref = user ? "/dashboard" : "/auth";
+  const primaryHref = user ? "/dashboard" : "/auth?mode=register";
   const primaryLabel = user ? "Go to dashboard" : "Create a pool";
   const secondaryHref = user ? "/dashboard" : "/auth";
-  const secondaryLabel = user ? "My pools" : "Join a pool";
+  const secondaryLabel = user ? "My pools" : "Login";
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
@@ -439,7 +439,7 @@ export default async function HomePage() {
 
             <div className="mt-8 flex justify-center">
               <Link
-                href="/auth"
+                href="/auth?mode=register"
                 className="rounded-2xl bg-emerald-300 px-9 py-4 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
               >
                 Register
