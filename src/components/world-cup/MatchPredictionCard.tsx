@@ -98,7 +98,7 @@ function getStatusClasses(status: string) {
   return "border-emerald-300/30 bg-emerald-300/10 text-emerald-200";
 }
 
-function isEditable(match: MatchPredictionCardProps["match"]) {
+function isEditable(match: MatchPredictionCardProps["match"], now: number) {
   if (
     match.status === "finished" ||
     match.status === "locked" ||
@@ -107,11 +107,40 @@ function isEditable(match: MatchPredictionCardProps["match"]) {
     return false;
   }
 
-  return new Date(match.starts_at).getTime() > Date.now();
+  return new Date(match.starts_at).getTime() > now;
 }
 
 function getScoreValue(value: number | null | undefined) {
   return value === null || value === undefined ? "" : String(value);
+}
+
+function formatCountdown(targetDate: string, now: number) {
+  const target = new Date(targetDate).getTime();
+  const diff = target - now;
+
+  if (diff <= 0) {
+    return "locking...";
+  }
+
+  const totalSeconds = Math.floor(diff / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (days > 0) {
+    return `${days}d ${hours}h`;
+  }
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+
+  return `${seconds}s`;
 }
 
 function TeamPredictionRow({
@@ -125,29 +154,27 @@ function TeamPredictionRow({
   const flagSrc = getTeamFlagSrc(teamName);
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#06110d]/80 p-3">
-      <div className="flex h-12 w-[58px] shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/30">
+    <div className="grid grid-cols-[2rem_minmax(0,1fr)_2.35rem] items-center gap-2 rounded-lg border border-white/10 bg-[#06110d]/90 px-2 py-1.5">
+      <div className="flex h-7 w-8 items-center justify-center rounded-md border border-white/10 bg-black/35">
         {flagSrc ? (
           <img
             src={flagSrc}
             alt={getTeamFlagAlt(teamName)}
             width={80}
             height={60}
-            className="h-7 w-10 rounded-md object-cover shadow-[0_0_0_1px_rgba(255,255,255,0.14)]"
+            className="h-[18px] w-[26px] rounded-[3px] object-cover shadow-[0_0_0_1px_rgba(255,255,255,0.14)]"
             loading="lazy"
           />
         ) : (
-          <span className="text-xs font-black uppercase tracking-wide text-zinc-500">
+          <span className="text-[8px] font-black uppercase tracking-wide text-zinc-500">
             TBD
           </span>
         )}
       </div>
 
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-black text-white sm:text-base">
-          {teamName}
-        </p>
-      </div>
+      <p className="min-w-0 truncate text-[12px] font-black leading-none text-white">
+        {teamName}
+      </p>
 
       <input
         name={scoreName}
@@ -157,7 +184,7 @@ function TeamPredictionRow({
         value={score}
         onChange={(event) => onScoreChange(event.target.value)}
         disabled={!editable || loading}
-        className="h-12 w-16 shrink-0 rounded-2xl border border-white/10 bg-black/30 px-2 text-center text-lg font-black text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/70 disabled:cursor-not-allowed disabled:opacity-50 sm:w-20"
+        className="h-7 w-9 rounded-md border border-emerald-300/20 bg-black/45 px-1 text-center text-xs font-black text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/80 focus:bg-black/70 disabled:cursor-not-allowed disabled:opacity-50"
         placeholder="-"
         required={editable}
       />
@@ -172,7 +199,10 @@ export default function MatchPredictionCard({
 }: MatchPredictionCardProps) {
   const homeDisplay = getDisplayTeam(match.home_team, match.home_slot);
   const awayDisplay = getDisplayTeam(match.away_team, match.away_slot);
-  const editable = isEditable(match);
+
+  const [now, setNow] = useState(Date.now());
+  const editable = isEditable(match, now);
+  const showCountdown = editable && new Date(match.starts_at).getTime() > now;
 
   const [homeScore, setHomeScore] = useState(
     getScoreValue(prediction?.predicted_home_score)
@@ -184,6 +214,14 @@ export default function MatchPredictionCard({
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     setHomeScore(getScoreValue(prediction?.predicted_home_score));
@@ -245,72 +283,86 @@ export default function MatchPredictionCard({
   }
 
   return (
-    <article className="rounded-[1.25rem] border border-white/10 bg-black/20 p-3.5 transition hover:border-emerald-300/25 hover:bg-white/[0.04] sm:p-4">
-      <div className="flex items-start justify-between gap-3">
+    <article className="rounded-xl border border-white/10 bg-black/20 p-2 transition hover:border-emerald-300/25 hover:bg-white/[0.04]">
+      <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">
+          <div className="flex flex-wrap items-center gap-1">
+            <p className="text-[8px] font-black uppercase tracking-[0.14em] text-emerald-300">
               {getStageLabel(match)}
             </p>
 
             {match.match_number !== null ? (
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-zinc-300">
+              <span className="rounded-full border border-white/10 bg-white/[0.04] px-1 py-0.5 text-[8px] font-bold uppercase tracking-wide text-zinc-300">
                 Match {match.match_number}
               </span>
             ) : null}
           </div>
 
-          <p className="mt-1 text-[11px] font-medium text-zinc-400">
+          <p className="mt-0.5 text-[9px] font-medium text-zinc-500">
             {formatMatchDate(match.starts_at)}
           </p>
         </div>
 
         <div
-          className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${getStatusClasses(
-            match.status
+          className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide ${getStatusClasses(
+            editable ? "open" : match.status
           )}`}
         >
-          {getStatusLabel(match.status)}
+          {editable ? "Open" : getStatusLabel(match.status)}
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-4">
-        <div className="grid gap-2">
-          <TeamPredictionRow
-            teamName={homeDisplay}
-            score={homeScore}
-            scoreName="predicted_home_score"
-            editable={editable}
-            loading={loading}
-            onScoreChange={setHomeScore}
-          />
+      {showCountdown ? (
+        <div className="mt-2 flex items-center justify-between rounded-lg border border-emerald-300/25 bg-emerald-300/[0.08] px-2.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+          <span className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-200/80">
+            Starts in
+          </span>
+          <span className="font-mono text-sm font-black leading-none text-emerald-100">
+            {formatCountdown(match.starts_at, now)}
+          </span>
+        </div>
+      ) : null}
 
-          <div className="flex items-center gap-3 px-3">
-            <div className="h-px flex-1 bg-white/10" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
-              VS
+      <form onSubmit={handleSubmit} className="mt-2">
+        <div className="rounded-xl border border-white/10 bg-black/20 p-1.5">
+          <div className="grid grid-cols-[1fr_2.35rem] items-center gap-2 px-1 pb-1">
+            <span className="text-[8px] font-black uppercase tracking-[0.16em] text-zinc-500">
+              Prediction
             </span>
-            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-center text-[8px] font-black uppercase tracking-[0.12em] text-zinc-500">
+              Score
+            </span>
           </div>
 
-          <TeamPredictionRow
-            teamName={awayDisplay}
-            score={awayScore}
-            scoreName="predicted_away_score"
-            editable={editable}
-            loading={loading}
-            onScoreChange={setAwayScore}
-          />
+          <div className="grid gap-1">
+            <TeamPredictionRow
+              teamName={homeDisplay}
+              score={homeScore}
+              scoreName="predicted_home_score"
+              editable={editable}
+              loading={loading}
+              onScoreChange={setHomeScore}
+            />
+
+            <TeamPredictionRow
+              teamName={awayDisplay}
+              score={awayScore}
+              scoreName="predicted_away_score"
+              editable={editable}
+              loading={loading}
+              onScoreChange={setAwayScore}
+            />
+          </div>
         </div>
 
         {error ? (
-          <div className="mt-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+          <div className="mt-1.5 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1 text-[10px] text-red-200">
             {error}
           </div>
         ) : null}
 
         {message ? (
-          <div className="mt-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
+          <div className="mt-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[10px] text-emerald-200">
             {message}
           </div>
         ) : null}
@@ -318,32 +370,31 @@ export default function MatchPredictionCard({
         {match.status === "finished" &&
         match.home_score !== null &&
         match.away_score !== null ? (
-          <div className="mt-3 rounded-xl border border-sky-400/20 bg-sky-400/10 px-3 py-2 text-xs text-sky-100">
-            Final score:{" "}
-            <span className="font-black">{match.home_score}</span> -{" "}
+          <div className="mt-1.5 rounded-md border border-sky-400/20 bg-sky-400/10 px-2 py-1 text-[10px] text-sky-100">
+            Final: <span className="font-black">{match.home_score}</span> -{" "}
             <span className="font-black">{match.away_score}</span>
             {prediction?.points_awarded !== null &&
             prediction?.points_awarded !== undefined ? (
-              <span className="ml-2 text-sky-200">
+              <span className="ml-1.5 text-sky-200">
                 · {prediction.points_awarded} pts
               </span>
             ) : null}
           </div>
         ) : null}
 
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <div className="text-[11px] font-medium text-zinc-500">
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          <div className="truncate text-[9px] font-medium text-zinc-500">
             {hasPrediction
-              ? "Prediction saved"
+              ? "Saved"
               : editable
-              ? "No prediction yet"
-              : "Prediction locked"}
+              ? "No prediction"
+              : "Locked"}
           </div>
 
           <button
             type="submit"
             disabled={!editable || loading}
-            className="rounded-xl bg-emerald-300 px-4 py-2 text-xs font-black text-zinc-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-50"
+            className="shrink-0 rounded-md bg-emerald-300 px-2.5 py-1 text-[10px] font-black text-zinc-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Saving..." : hasPrediction ? "Update" : "Save"}
           </button>

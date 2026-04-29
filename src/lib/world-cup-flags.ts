@@ -155,6 +155,9 @@ const TEAM_COUNTRY_CODES: Record<string, string> = {
 
   oekraine: "ua",
   ukraine: "ua",
+  oezbekistan: "uz",
+  uzbekistan: "uz",
+  oesbekistan: "uz",
   oman: "om",
 
   pakistan: "pk",
@@ -213,9 +216,16 @@ const TEAM_COUNTRY_CODES: Record<string, string> = {
 
   uruguay: "uy",
   usa: "us",
+  "u s a": "us",
+  "u.s.a": "us",
+  "u.s.a.": "us",
+  us: "us",
+  vs: "us",
   amerika: "us",
   "verenigde staten": "us",
+  "verenigde staten amerika": "us",
   "verenigde staten van amerika": "us",
+  "verenigde staten van america": "us",
   "united states": "us",
   "united states of america": "us",
 
@@ -240,7 +250,8 @@ function normalizeTeamName(teamName: string) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[’']/g, "")
-    .replace(/[().,]/g, "")
+    .replace(/[().,]/g, " ")
+    .replace(/-/g, " ")
     .replace(/\s+/g, " ");
 }
 
