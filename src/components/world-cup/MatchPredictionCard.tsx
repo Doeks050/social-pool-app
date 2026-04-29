@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { getTeamFlagAlt, getTeamFlagSrc } from "@/lib/world-cup-flags";
 
 type MatchPredictionCardProps = {
   match: {
@@ -29,6 +30,15 @@ type MatchPredictionCardProps = {
     predicted_away_score: number | null;
     points_awarded?: number | null;
   } | null;
+};
+
+type TeamPredictionRowProps = {
+  teamName: string;
+  score: string;
+  scoreName: string;
+  editable: boolean;
+  loading: boolean;
+  onScoreChange: (value: string) => void;
 };
 
 function formatMatchDate(value: string) {
@@ -102,6 +112,57 @@ function isEditable(match: MatchPredictionCardProps["match"]) {
 
 function getScoreValue(value: number | null | undefined) {
   return value === null || value === undefined ? "" : String(value);
+}
+
+function TeamPredictionRow({
+  teamName,
+  score,
+  scoreName,
+  editable,
+  loading,
+  onScoreChange,
+}: TeamPredictionRowProps) {
+  const flagSrc = getTeamFlagSrc(teamName);
+
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#06110d]/80 p-3">
+      <div className="flex h-12 w-[58px] shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/30">
+        {flagSrc ? (
+          <img
+            src={flagSrc}
+            alt={getTeamFlagAlt(teamName)}
+            width={80}
+            height={60}
+            className="h-7 w-10 rounded-md object-cover shadow-[0_0_0_1px_rgba(255,255,255,0.14)]"
+            loading="lazy"
+          />
+        ) : (
+          <span className="text-xs font-black uppercase tracking-wide text-zinc-500">
+            TBD
+          </span>
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-black text-white sm:text-base">
+          {teamName}
+        </p>
+      </div>
+
+      <input
+        name={scoreName}
+        type="number"
+        min="0"
+        inputMode="numeric"
+        value={score}
+        onChange={(event) => onScoreChange(event.target.value)}
+        disabled={!editable || loading}
+        className="h-12 w-16 shrink-0 rounded-2xl border border-white/10 bg-black/30 px-2 text-center text-lg font-black text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/70 disabled:cursor-not-allowed disabled:opacity-50 sm:w-20"
+        placeholder="-"
+        required={editable}
+      />
+    </div>
+  );
 }
 
 export default function MatchPredictionCard({
@@ -184,7 +245,7 @@ export default function MatchPredictionCard({
   }
 
   return (
-    <article className="rounded-[1.25rem] border border-white/10 bg-black/20 p-3.5 transition hover:border-emerald-300/25 hover:bg-white/[0.04]">
+    <article className="rounded-[1.25rem] border border-white/10 bg-black/20 p-3.5 transition hover:border-emerald-300/25 hover:bg-white/[0.04] sm:p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
@@ -214,46 +275,32 @@ export default function MatchPredictionCard({
       </div>
 
       <form onSubmit={handleSubmit} className="mt-4">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2 rounded-[1rem] border border-white/10 bg-[#06110d]/80 p-3">
-          <div className="min-w-0">
-            <p className="mb-2 truncate text-sm font-black text-white">
-              {homeDisplay}
-            </p>
-            <input
-              name="predicted_home_score"
-              type="number"
-              min="0"
-              inputMode="numeric"
-              value={homeScore}
-              onChange={(event) => setHomeScore(event.target.value)}
-              disabled={!editable || loading}
-              className="h-11 w-full rounded-xl border border-white/10 bg-black/25 px-3 text-center text-base font-black text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/70 disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="-"
-              required={editable}
-            />
+        <div className="grid gap-2">
+          <TeamPredictionRow
+            teamName={homeDisplay}
+            score={homeScore}
+            scoreName="predicted_home_score"
+            editable={editable}
+            loading={loading}
+            onScoreChange={setHomeScore}
+          />
+
+          <div className="flex items-center gap-3 px-3">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+              VS
+            </span>
+            <div className="h-px flex-1 bg-white/10" />
           </div>
 
-          <div className="pb-3 text-center text-[11px] font-black uppercase tracking-wide text-zinc-500">
-            VS
-          </div>
-
-          <div className="min-w-0">
-            <p className="mb-2 truncate text-sm font-black text-white">
-              {awayDisplay}
-            </p>
-            <input
-              name="predicted_away_score"
-              type="number"
-              min="0"
-              inputMode="numeric"
-              value={awayScore}
-              onChange={(event) => setAwayScore(event.target.value)}
-              disabled={!editable || loading}
-              className="h-11 w-full rounded-xl border border-white/10 bg-black/25 px-3 text-center text-base font-black text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/70 disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="-"
-              required={editable}
-            />
-          </div>
+          <TeamPredictionRow
+            teamName={awayDisplay}
+            score={awayScore}
+            scoreName="predicted_away_score"
+            editable={editable}
+            loading={loading}
+            onScoreChange={setAwayScore}
+          />
         </div>
 
         {error ? (

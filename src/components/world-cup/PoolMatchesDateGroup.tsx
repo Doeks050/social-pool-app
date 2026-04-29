@@ -128,7 +128,7 @@ export default function PoolMatchesDateGroup({
 
       {isOpen ? (
         <div className="border-t border-white/10 p-3 sm:p-4">
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="grid gap-3">
             {matches.map((match) => (
               <MatchPredictionCard
                 key={match.id}
