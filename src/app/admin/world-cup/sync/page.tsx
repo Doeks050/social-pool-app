@@ -3,16 +3,13 @@ import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
-import {
-  buildSlotResolverContext,
-  resolveSlotTeam,
-  type WorldCupMatchRow,
-} from "@/lib/world-cup/slotResolver";
+import { syncKnockoutTeams } from "@/lib/world-cup/syncKnockoutTeams";
 
 type WorldCupSyncPageProps = {
   searchParams?: Promise<{
     success?: string;
     skipped?: string;
+    passes?: string;
     error?: string;
   }>;
 };
@@ -21,6 +18,7 @@ async function syncWorldCupKnockoutTeams() {
   "use server";
 
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -29,86 +27,43 @@ async function syncWorldCupKnockoutTeams() {
     redirect("/auth");
   }
 
-  const { data: appAdmin } = await supabase
+  const { data: appAdmin, error: adminError } = await supabase
     .from("app_admins")
     .select("user_id")
     .eq("user_id", user.id)
     .maybeSingle();
 
+  if (adminError) {
+    redirect(
+      `/admin/world-cup/sync?error=${encodeURIComponent(adminError.message)}`
+    );
+  }
+
   if (!appAdmin) {
     notFound();
   }
 
-  const { data: matches, error: matchesError } = await supabase
-    .from("matches")
-    .select(
-      "id, stage, round_name, stage_type, group_label, round_order, bracket_code, starts_at, status, home_team, away_team, home_slot, away_slot, home_score, away_score, is_knockout"
-    )
-    .eq("tournament", "world_cup_2026")
-    .order("round_order", { ascending: true })
-    .order("starts_at", { ascending: true });
+  try {
+    const result = await syncKnockoutTeams(supabase);
 
-  if (matchesError) {
+    revalidatePath("/admin");
+    revalidatePath("/admin/world-cup/sync");
+    revalidatePath("/admin/world-cup/results");
+    revalidatePath("/pools/[id]/bracket", "page");
+    revalidatePath("/pools/[id]/matches", "page");
+
     redirect(
-      `/admin/world-cup/sync?error=${encodeURIComponent(matchesError.message)}`
+      `/admin/world-cup/sync?success=${result.updatedCount}&skipped=${result.skippedCount}&passes=${result.passes}`
+    );
+  } catch (error) {
+    redirect(
+      `/admin/world-cup/sync?error=${encodeURIComponent(
+        error instanceof Error
+          ? error.message
+          : "Onbekende fout tijdens knock-out sync."
+      )}`
     );
   }
-
-  const typedMatches = (matches ?? []) as WorldCupMatchRow[];
-  const context = buildSlotResolverContext(typedMatches);
-
-  const knockoutMatches = typedMatches.filter(
-    (match) =>
-      match.stage_type !== "group" ||
-      match.is_knockout === true ||
-      !!match.home_slot ||
-      !!match.away_slot
-  );
-
-  let updatedCount = 0;
-  let skippedCount = 0;
-
-  for (const match of knockoutMatches) {
-    const resolvedHomeTeam = resolveSlotTeam(match.home_slot, context);
-    const resolvedAwayTeam = resolveSlotTeam(match.away_slot, context);
-
-    const nextHomeTeam = resolvedHomeTeam ?? match.home_team ?? null;
-    const nextAwayTeam = resolvedAwayTeam ?? match.away_team ?? null;
-
-    const changed =
-      (resolvedHomeTeam && resolvedHomeTeam !== match.home_team) ||
-      (resolvedAwayTeam && resolvedAwayTeam !== match.away_team);
-
-    if (!changed) {
-      skippedCount += 1;
-      continue;
-    }
-
-    const { error } = await supabase
-      .from("matches")
-      .update({
-        home_team: nextHomeTeam,
-        away_team: nextAwayTeam,
-      })
-      .eq("id", match.id);
-
-    if (error) {
-      redirect(
-        `/admin/world-cup/sync?error=${encodeURIComponent(error.message)}`
-      );
-    }
-
-    updatedCount += 1;
-  }
-
-  revalidatePath("/admin");
-  revalidatePath("/admin/world-cup/sync");
-  revalidatePath("/admin/world-cup/results");
-  revalidatePath("/pools/[id]/bracket", "page");
-
-  redirect(
-    `/admin/world-cup/sync?success=${updatedCount}&skipped=${skippedCount}`
-  );
 }
 
 function getErrorMessage(error: string | undefined) {
@@ -120,15 +75,23 @@ export default async function WorldCupSyncPage({
   searchParams,
 }: WorldCupSyncPageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
+
   const successCount = resolvedSearchParams?.success
     ? Number(resolvedSearchParams.success)
     : null;
+
   const skippedCount = resolvedSearchParams?.skipped
     ? Number(resolvedSearchParams.skipped)
     : null;
+
+  const passesCount = resolvedSearchParams?.passes
+    ? Number(resolvedSearchParams.passes)
+    : null;
+
   const errorMessage = getErrorMessage(resolvedSearchParams?.error);
 
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -150,7 +113,7 @@ export default async function WorldCupSyncPage({
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "id, stage_type, bracket_code, home_slot, away_slot, home_team, away_team, status, home_score, away_score"
+      "id, stage_type, bracket_code, home_slot, away_slot, home_team, away_team, status, home_score, away_score, home_team_locked_by_admin, away_team_locked_by_admin"
     )
     .eq("tournament", "world_cup_2026");
 
@@ -165,12 +128,44 @@ export default async function WorldCupSyncPage({
     status: string;
     home_score: number | null;
     away_score: number | null;
+    home_team_locked_by_admin: boolean | null;
+    away_team_locked_by_admin: boolean | null;
   }>;
 
   const totalMatches = typedMatches.length;
+
   const slotMatches = typedMatches.filter(
     (match) => !!match.home_slot || !!match.away_slot
   ).length;
+
+  const filledSlotSides = typedMatches.reduce((total, match) => {
+    let count = total;
+
+    if (match.home_slot && match.home_team) {
+      count += 1;
+    }
+
+    if (match.away_slot && match.away_team) {
+      count += 1;
+    }
+
+    return count;
+  }, 0);
+
+  const lockedSlotSides = typedMatches.reduce((total, match) => {
+    let count = total;
+
+    if (match.home_slot && match.home_team_locked_by_admin) {
+      count += 1;
+    }
+
+    if (match.away_slot && match.away_team_locked_by_admin) {
+      count += 1;
+    }
+
+    return count;
+  }, 0);
+
   const finishedKnockoutMatches = typedMatches.filter(
     (match) =>
       match.stage_type !== "group" &&
@@ -178,6 +173,7 @@ export default async function WorldCupSyncPage({
       match.home_score !== null &&
       match.away_score !== null
   ).length;
+
   const progressedMatches = typedMatches.filter(
     (match) =>
       (match.home_slot?.startsWith("winner_") ||
@@ -206,20 +202,20 @@ export default async function WorldCupSyncPage({
                 App admin
               </p>
               <h1 className="mt-2 text-3xl font-bold tracking-tight">
-                Sync knock-out vervolgslots
+                Sync knock-out teams
               </h1>
               <p className="mt-3 text-sm leading-6 text-zinc-400">
-                Deze sync ondersteunt nu zowel groepslots als vervolgslots uit
-                eerdere knock-out rondes. Daardoor kunnen kwartfinales, halve
-                finales, finale en derde plaats automatisch doorschuiven zodra
-                bronwedstrijden finished zijn.
+                Deze sync vult knock-out teams automatisch in wanneer slots
+                bekend zijn. Als een slot nog niet opgelost kan worden, wordt
+                een eerder automatisch ingevuld team weer leeggemaakt. Admin
+                overrides blijven staan.
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-5">
               <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                  Totaal WK matches
+                  Totaal
                 </p>
                 <p className="mt-2 text-lg font-semibold text-white">
                   {totalMatches}
@@ -237,27 +233,39 @@ export default async function WorldCupSyncPage({
 
               <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                  Finished knock-out duels
+                  Gevuld
                 </p>
                 <p className="mt-2 text-lg font-semibold text-white">
-                  {finishedKnockoutMatches}
+                  {filledSlotSides}
                 </p>
               </div>
 
               <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                  Vervolgslot matches
+                  Locked
                 </p>
                 <p className="mt-2 text-lg font-semibold text-white">
-                  {progressedMatches}
+                  {lockedSlotSides}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+                  KO finished
+                </p>
+                <p className="mt-2 text-lg font-semibold text-white">
+                  {finishedKnockoutMatches}
                 </p>
               </div>
             </div>
 
             {successCount !== null ? (
               <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
-                Sync gelukt. {successCount} knock-out wedstrijden bijgewerkt.
-                {skippedCount !== null ? ` ${skippedCount} wedstrijden overgeslagen.` : ""}
+                Sync gelukt. {successCount} wijzigingen uitgevoerd.
+                {skippedCount !== null
+                  ? ` ${skippedCount} controles overgeslagen.`
+                  : ""}
+                {passesCount !== null ? ` Passes: ${passesCount}.` : ""}
               </div>
             ) : null}
 
@@ -269,17 +277,23 @@ export default async function WorldCupSyncPage({
 
             <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6">
               <h2 className="text-xl font-semibold">Ondersteunde slottypes</h2>
+
               <div className="mt-4 grid gap-3 text-sm text-zinc-300">
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
                   <span className="font-semibold text-white">
                     winner_group_a
                   </span>{" "}
-                  / <span className="font-semibold text-white">runnerup_group_b</span>
+                  /{" "}
+                  <span className="font-semibold text-white">
+                    runnerup_group_b
+                  </span>
                 </div>
+
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
                   <span className="font-semibold text-white">winner_r32_1</span>{" "}
                   / <span className="font-semibold text-white">winner_qf_2</span>
                 </div>
+
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
                   <span className="font-semibold text-white">winner_sf_1</span>{" "}
                   / <span className="font-semibold text-white">loser_sf_1</span>
@@ -296,8 +310,8 @@ export default async function WorldCupSyncPage({
                   <h2 className="text-xl font-semibold">Sync uitvoeren</h2>
                   <p className="mt-2 text-sm leading-6 text-zinc-400">
                     Gebruik dit nadat groepsuitslagen of knock-out resultaten
-                    zijn ingevuld, zodat vervolgwedstrijden automatisch worden
-                    bijgewerkt.
+                    zijn ingevuld of gereset. Teams die niet meer logisch
+                    bepaald kunnen worden, worden automatisch leeggemaakt.
                   </p>
                 </div>
 
@@ -318,6 +332,13 @@ export default async function WorldCupSyncPage({
                 </div>
               </div>
             </form>
+
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm leading-6 text-amber-100">
+              Let op: de beste nummers 3-logica moeten we hierna nog apart
+              toevoegen. Deze fix zorgt er nu vooral voor dat onterecht gevulde
+              knock-out teams weer worden verwijderd wanneer de groepsfase nog
+              niet beslist is.
+            </div>
           </div>
         </Container>
       </section>

@@ -34,6 +34,25 @@ async function fetchWorldCupMatches(
   return (data ?? []) as SyncableWorldCupMatchRow[];
 }
 
+function getNextTeamValue(params: {
+  currentTeam: string | null;
+  slot: string | null;
+  resolvedTeam: string | null;
+  lockedByAdmin: boolean;
+}): string | null {
+  const { currentTeam, slot, resolvedTeam, lockedByAdmin } = params;
+
+  if (lockedByAdmin) {
+    return currentTeam ?? null;
+  }
+
+  if (slot && slot.trim()) {
+    return resolvedTeam ?? null;
+  }
+
+  return currentTeam ?? null;
+}
+
 export async function syncKnockoutTeams(supabase: any): Promise<SyncResult> {
   let updatedCount = 0;
   let skippedCount = 0;
@@ -60,13 +79,19 @@ export async function syncKnockoutTeams(supabase: any): Promise<SyncResult> {
       const resolvedHomeTeam = resolveSlotTeam(match.home_slot, context);
       const resolvedAwayTeam = resolveSlotTeam(match.away_slot, context);
 
-      const nextHomeTeam = match.home_team_locked_by_admin
-        ? match.home_team ?? null
-        : resolvedHomeTeam ?? match.home_team ?? null;
+      const nextHomeTeam = getNextTeamValue({
+        currentTeam: match.home_team ?? null,
+        slot: match.home_slot ?? null,
+        resolvedTeam: resolvedHomeTeam,
+        lockedByAdmin: match.home_team_locked_by_admin,
+      });
 
-      const nextAwayTeam = match.away_team_locked_by_admin
-        ? match.away_team ?? null
-        : resolvedAwayTeam ?? match.away_team ?? null;
+      const nextAwayTeam = getNextTeamValue({
+        currentTeam: match.away_team ?? null,
+        slot: match.away_slot ?? null,
+        resolvedTeam: resolvedAwayTeam,
+        lockedByAdmin: match.away_team_locked_by_admin,
+      });
 
       const changed =
         nextHomeTeam !== (match.home_team ?? null) ||

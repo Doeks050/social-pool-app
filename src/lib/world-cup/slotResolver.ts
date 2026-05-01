@@ -3,6 +3,11 @@ import {
   buildGroupStandings,
   type TeamStanding,
 } from "@/lib/world-cup/groupStandings";
+import {
+  formatThirdPlacedSlotLabel,
+  isGroupComplete,
+  resolveThirdPlacedSlotTeam,
+} from "@/lib/world-cup/thirdPlacedTeams";
 
 export type WorldCupMatchRow = {
   id: string;
@@ -59,6 +64,12 @@ export function buildSlotResolverContext(
 }
 
 function prettifySlot(slot: string): string {
+  const thirdPlacedLabel = formatThirdPlacedSlotLabel(slot);
+
+  if (thirdPlacedLabel) {
+    return thirdPlacedLabel;
+  }
+
   return slot
     .replace(/_/g, " ")
     .replace(/\bgroup\b/gi, "Group")
@@ -88,6 +99,34 @@ function resolveMatchSideTeam(
   return resolveSlotTeam(slot, context, visited);
 }
 
+function resolveWinnerGroupSlot(
+  groupCode: string,
+  context: SlotResolverContext
+): string | null {
+  const groupLabel = `Group ${groupCode.toUpperCase()}`;
+  const teams = context.groupLookup.get(groupLabel);
+
+  if (!isGroupComplete(teams)) {
+    return null;
+  }
+
+  return teams?.[0]?.team ?? null;
+}
+
+function resolveRunnerUpGroupSlot(
+  groupCode: string,
+  context: SlotResolverContext
+): string | null {
+  const groupLabel = `Group ${groupCode.toUpperCase()}`;
+  const teams = context.groupLookup.get(groupLabel);
+
+  if (!isGroupComplete(teams)) {
+    return null;
+  }
+
+  return teams?.[1]?.team ?? null;
+}
+
 export function resolveSlotTeam(
   slot: string | null | undefined,
   context: SlotResolverContext,
@@ -106,23 +145,36 @@ export function resolveSlotTeam(
 
   visited.add(visitKey);
 
-  const winnerGroupMatch = normalized.match(/^winner_group_([a-z0-9]+)$/i);
-  if (winnerGroupMatch) {
-    const groupLabel = `Group ${winnerGroupMatch[1].toUpperCase()}`;
-    const teams = context.groupLookup.get(groupLabel);
+  const thirdPlacedTeam = resolveThirdPlacedSlotTeam(slot, context.groupLookup);
+
+  if (thirdPlacedTeam) {
     visited.delete(visitKey);
-    return teams?.[0]?.team ?? null;
+    return thirdPlacedTeam;
+  }
+
+  const winnerGroupMatch = normalized.match(/^winner_group_([a-z0-9]+)$/i);
+
+  if (winnerGroupMatch) {
+    const resolvedTeam = resolveWinnerGroupSlot(winnerGroupMatch[1], context);
+
+    visited.delete(visitKey);
+    return resolvedTeam;
   }
 
   const runnerUpGroupMatch = normalized.match(/^runnerup_group_([a-z0-9]+)$/i);
+
   if (runnerUpGroupMatch) {
-    const groupLabel = `Group ${runnerUpGroupMatch[1].toUpperCase()}`;
-    const teams = context.groupLookup.get(groupLabel);
+    const resolvedTeam = resolveRunnerUpGroupSlot(
+      runnerUpGroupMatch[1],
+      context
+    );
+
     visited.delete(visitKey);
-    return teams?.[1]?.team ?? null;
+    return resolvedTeam;
   }
 
   const winnerMatch = normalized.match(/^winner_(.+)$/i);
+
   if (winnerMatch) {
     const code = normalizeBracketCode(winnerMatch[1]);
     const sourceMatch = context.matchesByCode.get(code);
@@ -165,6 +217,7 @@ export function resolveSlotTeam(
   }
 
   const loserMatch = normalized.match(/^loser_(.+)$/i);
+
   if (loserMatch) {
     const code = normalizeBracketCode(loserMatch[1]);
     const sourceMatch = context.matchesByCode.get(code);

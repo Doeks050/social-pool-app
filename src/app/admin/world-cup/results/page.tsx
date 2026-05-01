@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
@@ -34,6 +35,10 @@ type DateGroup = {
 type MatchOptions = {
   homeOptions: string[];
   awayOptions: string[];
+};
+
+type WorldCupMatchIdRow = {
+  id: string;
 };
 
 const PHASE_OPTIONS: PhaseOption[] = [
@@ -338,15 +343,16 @@ export default async function WorldCupResultsPage({
       redirect(
         buildResetAllHref(
           "error",
-          "Alle uitslagen resetten mislukt: je bent geen app admin."
+          "WK reset mislukt: je bent geen app admin."
         )
       );
     }
 
-    const { data: worldCupMatches, error: worldCupMatchesError } = await supabase
-      .from("matches")
-      .select("id")
-      .eq("tournament", "world_cup_2026");
+    const { data: worldCupMatches, error: worldCupMatchesError } =
+      await supabase
+        .from("matches")
+        .select("id")
+        .eq("tournament", "world_cup_2026");
 
     if (worldCupMatchesError) {
       redirect(
@@ -357,25 +363,29 @@ export default async function WorldCupResultsPage({
       );
     }
 
-    const worldCupMatchIds = (worldCupMatches ?? []).map((match) => match.id);
+    const worldCupMatchIds = ((worldCupMatches ?? []) as WorldCupMatchIdRow[])
+      .map((match) => match.id)
+      .filter(Boolean);
 
     if (worldCupMatchIds.length > 0) {
       const { error: predictionsError } = await supabase
         .from("predictions")
-        .delete()
+        .update({
+          points_awarded: 0,
+        })
         .in("match_id", worldCupMatchIds);
 
       if (predictionsError) {
         redirect(
           buildResetAllHref(
             "error",
-            `Voorspellingen verwijderen mislukt: ${predictionsError.message}`
+            `Punten resetten mislukt: ${predictionsError.message}`
           )
         );
       }
     }
 
-    const { error: matchesError } = await supabase
+    const { error: resetAllScoresError } = await supabase
       .from("matches")
       .update({
         home_score: null,
@@ -384,19 +394,46 @@ export default async function WorldCupResultsPage({
       })
       .eq("tournament", "world_cup_2026");
 
-    if (matchesError) {
+    if (resetAllScoresError) {
       redirect(
         buildResetAllHref(
           "error",
-          `Wedstrijduitslagen resetten mislukt: ${matchesError.message}`
+          `Wedstrijduitslagen resetten mislukt: ${resetAllScoresError.message}`
         )
       );
     }
 
+    const { error: resetKnockoutTeamsError } = await supabase
+      .from("matches")
+      .update({
+        home_team: null,
+        away_team: null,
+        home_team_locked_by_admin: false,
+        away_team_locked_by_admin: false,
+      })
+      .eq("tournament", "world_cup_2026")
+      .neq("stage_type", "group");
+
+    if (resetKnockoutTeamsError) {
+      redirect(
+        buildResetAllHref(
+          "error",
+          `Knock-out teams resetten mislukt: ${resetKnockoutTeamsError.message}`
+        )
+      );
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/world-cup/results");
+    revalidatePath("/admin/world-cup/sync");
+    revalidatePath("/pools/[id]/matches", "page");
+    revalidatePath("/pools/[id]/bracket", "page");
+    revalidatePath("/pools/[id]/leaderboard", "page");
+
     redirect(
       buildResetAllHref(
         "success",
-        "Alle WK-uitslagen en punten zijn verwijderd."
+        "WK is gereset. Scores, punten en automatisch ingevulde knock-outteams zijn leeggemaakt. Voorspellingen zijn bewaard."
       )
     );
   }

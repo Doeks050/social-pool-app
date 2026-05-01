@@ -19,7 +19,7 @@ export default function ResetAllResultsButton({
           onClick={() => setConfirmed(true)}
           className="w-full rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-200 transition hover:border-red-400 hover:bg-red-500/20 sm:w-auto"
         >
-          Verwijder alle uitslagen
+          Reset WK
         </button>
       ) : (
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
@@ -44,7 +44,8 @@ export default function ResetAllResultsButton({
 
       {confirmed ? (
         <p className="max-w-xs text-right text-xs leading-5 text-red-200">
-          Dit verwijdert alle ingevulde WK-uitslagen en herberekende punten.
+          Dit reset alle WK-scores, punten en automatisch ingevulde
+          knock-outteams. Voorspellingen van spelers blijven bewaard.
         </p>
       ) : null}
     </div>

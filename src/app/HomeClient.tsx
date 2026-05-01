@@ -95,6 +95,19 @@ const copy = {
     ctaText:
       "Launch your World Cup pool first. Office Bingo and F1 are already on the roadmap.",
     register: "Register",
+    footerTagline: "Social pools, made simple.",
+    footerText:
+      "Poolr is an independent platform for private prediction pools, social games and leaderboards.",
+    footerLinks: [
+      { label: "How it works", href: "/how-it-works" },
+      { label: "World Cup rules", href: "/wk-poule/spelregels" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
+      { label: "Disclaimer", href: "/disclaimer" },
+      { label: "Contact", href: "/contact" },
+    ],
+    footerSmall:
+      "Poolr is independent and is not affiliated with FIFA, UEFA, Formula 1, FIA or other rights holders.",
   },
   nl: {
     login: "Inloggen",
@@ -172,6 +185,19 @@ const copy = {
     ctaText:
       "Start eerst met je WK-poule. Office Bingo en F1 staan al op de roadmap.",
     register: "Registreren",
+    footerTagline: "Sociale poules, simpel geregeld.",
+    footerText:
+      "Poolr is een onafhankelijk platform voor privé voorspellingenspellen, sociale poules en ranglijsten.",
+    footerLinks: [
+      { label: "Hoe werkt het", href: "/how-it-works" },
+      { label: "WK-spelregels", href: "/wk-poule/spelregels" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "Voorwaarden", href: "/terms" },
+      { label: "Disclaimer", href: "/disclaimer" },
+      { label: "Contact", href: "/contact" },
+    ],
+    footerSmall:
+      "Poolr is onafhankelijk en is niet verbonden aan FIFA, UEFA, Formula 1, FIA of andere rechthebbenden.",
   },
 };
 
@@ -623,6 +649,52 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
           </div>
         </Container>
       </section>
+
+      <footer className="border-t border-white/10 bg-[#020403] py-10">
+        <Container>
+          <div className="grid gap-8 md:grid-cols-[1fr_auto] md:items-start">
+            <div>
+              <Link href="/" className="inline-flex items-center">
+                <Image
+                  src="/brand/poolr-logo-dark.png"
+                  alt="Poolr"
+                  width={220}
+                  height={64}
+                  className="h-16 w-auto"
+                />
+              </Link>
+
+              <p className="mt-4 text-sm font-black text-white">
+                {t.footerTagline}
+              </p>
+
+              <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-500">
+                {t.footerText}
+              </p>
+            </div>
+
+            <nav
+              aria-label="Footer navigation"
+              className="flex flex-wrap gap-x-5 gap-y-3 text-sm font-bold text-zinc-400 md:max-w-md md:justify-end"
+            >
+              {t.footerLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="transition hover:text-emerald-300"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          <div className="mt-8 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs leading-6 text-zinc-600 sm:flex-row sm:items-center sm:justify-between">
+            <p>© {new Date().getFullYear()} Poolr. All rights reserved.</p>
+            <p className="max-w-2xl">{t.footerSmall}</p>
+          </div>
+        </Container>
+      </footer>
     </main>
   );
 }
