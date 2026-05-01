@@ -183,7 +183,7 @@ export const termsContent: Record<Language, LegalPageContent> = {
       },
       {
         title: "7. Betaalde functies",
-        body: "Poolr kan gratis en betaalde functies aanbieden. Betaalde functies kunnen toegang geven tot extra mogelijkheden, zoals grotere poules, aanvullende beheeropties of extra speltypen. De actuele prijs, inhoud en voorwaarden van een betaalde functie worden vóór aankoop getoond.",
+        body: "Poolr kan gratis en betaalde functies aanbieden. Betaalde functies kunnen toegang geven tot extra mogelijkheden, zoals grotere poules, aanvullende beheeropties of extra speltypen. De actuele prijs, inhoud en voorwaarden van een betaalde functie worden vóór aankoop getoond. Aanvullende informatie over betalingen en terugbetalingen staat op de pagina Betalingen.",
       },
       {
         title: "8. Geen gokplatform",
@@ -246,7 +246,7 @@ export const termsContent: Record<Language, LegalPageContent> = {
       },
       {
         title: "7. Paid features",
-        body: "Poolr may offer free and paid features. Paid features may provide access to additional options such as larger pools, additional management options or extra game types. The current price, contents and conditions of a paid feature will be shown before purchase.",
+        body: "Poolr may offer free and paid features. Paid features may provide access to additional options such as larger pools, additional management options or extra game types. The current price, contents and conditions of a paid feature will be shown before purchase. Additional information about payments and refunds is available on the Billing page.",
       },
       {
         title: "8. No gambling platform",
@@ -703,6 +703,111 @@ export const worldCupRulesContent: Record<Language, LegalPageContent> = {
       {
         title: "17. Changes to rules",
         body: "Poolr may adjust rules or scoring when needed for clarity, technical operation or new features. For ongoing pools, we try to keep changes as limited and fair as possible.",
+      },
+    ],
+  },
+};
+
+export const billingContent: Record<Language, LegalPageContent> = {
+  nl: {
+    backLabel: "Terug naar home",
+    updatedLabel: "Laatst bijgewerkt",
+    updatedAt: updatedAt.nl,
+    label: "Betalingen",
+    title: "Betalingen & refunds",
+    intro:
+      "Op deze pagina leggen we uit hoe betalingen voor betaalde functies binnen Poolr werken en wanneer terugbetaling wel of niet mogelijk is.",
+    sections: [
+      {
+        title: "1. Betaalde functies",
+        body: "Poolr kan gratis en betaalde functies aanbieden. Betaalde functies kunnen bijvoorbeeld toegang geven tot grotere poules, extra beheeropties, aangepaste instellingen, premium speltypes of andere aanvullende mogelijkheden.",
+      },
+      {
+        title: "2. Wie betaalt?",
+        body: "In de meeste gevallen betaalt de persoon die een betaalde poule of premium functie activeert. Deelnemers aan een poule hoeven niet automatisch aan Poolr te betalen, tenzij dit vooraf duidelijk wordt aangegeven.",
+      },
+      {
+        title: "3. Prijzen",
+        body: "De actuele prijs, inhoud en voorwaarden van een betaalde functie worden vóór aankoop getoond. Prijzen kunnen per functie, pouletype, looptijd of actie verschillen.",
+      },
+      {
+        title: "4. Betaalprovider",
+        body: "Betalingen kunnen worden verwerkt via een externe betaalprovider. Poolr slaat zelf geen volledige betaalkaartgegevens of bankgegevens op. De betaalprovider kan eigen voorwaarden en privacyregels hanteren.",
+      },
+      {
+        title: "5. Directe levering",
+        body: "Betaalde digitale functies worden meestal direct na aankoop beschikbaar gemaakt. Door een betaalde functie te activeren, vraag je om directe levering van de digitale dienst.",
+      },
+      {
+        title: "6. Geen standaard refunds",
+        body: "Omdat betaalde digitale functies direct beschikbaar worden gemaakt en vaak om kleine bedragen gaan, worden betalingen in principe niet terugbetaald. Dit geldt bijvoorbeeld wanneer een gebruiker zich bedenkt, een poule niet gebruikt, deelnemers niet meedoen of een verkeerde keuze maakt.",
+      },
+      {
+        title: "7. Uitzonderingen",
+        body: "Een terugbetaling kan alleen worden overwogen wanneer dit wettelijk verplicht is, wanneer er sprake is van een aantoonbare dubbele of foutieve betaling, of wanneer een betaalde functie door een technisch probleem aan de kant van Poolr niet geleverd kan worden.",
+      },
+      {
+        title: "8. Mislukte of teruggedraaide betalingen",
+        body: "Als een betaling mislukt, wordt teruggedraaid of niet volledig wordt afgerond, kan toegang tot de betaalde functie worden geweigerd, beperkt of ingetrokken.",
+      },
+      {
+        title: "9. Misbruik",
+        body: "Bij misbruik, fraude, chargebacks zonder geldige reden of pogingen om betaalde functies te gebruiken zonder geldige betaling kan Poolr toegang beperken, een account blokkeren of een poule sluiten.",
+      },
+      {
+        title: "10. Contact over betalingen",
+        body: "Voor vragen over betalingen of een mogelijk probleem met een betaling kun je contact opnemen via playpoolr.app@gmail.com. Vermeld daarbij je account, de naam van de poule, de datum van betaling en een duidelijke omschrijving van het probleem.",
+      },
+    ],
+  },
+  en: {
+    backLabel: "Back to home",
+    updatedLabel: "Last updated",
+    updatedAt: updatedAt.en,
+    label: "Billing",
+    title: "Billing & refunds",
+    intro:
+      "This page explains how payments for paid features within Poolr work and when refunds are or are not possible.",
+    sections: [
+      {
+        title: "1. Paid features",
+        body: "Poolr may offer free and paid features. Paid features may provide access to larger pools, extra management options, custom settings, premium game types or other additional functionality.",
+      },
+      {
+        title: "2. Who pays?",
+        body: "In most cases, the person who activates a paid pool or premium feature pays. Participants in a pool do not automatically have to pay Poolr unless this is clearly stated before purchase.",
+      },
+      {
+        title: "3. Prices",
+        body: "The current price, contents and conditions of a paid feature are shown before purchase. Prices may differ per feature, pool type, duration or promotion.",
+      },
+      {
+        title: "4. Payment provider",
+        body: "Payments may be processed through an external payment provider. Poolr does not store full payment card details or bank details. The payment provider may apply its own terms and privacy rules.",
+      },
+      {
+        title: "5. Immediate delivery",
+        body: "Paid digital features are usually made available immediately after purchase. By activating a paid feature, you request immediate delivery of the digital service.",
+      },
+      {
+        title: "6. No standard refunds",
+        body: "Because paid digital features are made available immediately and often involve small amounts, payments are generally not refunded. This includes situations where a user changes their mind, does not use a pool, participants do not join, or a wrong choice is made.",
+      },
+      {
+        title: "7. Exceptions",
+        body: "A refund may only be considered when required by law, when there is a proven duplicate or incorrect payment, or when a paid feature cannot be delivered due to a technical problem on Poolr’s side.",
+      },
+      {
+        title: "8. Failed or reversed payments",
+        body: "If a payment fails, is reversed or is not fully completed, access to the paid feature may be refused, limited or withdrawn.",
+      },
+      {
+        title: "9. Misuse",
+        body: "In case of misuse, fraud, chargebacks without a valid reason or attempts to use paid features without valid payment, Poolr may restrict access, block an account or close a pool.",
+      },
+      {
+        title: "10. Contact about payments",
+        body: "For questions about payments or a possible payment issue, contact us at playpoolr.app@gmail.com. Include your account, the name of the pool, the payment date and a clear description of the issue.",
       },
     ],
   },

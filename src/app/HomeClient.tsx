@@ -30,24 +30,16 @@ const copy = {
     heroText:
       "Create and join private pools for football, bingo, F1 and more. Built for friends, colleagues and every group that loves a leaderboard.",
     chips: ["One-time entry", "Private invite links", "Mobile friendly"],
-    leaderboard: "Leaderboard",
+    appPreview: "App preview",
+    leaderboard: "Live leaderboard",
     players: "24 players",
     poolName: "Office World Cup 2026",
-    poolSubtitle: "Match points and bonus points combined.",
-    leader: "Leader",
-    yourRank: "Your rank",
-    points: "Points",
-    currentPodium: "Current podium",
-    topPlayers: "Top players",
-    liveRanking: "Live ranking",
+    poolSubtitle: "Ranking updates after every result.",
     match: "Match",
     bonus: "Bonus",
     total: "Total",
     pts: "pts",
     you: "You",
-    nextMatch: "Next match",
-    locksIn: "Locks in",
-    matchName: "Germany vs Mexico",
     poolTypes: [
       {
         label: "World Cup 2026",
@@ -117,24 +109,16 @@ const copy = {
     heroText:
       "Maak en speel privé-poules voor voetbal, Office Bingo, F1 en meer. Gebouwd voor vrienden, collega’s en elke groep die gek is op een ranglijst.",
     chips: ["Eenmalige deelname", "Privé uitnodigingslinks", "Mobielvriendelijk"],
-    leaderboard: "Ranglijst",
+    appPreview: "App voorbeeld",
+    leaderboard: "Live ranglijst",
     players: "24 spelers",
     poolName: "Kantoor WK 2026",
-    poolSubtitle: "Wedstrijdpunten en bonuspunten gecombineerd.",
-    leader: "Koploper",
-    yourRank: "Jouw plek",
-    points: "Punten",
-    currentPodium: "Huidig podium",
-    topPlayers: "Topspelers",
-    liveRanking: "Live stand",
+    poolSubtitle: "De stand werkt bij na elke uitslag.",
     match: "Wedstrijd",
     bonus: "Bonus",
     total: "Totaal",
     pts: "pnt",
     you: "Jij",
-    nextMatch: "Volgende wedstrijd",
-    locksIn: "Sluit over",
-    matchName: "Duitsland vs Mexico",
     poolTypes: [
       {
         label: "WK 2026",
@@ -198,170 +182,101 @@ const copy = {
 type Translation = typeof copy.en;
 
 function getRankBadgeClasses(rank: number, isUser: boolean) {
-  if (isUser) {
-    return "border-emerald-300/35 bg-emerald-300/15 text-emerald-100";
-  }
-
-  if (rank === 1) {
-    return "border-yellow-300/35 bg-yellow-300/15 text-yellow-100";
-  }
-
-  if (rank === 2) {
-    return "border-zinc-300/25 bg-zinc-300/10 text-zinc-100";
-  }
-
-  if (rank === 3) {
-    return "border-orange-300/25 bg-orange-300/10 text-orange-100";
-  }
-
+  if (isUser) return "border-emerald-300/40 bg-emerald-300/20 text-emerald-100";
+  if (rank === 1) return "border-yellow-300/45 bg-yellow-300/20 text-yellow-100";
+  if (rank === 2) return "border-zinc-300/30 bg-zinc-300/12 text-zinc-100";
+  if (rank === 3) return "border-orange-300/35 bg-orange-300/14 text-orange-100";
   return "border-white/10 bg-black/25 text-zinc-300";
 }
 
 function getRowClasses(rank: number, isUser: boolean) {
-  if (isUser) {
-    return "border-emerald-300/45 bg-emerald-300/[0.09]";
-  }
-
-  if (rank === 1) {
-    return "border-yellow-300/30 bg-yellow-300/[0.07]";
-  }
-
-  if (rank === 2) {
-    return "border-zinc-300/20 bg-zinc-300/[0.045]";
-  }
-
-  if (rank === 3) {
-    return "border-orange-300/25 bg-orange-300/[0.055]";
-  }
-
+  if (isUser) return "border-emerald-300/45 bg-emerald-300/[0.09]";
+  if (rank === 1) return "border-yellow-300/30 bg-yellow-300/[0.07]";
+  if (rank === 2) return "border-zinc-300/20 bg-zinc-300/[0.045]";
+  if (rank === 3) return "border-orange-300/25 bg-orange-300/[0.055]";
   return "border-white/10 bg-white/[0.04]";
 }
 
-function LeaderboardMockup({
-  t,
-  compact = false,
-}: {
-  t: Translation;
-  compact?: boolean;
-}) {
+function LeaderboardMockup({ t }: { t: Translation }) {
   return (
-    <div className="relative mx-auto w-full max-w-[20rem] sm:max-w-xl lg:max-w-none">
-      <div className="absolute -inset-8 rounded-[3rem] bg-emerald-400/10 blur-3xl" />
-      <div className="absolute left-1/2 top-5 h-28 w-44 -translate-x-1/2 rounded-full bg-emerald-300/20 blur-3xl" />
-      <div className="absolute -right-6 top-16 hidden h-24 w-24 rounded-full border border-emerald-300/20 bg-emerald-300/10 blur-xl sm:block" />
-      <div className="absolute -left-8 bottom-20 hidden h-28 w-28 rounded-full border border-teal-300/10 bg-teal-300/10 blur-2xl sm:block" />
+    <div className="relative mx-auto w-full max-w-[21rem] sm:max-w-xl lg:max-w-none">
+      <div className="absolute -inset-8 rounded-[3rem] bg-emerald-400/12 blur-3xl" />
+      <div className="absolute left-1/2 top-6 h-32 w-52 -translate-x-1/2 rounded-full bg-emerald-300/20 blur-3xl" />
 
-      <div className="relative mx-auto rounded-[2.4rem] border border-white/15 bg-gradient-to-b from-white/12 via-white/5 to-white/[0.03] p-2 shadow-[0_30px_90px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:rotate-[-2deg] sm:rounded-[2.7rem] sm:p-3 lg:rotate-[-5deg]">
-        <div className="pointer-events-none absolute inset-x-12 top-2 z-20 h-5 rounded-b-2xl bg-black/80 sm:inset-x-20" />
+      <div className="relative mx-auto rounded-[2.5rem] border border-white/20 bg-gradient-to-b from-white/14 via-white/6 to-white/[0.03] p-2 shadow-[0_30px_90px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:rotate-[-2deg] sm:rounded-[2.8rem] sm:p-3 lg:rotate-[-5deg]">
+        <div className="pointer-events-none absolute inset-x-12 top-2 z-20 h-5 rounded-b-2xl bg-black/85 sm:inset-x-20" />
 
         <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#06110d] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:rounded-[2.2rem]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(110,231,183,0.18),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.05),transparent_30%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(110,231,183,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.055),transparent_32%)]" />
 
-          <div className="relative px-3 pb-3 pt-7 sm:px-5 sm:pb-5 sm:pt-8">
-            <div className="mb-3 flex items-start justify-between gap-3 sm:mb-4">
-              <div className="min-w-0">
-                <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-emerald-200 sm:text-[10px]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.9)]" />
-                    {t.leaderboard}
-                  </span>
-
-                  <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[9px] font-bold text-zinc-300 sm:text-[10px]">
-                    {t.players}
-                  </span>
+          <div className="relative px-3 pb-4 pt-7 sm:px-5 sm:pb-5 sm:pt-8">
+            <div className="mb-3 flex items-center justify-between rounded-2xl border border-white/10 bg-black/25 px-3 py-2">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-300 text-sm font-black text-zinc-950">
+                  P
                 </div>
-
-                <h2 className="truncate text-lg font-black tracking-tight text-white sm:text-3xl">
-                  {t.poolName}
-                </h2>
-
-                <p className="mt-1 line-clamp-1 text-[11px] font-semibold text-zinc-400 sm:text-sm">
-                  {t.poolSubtitle}
-                </p>
-              </div>
-            </div>
-
-            <div className="mb-3 grid grid-cols-3 gap-2 sm:mb-4">
-              <div className="rounded-2xl border border-yellow-300/25 bg-yellow-300/[0.08] px-2 py-2 text-center sm:py-3">
-                <p className="text-[8px] font-black uppercase tracking-[0.12em] text-yellow-100/80 sm:text-[9px]">
-                  {t.leader}
-                </p>
-                <p className="mt-1 truncate text-xs font-black text-white sm:text-sm">
-                  Alex
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-emerald-300/25 bg-emerald-300/[0.09] px-2 py-2 text-center sm:py-3">
-                <p className="text-[8px] font-black uppercase tracking-[0.12em] text-emerald-200 sm:text-[9px]">
-                  {t.yourRank}
-                </p>
-                <p className="mt-1 text-xs font-black text-white sm:text-sm">
-                  #3
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-black/20 px-2 py-2 text-center sm:py-3">
-                <p className="text-[8px] font-black uppercase tracking-[0.12em] text-zinc-500 sm:text-[9px]">
-                  {t.points}
-                </p>
-                <p className="mt-1 text-xs font-black text-white sm:text-sm">
-                  35
-                </p>
-              </div>
-            </div>
-
-            <div className="mb-3 rounded-2xl border border-white/10 bg-black/20 p-3 sm:mb-4">
-              <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.16em] text-emerald-300 sm:text-[10px]">
-                    {t.currentPodium}
+                  <p className="text-sm font-black leading-none text-white">
+                    Poolr
                   </p>
-                  <p className="mt-1 text-xs font-black text-white sm:text-sm">
-                    {t.topPlayers}
+                  <p className="mt-0.5 text-[10px] font-bold text-zinc-500">
+                    {t.appPreview}
                   </p>
                 </div>
-
-                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[9px] font-bold text-zinc-300 sm:text-[10px]">
-                  {t.liveRanking}
-                </span>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
-                {leaderboardRows.slice(0, 3).map((row) => {
-                  const isUser = row.name === "You";
-                  const displayName = isUser ? t.you : row.name;
+              <span className="rounded-full bg-emerald-300/12 px-2.5 py-1 text-[10px] font-black text-emerald-200">
+                LIVE
+              </span>
+            </div>
 
-                  return (
-                    <div
-                      key={row.rank}
-                      className={`rounded-xl border px-2 py-2 text-center ${getRowClasses(
-                        row.rank,
-                        isUser
-                      )}`}
-                    >
-                      <div
-                        className={`mx-auto flex h-7 w-7 items-center justify-center rounded-lg border text-[9px] font-black sm:h-8 sm:w-8 sm:rounded-xl sm:text-[10px] ${getRankBadgeClasses(
-                          row.rank,
-                          isUser
-                        )}`}
-                      >
-                        #{row.rank}
-                      </div>
+            <div className="mb-4 rounded-[1.5rem] border border-emerald-300/20 bg-emerald-300/[0.08] p-4 shadow-[0_18px_40px_rgba(16,185,129,0.09)]">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200">
+                {t.players}
+              </p>
 
-                      <p className="mt-2 truncate text-[11px] font-black text-white sm:text-xs">
-                        {displayName}
-                      </p>
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-white sm:text-3xl">
+                {t.leaderboard}
+              </h2>
 
-                      <p className="mt-1 text-[10px] font-black text-zinc-300 sm:text-[11px]">
-                        {row.total} {t.pts}
-                      </p>
-                    </div>
-                  );
-                })}
+              <p className="mt-1 text-xs font-semibold text-zinc-300">
+                {t.poolSubtitle}
+              </p>
+            </div>
+
+            <div className="mb-4 grid grid-cols-3 items-end gap-2">
+              <div className="rounded-2xl border border-zinc-300/25 bg-zinc-300/[0.08] px-2 py-3 text-center">
+                <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-300/30 bg-zinc-300/12 text-sm font-black text-zinc-100">
+                  #2
+                </div>
+                <p className="truncate text-xs font-black text-white">Jamie</p>
+                <p className="mt-0.5 text-[11px] font-black text-zinc-400">
+                  38 {t.pts}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-yellow-300/35 bg-yellow-300/[0.12] px-2 py-5 text-center shadow-[0_14px_45px_rgba(250,204,21,0.12)]">
+                <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl border border-yellow-300/40 bg-yellow-300/20 text-base font-black text-yellow-100">
+                  #1
+                </div>
+                <p className="truncate text-sm font-black text-white">Alex</p>
+                <p className="mt-0.5 text-xs font-black text-yellow-100">
+                  42 {t.pts}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-emerald-300/35 bg-emerald-300/[0.1] px-2 py-3 text-center">
+                <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-300/35 bg-emerald-300/16 text-sm font-black text-emerald-100">
+                  #3
+                </div>
+                <p className="truncate text-xs font-black text-white">{t.you}</p>
+                <p className="mt-0.5 text-[11px] font-black text-emerald-100">
+                  35 {t.pts}
+                </p>
               </div>
             </div>
 
-            <div className={compact ? "hidden sm:grid sm:gap-2" : "grid gap-2"}>
+            <div className="grid gap-2">
               {leaderboardRows.map((row) => {
                 const isUser = row.name === "You";
                 const displayName = isUser ? t.you : row.name;
@@ -388,6 +303,7 @@ function LeaderboardMockup({
                         <p className="truncate text-sm font-black text-white">
                           {displayName}
                         </p>
+
                         <p className="mt-0.5 text-xs font-semibold text-zinc-500">
                           {t.match} {row.match} · {t.bonus} {row.bonus}
                         </p>
@@ -405,30 +321,6 @@ function LeaderboardMockup({
                   </div>
                 );
               })}
-            </div>
-
-            <div className={compact ? "mt-3 hidden sm:block" : "mt-4"}>
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
-                      {t.nextMatch}
-                    </p>
-                    <p className="mt-1 truncate text-sm font-black text-white">
-                      {t.matchName}
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-4 py-2 text-center">
-                    <p className="text-[9px] font-black uppercase tracking-[0.12em] text-emerald-200">
-                      {t.locksIn}
-                    </p>
-                    <p className="mt-0.5 text-sm font-black text-white">
-                      02:14:33
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -545,7 +437,7 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
                 </h1>
 
                 <div className="mt-5 lg:hidden">
-                  <LeaderboardMockup t={t} compact />
+                  <LeaderboardMockup t={t} />
                 </div>
 
                 <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-300 sm:mt-6 sm:text-xl sm:leading-8">
