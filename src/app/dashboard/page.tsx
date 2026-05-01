@@ -18,6 +18,8 @@ type PoolMembershipRow = {
         game_type: string;
         invite_code: string;
         created_at: string;
+        status: string | null;
+        payment_status: string | null;
       }
     | {
         id: string;
@@ -25,6 +27,8 @@ type PoolMembershipRow = {
         game_type: string;
         invite_code: string;
         created_at: string;
+        status: string | null;
+        payment_status: string | null;
       }[]
     | null;
 };
@@ -38,6 +42,11 @@ type DashboardPool = {
   inviteCode: string;
   createdAt: string;
   role: string;
+  status: string | null;
+  paymentStatus: string | null;
+  isActive: boolean;
+  needsPayment: boolean;
+  href: string;
 };
 
 const copy = {
@@ -79,6 +88,9 @@ const copy = {
     officeBingo: "Office Bingo",
     f1Pool: "F1 Pool",
     wkShort: "WC",
+    paymentRequired: "Payment required",
+    paymentRequiredDescription:
+      "This pool has been created, but still needs to be paid and activated.",
   },
   nl: {
     playerFallback: "Speler",
@@ -118,6 +130,9 @@ const copy = {
     officeBingo: "Office Bingo",
     f1Pool: "F1-poule",
     wkShort: "WK",
+    paymentRequired: "Betaling vereist",
+    paymentRequiredDescription:
+      "Deze poule is aangemaakt, maar nog niet betaald/geactiveerd.",
   },
 };
 
@@ -151,7 +166,26 @@ function getRoleLabel(role: string, language: "en" | "nl") {
   return t.member;
 }
 
-function getPoolTypeLabel(gameType: string, fallback: string, language: "en" | "nl") {
+function isPaidPoolStatus(paymentStatus: string | null | undefined) {
+  return paymentStatus === "paid" || paymentStatus === "waived";
+}
+
+function isActivePool(input: {
+  status: string | null | undefined;
+  paymentStatus: string | null | undefined;
+}) {
+  return input.status === "active" && isPaidPoolStatus(input.paymentStatus);
+}
+
+function canManagePoolPayment(role: string) {
+  return role === "owner" || role === "admin";
+}
+
+function getPoolTypeLabel(
+  gameType: string,
+  fallback: string,
+  language: "en" | "nl"
+) {
   const t = copy[language];
 
   if (gameType === "world_cup") {
@@ -223,12 +257,13 @@ export default async function DashboardPage() {
   const { data: memberships } = await supabase
     .from("pool_members")
     .select(
-      "role, joined_at, pools(id, name, game_type, invite_code, created_at)"
+      "role, joined_at, pools(id, name, game_type, invite_code, created_at, status, payment_status)"
     )
     .eq("user_id", user.id)
     .order("joined_at", { ascending: false });
 
-  const displayName = profile?.display_name?.trim() || user.email || t.playerFallback;
+  const displayName =
+    profile?.display_name?.trim() || user.email || t.playerFallback;
 
   const myPools = ((memberships ?? []) as PoolMembershipRow[])
     .map((membership) => {
@@ -241,6 +276,15 @@ export default async function DashboardPage() {
       }
 
       const typeMeta = getPoolTypeMeta(pool.game_type);
+      const active = isActivePool({
+        status: pool.status,
+        paymentStatus: pool.payment_status,
+      });
+
+      const needsPayment =
+        pool.status === "pending_payment" &&
+        pool.payment_status === "pending" &&
+        canManagePoolPayment(membership.role);
 
       return {
         id: pool.id,
@@ -255,9 +299,16 @@ export default async function DashboardPage() {
         inviteCode: pool.invite_code,
         createdAt: pool.created_at,
         role: membership.role,
+        status: pool.status,
+        paymentStatus: pool.payment_status,
+        isActive: active,
+        needsPayment,
+        href: needsPayment ? `/pools/${pool.id}/payment` : `/pools/${pool.id}`,
       };
     })
     .filter(Boolean) as DashboardPool[];
+
+  const activePools = myPools.filter((pool) => pool.isActive);
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
@@ -326,9 +377,9 @@ export default async function DashboardPage() {
 
                 <div className="mt-7 grid gap-3 sm:grid-cols-3">
                   <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <p className="text-3xl font-black">{myPools.length}</p>
+                    <p className="text-3xl font-black">{activePools.length}</p>
                     <p className="mt-1 text-sm text-zinc-400">
-                      {myPools.length === 1 ? t.activePool : t.activePools}
+                      {activePools.length === 1 ? t.activePool : t.activePools}
                     </p>
                   </div>
 
@@ -442,10 +493,12 @@ export default async function DashboardPage() {
                     {myPools.map((pool) => (
                       <Link
                         key={pool.id}
-                        href={`/pools/${pool.id}`}
-                        className={`rounded-[1.5rem] border p-5 transition ${getPoolCardClasses(
-                          pool.gameType
-                        )}`}
+                        href={pool.href}
+                        className={`rounded-[1.5rem] border p-5 transition ${
+                          pool.needsPayment
+                            ? "border-amber-300/30 bg-amber-300/[0.08] hover:border-amber-300/50"
+                            : getPoolCardClasses(pool.gameType)
+                        }`}
                       >
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                           <div>
@@ -465,10 +518,18 @@ export default async function DashboardPage() {
                               >
                                 {pool.gameTypeShortLabel}
                               </span>
+
+                              {pool.needsPayment ? (
+                                <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-amber-200">
+                                  {t.paymentRequired}
+                                </span>
+                              ) : null}
                             </div>
 
                             <p className="mt-2 text-sm leading-6 text-zinc-400">
-                              {pool.gameTypeLabel}
+                              {pool.needsPayment
+                                ? t.paymentRequiredDescription
+                                : pool.gameTypeLabel}
                             </p>
                           </div>
 
