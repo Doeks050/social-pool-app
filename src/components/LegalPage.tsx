@@ -1,26 +1,39 @@
-import Link from "next/link";
-import Container from "@/components/Container";
+"use client";
 
-type LegalSection = {
-  title: string;
-  body: string | string[];
-};
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import Container from "@/components/Container";
+import type { Language, LegalPageContent } from "../data/legalPages";
 
 type LegalPageProps = {
-  label: string;
-  title: string;
-  intro: string;
-  updatedAt?: string;
-  sections: LegalSection[];
+  content: Record<Language, LegalPageContent>;
 };
 
-export default function LegalPage({
-  label,
-  title,
-  intro,
-  updatedAt = "1 mei 2026",
-  sections,
-}: LegalPageProps) {
+export default function LegalPage({ content }: LegalPageProps) {
+  const [language, setLanguage] = useState<Language>("nl");
+
+  useEffect(() => {
+    const savedLanguage = window.localStorage.getItem("poolr-language");
+
+    if (savedLanguage === "nl" || savedLanguage === "en") {
+      setLanguage(savedLanguage);
+      return;
+    }
+
+    const browserLanguage = window.navigator.language.toLowerCase();
+    const browserLanguages = window.navigator.languages.map((lang) =>
+      lang.toLowerCase()
+    );
+
+    const prefersDutch =
+      browserLanguage.startsWith("nl") ||
+      browserLanguages.some((lang) => lang.startsWith("nl"));
+
+    setLanguage(prefersDutch ? "nl" : "en");
+  }, []);
+
+  const t = content[language];
+
   return (
     <main className="min-h-screen bg-[#030706] py-16 text-white sm:py-24">
       <Container className="max-w-4xl">
@@ -28,26 +41,26 @@ export default function LegalPage({
           href="/"
           className="inline-flex rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-bold text-zinc-300 transition hover:bg-white/[0.08] hover:text-white"
         >
-          Terug naar home
+          {t.backLabel}
         </Link>
 
         <article className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 shadow-2xl sm:p-10">
           <p className="text-sm font-black uppercase tracking-[0.22em] text-emerald-300">
-            {label}
+            {t.label}
           </p>
 
           <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
-            {title}
+            {t.title}
           </h1>
 
-          <p className="mt-5 text-base leading-8 text-zinc-300">{intro}</p>
+          <p className="mt-5 text-base leading-8 text-zinc-300">{t.intro}</p>
 
           <p className="mt-4 text-sm leading-7 text-zinc-500">
-            Laatst bijgewerkt: {updatedAt}
+            {t.updatedLabel}: {t.updatedAt}
           </p>
 
           <div className="mt-10 space-y-8">
-            {sections.map((section) => (
+            {t.sections.map((section) => (
               <section key={section.title}>
                 <h2 className="text-2xl font-black text-white">
                   {section.title}
