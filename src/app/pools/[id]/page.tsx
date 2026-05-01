@@ -138,6 +138,16 @@ const copy = {
   },
 } satisfies Record<Language, Record<string, string>>;
 
+function isPoolActiveAndPaid(input: {
+  status: string | null;
+  paymentStatus: string | null;
+}) {
+  return (
+    input.status === "active" &&
+    (input.paymentStatus === "paid" || input.paymentStatus === "waived")
+  );
+}
+
 function getDisplayName(
   userId: string,
   profilesMap: Map<string, string>,
@@ -366,12 +376,23 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
 
   const { data: pool } = await supabase
     .from("pools")
-    .select("id, name, game_type, invite_code, created_at")
+    .select(
+      "id, name, game_type, invite_code, created_at, status, payment_status"
+    )
     .eq("id", id)
     .maybeSingle();
 
   if (!pool) {
     notFound();
+  }
+
+  if (
+    !isPoolActiveAndPaid({
+      status: pool.status,
+      paymentStatus: pool.payment_status,
+    })
+  ) {
+    redirect(`/pools/${pool.id}/payment`);
   }
 
   const { data: members } = await supabase

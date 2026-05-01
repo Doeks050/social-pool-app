@@ -45,6 +45,16 @@ type LeaderboardRow = {
   total_points: number;
 };
 
+function isPoolActiveAndPaid(input: {
+  status: string | null;
+  paymentStatus: string | null;
+}) {
+  return (
+    input.status === "active" &&
+    (input.paymentStatus === "paid" || input.paymentStatus === "waived")
+  );
+}
+
 function getDisplayName(
   userId: string,
   profilesMap: Map<string, string>,
@@ -135,12 +145,21 @@ export default async function PoolLeaderboardPage({
 
   const { data: pool } = await supabase
     .from("pools")
-    .select("id, name, game_type")
+    .select("id, name, game_type, status, payment_status")
     .eq("id", id)
     .maybeSingle();
 
   if (!pool || pool.game_type !== "world_cup") {
     notFound();
+  }
+
+  if (
+    !isPoolActiveAndPaid({
+      status: pool.status,
+      paymentStatus: pool.payment_status,
+    })
+  ) {
+    redirect(`/pools/${pool.id}/payment`);
   }
 
   const { data: members } = await supabase
@@ -331,8 +350,8 @@ export default async function PoolLeaderboardPage({
                       </h1>
 
                       <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-                        Match points and bonus points are combined into one
-                        live pool ranking.
+                        Match points and bonus points are combined into one live
+                        pool ranking.
                       </p>
                     </div>
 

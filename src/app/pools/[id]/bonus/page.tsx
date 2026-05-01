@@ -77,6 +77,16 @@ const copy = {
   },
 } satisfies Record<Language, Record<string, string>>;
 
+function isPoolActiveAndPaid(input: {
+  status: string | null;
+  paymentStatus: string | null;
+}) {
+  return (
+    input.status === "active" &&
+    (input.paymentStatus === "paid" || input.paymentStatus === "waived")
+  );
+}
+
 function formatDateTime(value: string, language: Language) {
   return new Intl.DateTimeFormat(language === "nl" ? "nl-NL" : "en-GB", {
     day: "2-digit",
@@ -121,12 +131,21 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
 
   const { data: pool } = await supabase
     .from("pools")
-    .select("id, name, game_type")
+    .select("id, name, game_type, status, payment_status")
     .eq("id", id)
     .maybeSingle();
 
   if (!pool || pool.game_type !== "world_cup") {
     notFound();
+  }
+
+  if (
+    !isPoolActiveAndPaid({
+      status: pool.status,
+      paymentStatus: pool.payment_status,
+    })
+  ) {
+    redirect(`/pools/${pool.id}/payment`);
   }
 
   const { data: templates } = await supabase

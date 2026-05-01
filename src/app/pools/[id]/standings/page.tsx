@@ -39,6 +39,16 @@ type GroupStanding = {
   teams: TeamStanding[];
 };
 
+function isPoolActiveAndPaid(input: {
+  status: string | null;
+  paymentStatus: string | null;
+}) {
+  return (
+    input.status === "active" &&
+    (input.paymentStatus === "paid" || input.paymentStatus === "waived")
+  );
+}
+
 function normalizeGroupLabel(match: MatchRow) {
   const roundName = match.round_name?.trim() ?? "";
   const stage = match.stage?.trim() ?? "";
@@ -220,12 +230,21 @@ export default async function PoolStandingsPage({
 
   const { data: pool } = await supabase
     .from("pools")
-    .select("id, name, game_type")
+    .select("id, name, game_type, status, payment_status")
     .eq("id", id)
     .maybeSingle();
 
   if (!pool || pool.game_type !== "world_cup") {
     notFound();
+  }
+
+  if (
+    !isPoolActiveAndPaid({
+      status: pool.status,
+      paymentStatus: pool.payment_status,
+    })
+  ) {
+    redirect(`/pools/${pool.id}/payment`);
   }
 
   const { data: matches } = await supabase

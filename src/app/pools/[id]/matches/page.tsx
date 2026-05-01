@@ -98,6 +98,16 @@ const copy = {
   },
 } satisfies Record<Language, Record<string, string>>;
 
+function isPoolActiveAndPaid(input: {
+  status: string | null;
+  paymentStatus: string | null;
+}) {
+  return (
+    input.status === "active" &&
+    (input.paymentStatus === "paid" || input.paymentStatus === "waived")
+  );
+}
+
 function getAmsterdamDateParts(value: string) {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/Amsterdam",
@@ -229,12 +239,21 @@ export default async function PoolMatchesPage({
 
   const { data: pool } = await supabase
     .from("pools")
-    .select("id, name, game_type")
+    .select("id, name, game_type, status, payment_status")
     .eq("id", id)
     .maybeSingle();
 
   if (!pool || pool.game_type !== "world_cup") {
     notFound();
+  }
+
+  if (
+    !isPoolActiveAndPaid({
+      status: pool.status,
+      paymentStatus: pool.payment_status,
+    })
+  ) {
+    redirect(`/pools/${pool.id}/payment`);
   }
 
   const { data: matches } = await supabase
