@@ -7,6 +7,7 @@ import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
 import { getLanguageFromCookieValue, type Language } from "@/lib/i18n";
 import { getPoolTypeMeta } from "@/lib/pool-types";
+import { getDefaultPoolPlan, getPoolPlan } from "@/lib/plans";
 import NextMatchHighlight from "@/components/world-cup/NextMatchHighlight";
 
 type PoolPageProps = {
@@ -46,6 +47,7 @@ const copy = {
     joined: "Joined",
     owner: "Owner",
     admin: "Admin",
+    appAdmin: "App admin",
     member: "Member",
     members: "members",
     oneMember: "member",
@@ -55,6 +57,8 @@ const copy = {
     poolDashboard: "pool dashboard",
     joinCode: "Join code",
     predict: "Predict",
+    plan: "Package",
+    memberLimit: "Members",
     poolMenu: "Pool menu",
     poolMenuIntro: "Navigate to the main parts of this pool.",
     predictLabel: "Predict",
@@ -94,6 +98,7 @@ const copy = {
     joined: "Lid sinds",
     owner: "Eigenaar",
     admin: "Admin",
+    appAdmin: "App admin",
     member: "Lid",
     members: "leden",
     oneMember: "lid",
@@ -103,6 +108,8 @@ const copy = {
     poolDashboard: "poule dashboard",
     joinCode: "Join code",
     predict: "Voorspellen",
+    plan: "Pakket",
+    memberLimit: "Leden",
     poolMenu: "Poule menu",
     poolMenuIntro: "Ga naar de belangrijkste onderdelen van deze poule.",
     predictLabel: "Voorspel",
@@ -195,6 +202,8 @@ function getRoleLabel(role: string, language: Language) {
       return t.owner;
     case "admin":
       return t.admin;
+    case "app_admin":
+      return t.appAdmin;
     default:
       return t.member;
   }
@@ -363,6 +372,14 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
     redirect("/auth");
   }
 
+  const { data: appAdmin } = await supabase
+    .from("app_admins")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const isAppAdmin = Boolean(appAdmin);
+
   const { data: membership } = await supabase
     .from("pool_members")
     .select("role")
@@ -370,14 +387,14 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!membership) {
+  if (!membership && !isAppAdmin) {
     notFound();
   }
 
   const { data: pool } = await supabase
     .from("pools")
     .select(
-      "id, name, game_type, invite_code, created_at, status, payment_status"
+      "id, name, game_type, invite_code, created_at, status, payment_status, plan_code, max_members"
     )
     .eq("id", id)
     .maybeSingle();
@@ -387,6 +404,7 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
   }
 
   if (
+    !isAppAdmin &&
     !isPoolActiveAndPaid({
       status: pool.status,
       paymentStatus: pool.payment_status,
@@ -421,6 +439,13 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
   }
 
   const poolType = getPoolTypeMeta(pool.game_type);
+  const poolPlan = getPoolPlan(pool.plan_code) ?? getDefaultPoolPlan();
+  const maxMembers =
+    typeof pool.max_members === "number" && pool.max_members > 0
+      ? pool.max_members
+      : poolPlan.maxMembers;
+
+  const currentRole = membership?.role ?? "app_admin";
   const isWorldCup = pool.game_type === "world_cup";
 
   let nextMatch: NextMatchRow | null = null;
@@ -480,12 +505,15 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                       </span>
 
                       <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
-                        {getRoleLabel(membership.role, language)}
+                        {getRoleLabel(currentRole, language)}
                       </span>
 
                       <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
-                        {typedMembers.length}{" "}
-                        {typedMembers.length === 1 ? t.oneMember : t.members}
+                        {t.plan}: {poolPlan.name}
+                      </span>
+
+                      <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
+                        {t.memberLimit}: {typedMembers.length}/{maxMembers}
                       </span>
                     </div>
 

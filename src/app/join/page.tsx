@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase-browser";
 import { useLanguage } from "@/hooks/useLanguage";
+import { getPoolPlan } from "@/lib/plans";
 
 const copy = {
   en: {
@@ -23,6 +24,12 @@ const copy = {
     enterInviteCode: "Enter an invite code.",
     sessionError: "Your session could not be loaded. Please log in again.",
     noPool: "No pool found with this invite code.",
+    inactivePool:
+      "This pool is not active yet. Ask the pool owner to complete the payment first.",
+    poolFull:
+      "This pool has reached the maximum number of members for its package.",
+    countError: "The member count could not be checked. Please try again.",
+    alreadyMemberRedirect: "You are already a member of this pool.",
     howItWorks: "How it works",
     stepOneTitle: "1. Get the code",
     stepOneText: "Ask the pool owner for the private invite code.",
@@ -46,6 +53,12 @@ const copy = {
     enterInviteCode: "Vul een invite code in.",
     sessionError: "Je sessie kon niet worden geladen. Log opnieuw in.",
     noPool: "Geen poule gevonden met deze invite code.",
+    inactivePool:
+      "Deze poule is nog niet actief. Vraag de poulebeheerder om de betaling eerst af te ronden.",
+    poolFull:
+      "Deze poule heeft het maximale aantal leden voor dit pakket bereikt.",
+    countError: "Het aantal leden kon niet worden gecontroleerd. Probeer opnieuw.",
+    alreadyMemberRedirect: "Je bent al lid van deze poule.",
     howItWorks: "Hoe het werkt",
     stepOneTitle: "1. Krijg de code",
     stepOneText: "Vraag de poulebeheerder om de privé invite code.",
@@ -56,6 +69,16 @@ const copy = {
     createOwnPool: "Maak je eigen poule",
   },
 };
+
+function isPoolUsable(input: {
+  status: string | null;
+  payment_status: string | null;
+}) {
+  return (
+    input.status === "active" &&
+    (input.payment_status === "paid" || input.payment_status === "waived")
+  );
+}
 
 export default function JoinPoolPage() {
   const router = useRouter();
@@ -95,7 +118,9 @@ export default function JoinPoolPage() {
 
     const { data: pool, error: poolError } = await supabase
       .from("pools")
-      .select("id, name, invite_code")
+      .select(
+        "id, name, invite_code, plan_code, status, payment_status"
+      )
       .eq("invite_code", cleanedCode)
       .maybeSingle();
 
@@ -107,6 +132,17 @@ export default function JoinPoolPage() {
 
     if (!pool) {
       setError(t.noPool);
+      setLoading(false);
+      return;
+    }
+
+    if (
+      !isPoolUsable({
+        status: pool.status,
+        payment_status: pool.payment_status,
+      })
+    ) {
+      setError(t.inactivePool);
       setLoading(false);
       return;
     }
@@ -128,6 +164,31 @@ export default function JoinPoolPage() {
     if (existingMembership) {
       router.push(`/pools/${pool.id}`);
       router.refresh();
+      return;
+    }
+
+    const plan = getPoolPlan(pool.plan_code) ?? getPoolPlan("starter");
+
+    if (!plan) {
+      setError(t.poolFull);
+      setLoading(false);
+      return;
+    }
+
+    const { count: memberCount, error: countError } = await supabase
+      .from("pool_members")
+      .select("pool_id", { count: "exact", head: true })
+      .eq("pool_id", pool.id);
+
+    if (countError || memberCount === null) {
+      setError(countError?.message ?? t.countError);
+      setLoading(false);
+      return;
+    }
+
+    if (memberCount >= plan.maxMembers) {
+      setError(t.poolFull);
+      setLoading(false);
       return;
     }
 
