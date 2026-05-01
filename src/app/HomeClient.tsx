@@ -278,34 +278,35 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
-      <section className="relative min-h-screen border-b border-white/10">
+      <section className="relative border-b border-white/10 lg:min-h-screen">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(34,255,160,0.18),transparent_34%),radial-gradient(circle_at_80%_65%,rgba(20,184,166,0.13),transparent_28%),linear-gradient(180deg,#04100c_0%,#030706_58%,#020403_100%)]" />
         <div className="absolute inset-0 opacity-[0.16] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
         <div className="absolute left-1/2 top-20 h-72 w-72 -translate-x-1/2 rounded-full bg-emerald-400/20 blur-3xl" />
 
         <Container>
-          <div className="relative z-10 flex min-h-screen flex-col">
-            <header className="flex items-center justify-between pt-3 pb-0 sm:pt-4">
-              <Link href="/" className="flex items-center">
+          <div className="relative z-10 flex flex-col lg:min-h-screen">
+            <header className="flex items-center justify-between gap-3 py-4 sm:py-5">
+              <Link href="/" className="flex min-w-0 items-center">
                 <Image
                   src="/brand/poolr-logo-dark.png"
                   alt="Poolr"
                   width={420}
                   height={123}
                   priority
-                  className="h-24 w-auto sm:h-28 lg:h-32"
+                  className="h-14 w-auto sm:h-20 lg:h-28"
                 />
               </Link>
 
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
                 <div className="flex rounded-full border border-white/15 bg-white/5 p-1 backdrop-blur">
                   <button
                     type="button"
                     onClick={() => changeLanguage("en")}
-                    className={`rounded-full px-3 py-1.5 text-xs font-black transition ${language === "en"
+                    className={`rounded-full px-2.5 py-1.5 text-[11px] font-black transition sm:px-3 sm:text-xs ${
+                      language === "en"
                         ? "bg-emerald-300 text-zinc-950"
                         : "text-white/70 hover:text-white"
-                      }`}
+                    }`}
                     aria-pressed={language === "en"}
                   >
                     EN
@@ -314,10 +315,11 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
                   <button
                     type="button"
                     onClick={() => changeLanguage("nl")}
-                    className={`rounded-full px-3 py-1.5 text-xs font-black transition ${language === "nl"
+                    className={`rounded-full px-2.5 py-1.5 text-[11px] font-black transition sm:px-3 sm:text-xs ${
+                      language === "nl"
                         ? "bg-emerald-300 text-zinc-950"
                         : "text-white/70 hover:text-white"
-                      }`}
+                    }`}
                     aria-pressed={language === "nl"}
                   >
                     NL
@@ -326,16 +328,16 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
 
                 <Link
                   href={isLoggedIn ? "/dashboard" : "/auth"}
-                  className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur transition hover:bg-white/10"
+                  className="rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white/90 backdrop-blur transition hover:bg-white/10 sm:px-4 sm:text-sm"
                 >
                   {isLoggedIn ? t.dashboard : t.login}
                 </Link>
               </div>
             </header>
 
-            <div className="grid flex-1 items-start gap-10 pt-8 pb-12 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:pt-6 lg:pb-16">
+            <div className="grid flex-1 items-start gap-8 pt-4 pb-12 sm:pt-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:pt-6 lg:pb-16">
               <div className="max-w-3xl">
-                <h1 className="text-5xl font-black tracking-tight text-white sm:text-7xl lg:text-8xl">
+                <h1 className="text-4xl font-black tracking-tight text-white sm:text-7xl lg:text-8xl">
                   {t.heroTitle.map((line) => (
                     <span key={line}>
                       {line}
@@ -344,31 +346,31 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
                   ))}
                 </h1>
 
-                <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-300 sm:text-xl">
+                <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-300 sm:mt-6 sm:text-xl sm:leading-8">
                   {t.heroText}
                 </p>
 
-                <div className="mt-9 flex flex-col gap-4 sm:flex-row">
+                <div className="mt-7 flex flex-col gap-3 sm:mt-9 sm:flex-row sm:gap-4">
                   <Link
                     href={primaryHref}
-                    className="rounded-2xl bg-emerald-300 px-7 py-4 text-center text-sm font-black text-zinc-950 shadow-[0_18px_60px_rgba(16,185,129,0.3)] transition hover:bg-emerald-200"
+                    className="rounded-2xl bg-emerald-300 px-6 py-3.5 text-center text-sm font-black text-zinc-950 shadow-[0_18px_60px_rgba(16,185,129,0.3)] transition hover:bg-emerald-200 sm:px-7 sm:py-4"
                   >
                     {primaryLabel}
                   </Link>
 
                   <Link
                     href={secondaryHref}
-                    className="rounded-2xl border border-white/15 bg-white/5 px-7 py-4 text-center text-sm font-black text-white backdrop-blur transition hover:bg-white/10"
+                    className="rounded-2xl border border-white/15 bg-white/5 px-6 py-3.5 text-center text-sm font-black text-white backdrop-blur transition hover:bg-white/10 sm:px-7 sm:py-4"
                   >
                     {secondaryLabel}
                   </Link>
                 </div>
 
-                <div className="mt-7 flex flex-wrap gap-3 text-sm text-zinc-400">
+                <div className="mt-6 flex flex-wrap gap-2 text-xs text-zinc-400 sm:mt-7 sm:gap-3 sm:text-sm">
                   {t.chips.map((chip) => (
                     <span
                       key={chip}
-                      className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2"
+                      className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 sm:px-4 sm:py-2"
                     >
                       {chip}
                     </span>
@@ -381,8 +383,8 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
                 <div className="absolute -right-8 top-10 hidden h-24 w-24 rounded-full border border-emerald-300/20 bg-emerald-300/10 blur-xl sm:block" />
                 <div className="absolute -left-10 bottom-20 hidden h-28 w-28 rounded-full border border-teal-300/10 bg-teal-300/10 blur-2xl sm:block" />
 
-                <div className="relative rotate-[-2deg] rounded-[2rem] border border-white/15 bg-white/[0.06] p-3 shadow-2xl backdrop-blur-xl lg:rotate-[-5deg]">
-                  <div className="rounded-[1.55rem] border border-white/10 bg-[#06110d]/95 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-5">
+                <div className="relative rounded-[1.75rem] border border-white/15 bg-white/[0.06] p-2 shadow-2xl backdrop-blur-xl sm:rotate-[-2deg] sm:rounded-[2rem] sm:p-3 lg:rotate-[-5deg]">
+                  <div className="rounded-[1.35rem] border border-white/10 bg-[#06110d]/95 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:rounded-[1.55rem] sm:p-5">
                     <div className="mb-4 flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -396,11 +398,11 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
                           </span>
                         </div>
 
-                        <h2 className="truncate text-2xl font-black tracking-tight text-white sm:text-3xl">
+                        <h2 className="truncate text-xl font-black tracking-tight text-white sm:text-3xl">
                           {t.poolName}
                         </h2>
 
-                        <p className="mt-1 text-sm font-semibold text-zinc-400">
+                        <p className="mt-1 text-xs font-semibold text-zinc-400 sm:text-sm">
                           {t.poolSubtitle}
                         </p>
                       </div>
@@ -561,7 +563,7 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
         </Container>
       </section>
 
-      <section className="relative py-20">
+      <section className="relative py-16 sm:py-20">
         <Container>
           <div className="grid gap-4 md:grid-cols-3">
             {t.poolTypes.map((type) => (
@@ -592,14 +594,14 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
         </Container>
       </section>
 
-      <section className="border-y border-white/10 bg-white/[0.03] py-20">
+      <section className="border-y border-white/10 bg-white/[0.03] py-16 sm:py-20">
         <Container>
           <div className="max-w-2xl">
             <p className="text-sm font-bold uppercase tracking-[0.22em] text-emerald-300">
               {t.howItWorks}
             </p>
 
-            <h2 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+            <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-5xl">
               {t.howTitle}
             </h2>
           </div>
@@ -625,10 +627,10 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
         </Container>
       </section>
 
-      <section className="py-20">
+      <section className="py-16 sm:py-20">
         <Container>
-          <div className="rounded-[2rem] border border-emerald-300/20 bg-gradient-to-br from-emerald-300/15 via-white/[0.05] to-transparent p-8 text-center sm:p-12">
-            <h2 className="text-4xl font-black tracking-tight sm:text-5xl">
+          <div className="rounded-[2rem] border border-emerald-300/20 bg-gradient-to-br from-emerald-300/15 via-white/[0.05] to-transparent p-6 text-center sm:p-12">
+            <h2 className="text-3xl font-black tracking-tight sm:text-5xl">
               {t.ctaTitle}
             </h2>
 
@@ -658,7 +660,7 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
                   alt="Poolr"
                   width={300}
                   height={88}
-                  className="h-20 w-auto"
+                  className="h-16 w-auto sm:h-20"
                 />
               </Link>
 

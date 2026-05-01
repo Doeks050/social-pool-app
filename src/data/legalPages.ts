@@ -32,7 +32,7 @@ export const privacyContent: Record<Language, LegalPageContent> = {
     sections: [
       {
         title: "1. Wie zijn wij?",
-        body: "Poolr is een online platform waarmee gebruikers privé-poules en sociale spellen kunnen aanmaken, beheren en spelen. Denk aan WK-poules, Office Bingo, F1-poules en vergelijkbare sociale spelvormen.",
+        body: "Poolr is een online platform waarmee gebruikers privé-poules en sociale spellen kunnen aanmaken, beheren en spelen. Voorbeelden hiervan zijn WK-poules, Office Bingo, F1-poules en vergelijkbare sociale spelvormen.",
       },
       {
         title: "2. Welke gegevens verwerken wij?",
@@ -47,7 +47,7 @@ export const privacyContent: Record<Language, LegalPageContent> = {
       },
       {
         title: "4. Rechtsgrond",
-        body: "Wij verwerken gegevens op basis van uitvoering van de overeenkomst, gerechtvaardigd belang, wettelijke verplichtingen en, waar nodig, toestemming. Voor functionele onderdelen zoals login, poolbeheer en puntentelling is verwerking noodzakelijk om de dienst te kunnen leveren.",
+        body: "Wij verwerken persoonsgegevens alleen wanneer daar een geldige grondslag voor bestaat, zoals de uitvoering van de overeenkomst, een gerechtvaardigd belang, een wettelijke verplichting of toestemming. Voor functionele onderdelen zoals login, poolbeheer en puntentelling is verwerking noodzakelijk om de dienst te kunnen leveren.",
       },
       {
         title: "5. Zichtbaarheid binnen poules",
@@ -75,7 +75,7 @@ export const privacyContent: Record<Language, LegalPageContent> = {
       },
       {
         title: "11. Minderjarigen",
-        body: "Poolr is bedoeld voor gebruikers die zelfstandig online diensten mogen gebruiken volgens de toepasselijke wetgeving. Minderjarigen mogen de app alleen gebruiken met toestemming van een ouder of wettelijke vertegenwoordiger.",
+        body: "Poolr is bedoeld voor gebruikers die volgens de toepasselijke wetgeving zelfstandig online diensten mogen gebruiken. Minderjarige gebruikers mogen Poolr alleen gebruiken met toestemming van een ouder of wettelijke vertegenwoordiger.",
       },
       {
         title: "12. Contact",
@@ -94,7 +94,7 @@ export const privacyContent: Record<Language, LegalPageContent> = {
     sections: [
       {
         title: "1. Who are we?",
-        body: "Poolr is an online platform that allows users to create, manage and play private pools and social games, including World Cup pools, Office Bingo, F1 pools and similar social game formats.",
+        body: "Poolr is an online platform that allows users to create, manage and play private pools and social games. Examples include World Cup pools, Office Bingo, F1 pools and similar social game formats.",
       },
       {
         title: "2. Which data do we process?",
@@ -109,7 +109,7 @@ export const privacyContent: Record<Language, LegalPageContent> = {
       },
       {
         title: "4. Legal basis",
-        body: "We process data based on performance of a contract, legitimate interest, legal obligations and, where required, consent. Processing is necessary for functional parts such as login, pool management and score calculation.",
+        body: "We only process personal data when there is a valid legal basis, such as performance of a contract, legitimate interest, legal obligation or consent. Processing is necessary for functional parts such as login, pool management and score calculation.",
       },
       {
         title: "5. Visibility within pools",
@@ -137,7 +137,7 @@ export const privacyContent: Record<Language, LegalPageContent> = {
       },
       {
         title: "11. Minors",
-        body: "Poolr is intended for users who are allowed to use online services independently under applicable law. Minors may only use the app with permission from a parent or legal guardian.",
+        body: "Poolr is intended for users who are allowed to use online services independently under applicable law. Minors may only use Poolr with permission from a parent or legal guardian.",
       },
       {
         title: "12. Contact",
@@ -183,7 +183,7 @@ export const termsContent: Record<Language, LegalPageContent> = {
       },
       {
         title: "7. Betaalde functies",
-        body: "Poolr kan gratis en betaalde functies aanbieden. Betaalde functies geven toegang tot extra mogelijkheden, zoals grotere poules, meer beheeropties of extra speltypen. Prijzen en voorwaarden worden getoond vóór aankoop.",
+        body: "Poolr kan gratis en betaalde functies aanbieden. Betaalde functies kunnen toegang geven tot extra mogelijkheden, zoals grotere poules, aanvullende beheeropties of extra speltypen. De actuele prijs, inhoud en voorwaarden van een betaalde functie worden vóór aankoop getoond.",
       },
       {
         title: "8. Geen gokplatform",
@@ -199,7 +199,7 @@ export const termsContent: Record<Language, LegalPageContent> = {
       },
       {
         title: "11. Beperking van aansprakelijkheid",
-        body: "Poolr is niet aansprakelijk voor indirecte schade, gemiste scores, verloren data, misgelopen prijzen, onderlinge afspraken tussen deelnemers of schade door tijdelijk niet beschikbaar zijn van de app, voor zover wettelijk toegestaan.",
+        body: "Voor zover wettelijk toegestaan is Poolr niet aansprakelijk voor indirecte schade, gemiste scores, verloren data, misgelopen prijzen, onderlinge afspraken tussen deelnemers of schade door tijdelijke onbeschikbaarheid van de app.",
       },
       {
         title: "12. Wijzigingen",
@@ -246,7 +246,7 @@ export const termsContent: Record<Language, LegalPageContent> = {
       },
       {
         title: "7. Paid features",
-        body: "Poolr may offer free and paid features. Paid features may provide access to additional options such as larger pools, more management options or extra game types. Prices and conditions are shown before purchase.",
+        body: "Poolr may offer free and paid features. Paid features may provide access to additional options such as larger pools, additional management options or extra game types. The current price, contents and conditions of a paid feature will be shown before purchase.",
       },
       {
         title: "8. No gambling platform",
@@ -262,7 +262,7 @@ export const termsContent: Record<Language, LegalPageContent> = {
       },
       {
         title: "11. Limitation of liability",
-        body: "Poolr is not liable for indirect damages, missed scores, lost data, missed prizes, agreements between participants or damage caused by temporary unavailability of the app, to the extent permitted by law.",
+        body: "To the extent permitted by law, Poolr is not liable for indirect damages, missed scores, lost data, missed prizes, agreements between participants or damage caused by temporary unavailability of the app.",
       },
       {
         title: "12. Changes",
@@ -288,7 +288,7 @@ export const disclaimerContent: Record<Language, LegalPageContent> = {
     sections: [
       {
         title: "1. Onafhankelijk platform",
-        body: "Poolr is een onafhankelijk platform en is niet verbonden aan, gesponsord door of officieel goedgekeurd door FIFA, UEFA, Formula 1, FIA, teams, coureurs, bonden, competities of andere rechthebbenden.",
+        body: "Poolr is een onafhankelijk platform. Poolr is niet verbonden aan, gesponsord door of officieel goedgekeurd door FIFA, UEFA, Formula 1, FIA, teams, coureurs, bonden, competities of andere rechthebbenden.",
       },
       {
         title: "2. Gebruik van namen",
@@ -331,7 +331,7 @@ export const disclaimerContent: Record<Language, LegalPageContent> = {
     sections: [
       {
         title: "1. Independent platform",
-        body: "Poolr is an independent platform and is not affiliated with, sponsored by or officially approved by FIFA, UEFA, Formula 1, FIA, teams, drivers, associations, competitions or other rights holders.",
+        body: "Poolr is an independent platform. Poolr is not affiliated with, sponsored by or officially approved by FIFA, UEFA, Formula 1, FIA, teams, drivers, associations, competitions or other rights holders.",
       },
       {
         title: "2. Use of names",
@@ -483,7 +483,7 @@ export const contactContent: Record<Language, LegalPageContent> = {
       },
       {
         title: "Zakelijke gegevens",
-        body: "Wanneer Poolr officieel commercieel wordt aangeboden, kunnen hier aanvullende bedrijfsgegevens worden toegevoegd, zoals bedrijfsnaam, KvK-nummer, btw-nummer en vestigingsadres.",
+        body: "Wanneer aanvullende bedrijfsgegevens van toepassing zijn, zoals bedrijfsnaam, KvK-nummer, btw-nummer of vestigingsadres, worden deze op deze pagina vermeld.",
       },
     ],
   },
@@ -515,7 +515,7 @@ export const contactContent: Record<Language, LegalPageContent> = {
       },
       {
         title: "Business details",
-        body: "When Poolr is officially offered commercially, additional business details may be added here, such as company name, chamber of commerce number, VAT number and business address.",
+        body: "When additional business details apply, such as company name, chamber of commerce number, VAT number or business address, they will be listed on this page.",
       },
     ],
   },
@@ -565,7 +565,7 @@ export const worldCupRulesContent: Record<Language, LegalPageContent> = {
       },
       {
         title: "8. Knock-outwedstrijden",
-        body: "Bij knock-outwedstrijden moet binnen de poule duidelijk zijn welke uitslag meetelt voor de puntentelling. Standaard telt de uitslag zoals die in Poolr als officiële wedstrijdscore wordt verwerkt. Wanneer een andere instelling wordt gebruikt, zoals uitslag na verlenging of winnaar na strafschoppen, wordt dit in de app aangegeven.",
+        body: "Bij knock-outwedstrijden telt de uitslag die in Poolr als officiële wedstrijdscore wordt verwerkt. Wanneer een andere scorebasis wordt gebruikt, bijvoorbeeld de stand na reguliere speeltijd, na verlenging of de winnaar na strafschoppen, wordt dit in de app aangegeven.",
       },
       {
         title: "9. Bonusvragen",
@@ -657,7 +657,7 @@ export const worldCupRulesContent: Record<Language, LegalPageContent> = {
       },
       {
         title: "8. Knockout matches",
-        body: "For knockout matches, it must be clear within the pool which score counts for scoring. By default, the score that Poolr processes as the official match score counts. If another setting is used, such as score after extra time or winner after penalties, this will be shown in the app.",
+        body: "For knockout matches, the score that Poolr processes as the official match score is used for scoring. If another scoring basis is used, such as the score after regular time, after extra time or the winner after penalties, this will be shown in the app.",
       },
       {
         title: "9. Bonus questions",
