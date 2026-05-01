@@ -11,12 +11,16 @@ type HomeClientProps = {
   isLoggedIn: boolean;
 };
 
-const leaderboardRows = [
-  { rank: 1, name: "Alex", match: 34, bonus: 8, total: 42 },
-  { rank: 2, name: "Jamie", match: 31, bonus: 7, total: 38 },
-  { rank: 3, name: "You", match: 28, bonus: 7, total: 35 },
-  { rank: 4, name: "Sam", match: 27, bonus: 4, total: 31 },
-];
+type PredictionStatus = "locked" | "open" | "saved";
+
+type PredictionCard = {
+  home: string;
+  away: string;
+  status: PredictionStatus;
+  homePrediction?: string;
+  awayPrediction?: string;
+  time: string;
+};
 
 const copy = {
   en: {
@@ -30,16 +34,49 @@ const copy = {
     heroText:
       "Create and join private pools for football, bingo, F1 and more. Built for friends, colleagues and every group that loves a leaderboard.",
     chips: ["One-time entry", "Private invite links", "Mobile friendly"],
-    appPreview: "App preview",
-    leaderboard: "Live leaderboard",
-    players: "24 players",
+
     poolName: "Office World Cup 2026",
-    poolSubtitle: "Ranking updates after every result.",
-    match: "Match",
-    bonus: "Bonus",
-    total: "Total",
-    pts: "pts",
-    you: "You",
+    predictionTitle: "Match predictions",
+    predictionSubtitle: "Predict the final score before each match locks.",
+    yourPrediction: "Your score",
+    stillOpen: "Open",
+    saved: "Saved",
+    lockedIn: "Locked",
+    predict: "Predict now",
+    locksIn: "Locks in",
+    matchday: "Matchday 1",
+    tournament: "World Cup 2026",
+    liveRanking: "Live ranking",
+    rankingText: "You are #3 of 24 players",
+    pointsText: "35 pts",
+    homeLabel: "Home",
+    awayLabel: "Away",
+
+    matchCards: [
+      {
+        home: "Netherlands",
+        away: "France",
+        status: "locked",
+        homePrediction: "2",
+        awayPrediction: "1",
+        time: "02:14:33",
+      },
+      {
+        home: "Brazil",
+        away: "Germany",
+        status: "open",
+        time: "Today 21:00",
+      },
+      {
+        home: "Spain",
+        away: "Mexico",
+        status: "saved",
+        homePrediction: "1",
+        awayPrediction: "1",
+        time: "Tomorrow 18:00",
+      },
+    ] as PredictionCard[],
+
     poolTypes: [
       {
         label: "World Cup 2026",
@@ -63,6 +100,7 @@ const copy = {
           "Predict race weekends, sessions and season outcomes in private pools.",
       },
     ],
+
     howItWorks: "How it works",
     howTitle:
       "Simple enough for everyone. Competitive enough to keep playing.",
@@ -83,10 +121,12 @@ const copy = {
         text: "Earn points, beat your friends and stay on top of the leaderboard.",
       },
     ],
+
     ctaTitle: "Ready to start your first Poolr?",
     ctaText:
       "Launch your World Cup pool first. Office Bingo and F1 are already on the roadmap.",
     register: "Register",
+
     footerLinks: [
       { label: "How it works", href: "/how-it-works" },
       { label: "World Cup rules", href: "/wk-poule/spelregels" },
@@ -99,6 +139,7 @@ const copy = {
     footerSmall:
       "Poolr is independent and is not affiliated with FIFA, UEFA, Formula 1, FIA or other rights holders.",
   },
+
   nl: {
     login: "Inloggen",
     dashboard: "Dashboard",
@@ -110,16 +151,49 @@ const copy = {
     heroText:
       "Maak en speel privé-poules voor voetbal, Office Bingo, F1 en meer. Gebouwd voor vrienden, collega’s en elke groep die gek is op een ranglijst.",
     chips: ["Eenmalige deelname", "Privé uitnodigingslinks", "Mobielvriendelijk"],
-    appPreview: "App voorbeeld",
-    leaderboard: "Live ranglijst",
-    players: "24 spelers",
+
     poolName: "Kantoor WK 2026",
-    poolSubtitle: "De stand werkt bij na elke uitslag.",
-    match: "Wedstrijd",
-    bonus: "Bonus",
-    total: "Totaal",
-    pts: "pnt",
-    you: "Jij",
+    predictionTitle: "Wedstrijden voorspellen",
+    predictionSubtitle: "Vul de eindstand in voordat de wedstrijd sluit.",
+    yourPrediction: "Jouw uitslag",
+    stillOpen: "Open",
+    saved: "Opgeslagen",
+    lockedIn: "Vastgezet",
+    predict: "Nu voorspellen",
+    locksIn: "Sluit over",
+    matchday: "Speelronde 1",
+    tournament: "WK 2026",
+    liveRanking: "Live stand",
+    rankingText: "Jij staat #3 van 24 spelers",
+    pointsText: "35 pnt",
+    homeLabel: "Thuis",
+    awayLabel: "Uit",
+
+    matchCards: [
+      {
+        home: "Nederland",
+        away: "Frankrijk",
+        status: "locked",
+        homePrediction: "2",
+        awayPrediction: "1",
+        time: "02:14:33",
+      },
+      {
+        home: "Brazilië",
+        away: "Duitsland",
+        status: "open",
+        time: "Vandaag 21:00",
+      },
+      {
+        home: "Spanje",
+        away: "Mexico",
+        status: "saved",
+        homePrediction: "1",
+        awayPrediction: "1",
+        time: "Morgen 18:00",
+      },
+    ] as PredictionCard[],
+
     poolTypes: [
       {
         label: "WK 2026",
@@ -143,6 +217,7 @@ const copy = {
           "Voorspel raceweekenden, sessies en seizoensuitslagen in privé-poules.",
       },
     ],
+
     howItWorks: "Hoe het werkt",
     howTitle:
       "Simpel genoeg voor iedereen. Competitief genoeg om te blijven spelen.",
@@ -163,10 +238,12 @@ const copy = {
         text: "Verdien punten, versla je vrienden en blijf bovenaan staan.",
       },
     ],
+
     ctaTitle: "Klaar om je eerste Poolr te starten?",
     ctaText:
       "Start eerst met je WK-poule. Office Bingo en F1 staan al op de roadmap.",
     register: "Registreren",
+
     footerLinks: [
       { label: "Hoe werkt het", href: "/how-it-works" },
       { label: "WK-spelregels", href: "/wk-poule/spelregels" },
@@ -183,146 +260,168 @@ const copy = {
 
 type Translation = typeof copy.en;
 
-function getRankBadgeClasses(rank: number, isUser: boolean) {
-  if (isUser) return "border-emerald-300/40 bg-emerald-300/20 text-emerald-100";
-  if (rank === 1) return "border-yellow-300/45 bg-yellow-300/20 text-yellow-100";
-  if (rank === 2) return "border-zinc-300/30 bg-zinc-300/12 text-zinc-100";
-  if (rank === 3) return "border-orange-300/35 bg-orange-300/14 text-orange-100";
-  return "border-white/10 bg-black/25 text-zinc-300";
+function getStatusLabel(t: Translation, status: PredictionStatus) {
+  if (status === "open") return t.stillOpen;
+  if (status === "locked") return t.lockedIn;
+  return t.saved;
 }
 
-function getRowClasses(rank: number, isUser: boolean) {
-  if (isUser) return "border-emerald-300/45 bg-emerald-300/[0.09]";
-  if (rank === 1) return "border-yellow-300/30 bg-yellow-300/[0.07]";
-  if (rank === 2) return "border-zinc-300/20 bg-zinc-300/[0.045]";
-  if (rank === 3) return "border-orange-300/25 bg-orange-300/[0.055]";
-  return "border-white/10 bg-white/[0.04]";
+function getStatusClasses(status: PredictionStatus) {
+  if (status === "open") {
+    return "border-emerald-300/35 bg-emerald-300/[0.1]";
+  }
+
+  if (status === "locked") {
+    return "border-yellow-300/35 bg-yellow-300/[0.1]";
+  }
+
+  return "border-white/10 bg-white/[0.055]";
 }
 
-function LeaderboardMockup({ t }: { t: Translation }) {
+function PhoneMatchMockup({ t }: { t: Translation }) {
   return (
-    <div className="relative mx-auto w-full max-w-[21rem] sm:max-w-xl lg:max-w-none">
-      <div className="absolute -inset-8 rounded-[3rem] bg-emerald-400/12 blur-3xl" />
-      <div className="absolute left-1/2 top-6 h-32 w-52 -translate-x-1/2 rounded-full bg-emerald-300/20 blur-3xl" />
+    <div className="relative mx-auto w-full max-w-[20rem] sm:max-w-xl lg:max-w-none">
+      <div className="absolute -inset-8 rounded-[3rem] bg-emerald-400/15 blur-3xl" />
+      <div className="absolute left-1/2 top-8 h-36 w-56 -translate-x-1/2 rounded-full bg-emerald-300/20 blur-3xl" />
+      <div className="absolute -right-8 top-24 hidden h-32 w-32 rounded-full bg-teal-300/10 blur-2xl sm:block" />
+      <div className="absolute -left-8 bottom-20 hidden h-32 w-32 rounded-full bg-emerald-300/10 blur-2xl sm:block" />
 
-      <div className="relative mx-auto rounded-[2.5rem] border border-white/20 bg-gradient-to-b from-white/14 via-white/6 to-white/[0.03] p-2 shadow-[0_30px_90px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:rotate-[-2deg] sm:rounded-[2.8rem] sm:p-3 lg:rotate-[-5deg]">
+      <div className="relative mx-auto rotate-[-5deg] rounded-[2.7rem] border border-white/20 bg-gradient-to-b from-white/16 via-white/7 to-white/[0.03] p-2 shadow-[0_32px_100px_rgba(0,0,0,0.62)] backdrop-blur-xl sm:rotate-[-6deg] sm:rounded-[3rem] sm:p-3 lg:rotate-[-8deg]">
         <div className="pointer-events-none absolute inset-x-12 top-2 z-20 h-5 rounded-b-2xl bg-black/85 sm:inset-x-20" />
 
-        <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#06110d] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:rounded-[2.2rem]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(110,231,183,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.055),transparent_32%)]" />
+        <div className="relative overflow-hidden rounded-[2.18rem] border border-white/10 bg-[#06110d] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:rounded-[2.35rem]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(110,231,183,0.24),transparent_36%),radial-gradient(circle_at_85%_30%,rgba(20,184,166,0.16),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.06),transparent_34%)]" />
 
-          <div className="relative px-3 pb-4 pt-7 sm:px-5 sm:pb-5 sm:pt-8">
-            <div className="mb-3 flex items-center justify-between rounded-2xl border border-white/10 bg-black/25 px-3 py-2">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-300 text-sm font-black text-zinc-950">
-                  P
-                </div>
+          <div className="relative px-3 pb-4 pt-8 sm:px-5 sm:pb-5 sm:pt-9">
+            <div className="mb-4 rounded-[1.65rem] border border-emerald-300/20 bg-gradient-to-br from-emerald-300/[0.16] via-emerald-300/[0.07] to-transparent p-4 shadow-[0_18px_44px_rgba(16,185,129,0.12)]">
+              <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-black leading-none text-white">
-                    Poolr
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200">
+                    {t.poolName}
                   </p>
-                  <p className="mt-0.5 text-[10px] font-bold text-zinc-500">
-                    {t.appPreview}
-                  </p>
+
+                  <h2 className="mt-1 text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
+                    {t.predictionTitle}
+                  </h2>
                 </div>
+
+                <span className="rounded-full border border-emerald-300/25 bg-emerald-300/12 px-2.5 py-1 text-[10px] font-black text-emerald-200">
+                  LIVE
+                </span>
               </div>
 
-              <span className="rounded-full bg-emerald-300/12 px-2.5 py-1 text-[10px] font-black text-emerald-200">
-                LIVE
+              <p className="max-w-[15rem] text-xs font-semibold leading-5 text-zinc-300">
+                {t.predictionSubtitle}
+              </p>
+            </div>
+
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-400">
+                {t.matchday}
+              </span>
+
+              <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-[10px] font-black text-zinc-300">
+                {t.tournament}
               </span>
             </div>
 
-            <div className="mb-4 rounded-[1.5rem] border border-emerald-300/20 bg-emerald-300/[0.08] p-4 shadow-[0_18px_40px_rgba(16,185,129,0.09)]">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200">
-                {t.players}
-              </p>
-
-              <h2 className="mt-1 text-2xl font-black tracking-tight text-white sm:text-3xl">
-                {t.leaderboard}
-              </h2>
-
-              <p className="mt-1 text-xs font-semibold text-zinc-300">
-                {t.poolSubtitle}
-              </p>
-            </div>
-
-            <div className="mb-4 grid grid-cols-3 items-end gap-2">
-              <div className="rounded-2xl border border-zinc-300/25 bg-zinc-300/[0.08] px-2 py-3 text-center">
-                <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-300/30 bg-zinc-300/12 text-sm font-black text-zinc-100">
-                  #2
-                </div>
-                <p className="truncate text-xs font-black text-white">Jamie</p>
-                <p className="mt-0.5 text-[11px] font-black text-zinc-400">
-                  38 {t.pts}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-yellow-300/35 bg-yellow-300/[0.12] px-2 py-5 text-center shadow-[0_14px_45px_rgba(250,204,21,0.12)]">
-                <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-2xl border border-yellow-300/40 bg-yellow-300/20 text-base font-black text-yellow-100">
-                  #1
-                </div>
-                <p className="truncate text-sm font-black text-white">Alex</p>
-                <p className="mt-0.5 text-xs font-black text-yellow-100">
-                  42 {t.pts}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-emerald-300/35 bg-emerald-300/[0.1] px-2 py-3 text-center">
-                <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-300/35 bg-emerald-300/16 text-sm font-black text-emerald-100">
-                  #3
-                </div>
-                <p className="truncate text-xs font-black text-white">{t.you}</p>
-                <p className="mt-0.5 text-[11px] font-black text-emerald-100">
-                  35 {t.pts}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-2">
-              {leaderboardRows.map((row) => {
-                const isUser = row.name === "You";
-                const displayName = isUser ? t.you : row.name;
+            <div className="grid gap-3">
+              {t.matchCards.map((card, index) => {
+                const isOpen = card.status === "open";
 
                 return (
                   <div
-                    key={row.rank}
-                    className={`rounded-2xl border px-3 py-3 ${getRowClasses(
-                      row.rank,
-                      isUser
+                    key={`${card.home}-${card.away}`}
+                    className={`relative overflow-hidden rounded-[1.45rem] border p-3 shadow-[0_14px_36px_rgba(0,0,0,0.18)] ${getStatusClasses(
+                      card.status
                     )}`}
                   >
-                    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
-                      <div
-                        className={`flex h-10 w-10 items-center justify-center rounded-xl border text-xs font-black ${getRankBadgeClasses(
-                          row.rank,
-                          isUser
-                        )}`}
-                      >
-                        #{row.rank}
-                      </div>
+                    <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-white/[0.06] blur-2xl" />
 
+                    <div className="relative mb-3 flex items-center justify-between gap-3">
+                      <span className="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[10px] font-black text-zinc-300">
+                        {index === 0 ? `${t.locksIn}: ${card.time}` : card.time}
+                      </span>
+
+                      <span className="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[10px] font-black text-zinc-200">
+                        {getStatusLabel(t, card.status)}
+                      </span>
+                    </div>
+
+                    <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-white">
-                          {displayName}
+                        <p className="truncate text-sm font-black text-white sm:text-base">
+                          {card.home}
                         </p>
 
-                        <p className="mt-0.5 text-xs font-semibold text-zinc-500">
-                          {t.match} {row.match} · {t.bonus} {row.bonus}
+                        <p className="mt-1 text-[10px] font-bold text-zinc-500">
+                          {t.homeLabel}
                         </p>
                       </div>
 
-                      <div className="rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-3 py-2 text-center">
-                        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-emerald-200">
-                          {t.total}
+                      <div className="rounded-2xl border border-white/15 bg-black/35 px-3 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+                        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500">
+                          {t.yourPrediction}
                         </p>
-                        <p className="mt-0.5 text-sm font-black text-white">
-                          {row.total}
+
+                        {isOpen ? (
+                          <div className="mt-1 flex items-center justify-center gap-1">
+                            <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-sm font-black text-zinc-500">
+                              —
+                            </span>
+
+                            <span className="text-sm font-black text-zinc-500">
+                              -
+                            </span>
+
+                            <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/15 bg-white/[0.08] text-sm font-black text-zinc-500">
+                              —
+                            </span>
+                          </div>
+                        ) : (
+                          <p className="mt-0.5 text-xl font-black text-white">
+                            {card.homePrediction} - {card.awayPrediction}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 text-right">
+                        <p className="truncate text-sm font-black text-white sm:text-base">
+                          {card.away}
+                        </p>
+
+                        <p className="mt-1 text-[10px] font-bold text-zinc-500">
+                          {t.awayLabel}
                         </p>
                       </div>
                     </div>
+
+                    {isOpen ? (
+                      <div className="relative mt-3 rounded-xl bg-emerald-300 px-3 py-2 text-center text-xs font-black text-zinc-950 shadow-[0_12px_32px_rgba(110,231,183,0.22)]">
+                        + {t.predict}
+                      </div>
+                    ) : null}
                   </div>
                 );
               })}
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-300">
+                    {t.liveRanking}
+                  </p>
+
+                  <p className="mt-1 text-sm font-black text-white">
+                    {t.rankingText}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-3 py-2 text-sm font-black text-emerald-100">
+                  {t.pointsText}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -427,7 +526,7 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
               </div>
             </header>
 
-            <div className="grid flex-1 items-start gap-7 pt-3 pb-10 sm:gap-10 sm:pt-8 sm:pb-12 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:pt-6 lg:pb-16">
+            <div className="grid flex-1 items-start gap-7 pb-10 pt-3 sm:gap-10 sm:pb-12 sm:pt-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:pb-16 lg:pt-6">
               <div className="max-w-3xl">
                 <h1 className="text-[2.5rem] font-black leading-[0.95] tracking-tight text-white sm:text-7xl sm:leading-none lg:text-8xl">
                   {t.heroTitle.map((line) => (
@@ -438,11 +537,11 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
                   ))}
                 </h1>
 
-                <div className="mt-5 lg:hidden">
-                  <LeaderboardMockup t={t} />
+                <div className="mt-6 lg:hidden">
+                  <PhoneMatchMockup t={t} />
                 </div>
 
-                <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-300 sm:mt-6 sm:text-xl sm:leading-8">
+                <p className="mt-6 max-w-2xl text-base leading-7 text-zinc-300 sm:text-xl sm:leading-8">
                   {t.heroText}
                 </p>
 
@@ -475,7 +574,7 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
               </div>
 
               <div className="hidden lg:block">
-                <LeaderboardMockup t={t} />
+                <PhoneMatchMockup t={t} />
               </div>
             </div>
           </div>
