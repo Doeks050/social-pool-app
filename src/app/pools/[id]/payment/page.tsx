@@ -214,20 +214,31 @@ export default async function PoolPaymentPage({ params }: PaymentPageProps) {
                   </div>
                 </div>
 
-                <div className="mt-6">
+                <form
+                  action="/api/stripe/create-checkout-session"
+                  method="POST"
+                  className="mt-6"
+                >
+                  <input
+                    type="hidden"
+                    name="poolId"
+                    value={typedPool.id}
+                  />
+
                   <button
-                    type="button"
-                    disabled
-                    className="w-full cursor-not-allowed rounded-2xl bg-emerald-300 px-5 py-4 text-sm font-black text-zinc-950 opacity-60"
+                    type="submit"
+                    className="w-full rounded-2xl bg-emerald-300 px-5 py-4 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
                   >
-                    Stripe payment coming in next step
+                    Pay {formatPlanPrice(selectedPlan.priceCents)} and activate
+                    pool
                   </button>
 
                   <p className="mt-3 text-center text-xs leading-5 text-zinc-500">
-                    The payment screen is ready. The next step connects this
-                    button to Stripe Checkout.
+                    You will be redirected to Stripe Checkout. After payment, the
+                    pool will be activated automatically in the next step when we
+                    add the webhook.
                   </p>
-                </div>
+                </form>
               </section>
 
               <aside className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur sm:p-6">
