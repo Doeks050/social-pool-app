@@ -195,6 +195,8 @@ const copy = {
   },
 };
 
+type Translation = typeof copy.en;
+
 function getRankBadgeClasses(rank: number, isUser: boolean) {
   if (isUser) {
     return "border-emerald-300/35 bg-emerald-300/15 text-emerald-100";
@@ -235,9 +237,7 @@ function getRowClasses(rank: number, isUser: boolean) {
   return "border-white/10 bg-white/[0.04]";
 }
 
-type Translation = typeof copy.en;
-
-function LeaderboardPreview({
+function LeaderboardMockup({
   t,
   compact = false,
 }: {
@@ -245,181 +245,194 @@ function LeaderboardPreview({
   compact?: boolean;
 }) {
   return (
-    <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
-      <div className="absolute -inset-6 rounded-[2rem] bg-emerald-400/10 blur-3xl sm:-inset-8 sm:rounded-[3rem]" />
-      <div className="absolute -right-8 top-10 hidden h-24 w-24 rounded-full border border-emerald-300/20 bg-emerald-300/10 blur-xl sm:block" />
-      <div className="absolute -left-10 bottom-20 hidden h-28 w-28 rounded-full border border-teal-300/10 bg-teal-300/10 blur-2xl sm:block" />
+    <div className="relative mx-auto w-full max-w-[20rem] sm:max-w-xl lg:max-w-none">
+      <div className="absolute -inset-8 rounded-[3rem] bg-emerald-400/10 blur-3xl" />
+      <div className="absolute left-1/2 top-5 h-28 w-44 -translate-x-1/2 rounded-full bg-emerald-300/20 blur-3xl" />
+      <div className="absolute -right-6 top-16 hidden h-24 w-24 rounded-full border border-emerald-300/20 bg-emerald-300/10 blur-xl sm:block" />
+      <div className="absolute -left-8 bottom-20 hidden h-28 w-28 rounded-full border border-teal-300/10 bg-teal-300/10 blur-2xl sm:block" />
 
-      <div className="relative rounded-[1.5rem] border border-white/15 bg-white/[0.06] p-2 shadow-2xl backdrop-blur-xl sm:rotate-[-2deg] sm:rounded-[2rem] sm:p-3 lg:rotate-[-5deg]">
-        <div className="rounded-[1.2rem] border border-white/10 bg-[#06110d]/95 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:rounded-[1.55rem] sm:p-5">
-          <div className="mb-3 flex items-start justify-between gap-3 sm:mb-4">
-            <div className="min-w-0">
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-200">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.9)]" />
-                  {t.leaderboard}
-                </span>
+      <div className="relative mx-auto rounded-[2.4rem] border border-white/15 bg-gradient-to-b from-white/12 via-white/5 to-white/[0.03] p-2 shadow-[0_30px_90px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:rotate-[-2deg] sm:rounded-[2.7rem] sm:p-3 lg:rotate-[-5deg]">
+        <div className="pointer-events-none absolute inset-x-12 top-2 z-20 h-5 rounded-b-2xl bg-black/80 sm:inset-x-20" />
 
-                <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-bold text-zinc-300">
-                  {t.players}
-                </span>
-              </div>
+        <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#06110d] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:rounded-[2.2rem]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(110,231,183,0.18),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.05),transparent_30%)]" />
 
-              <h2 className="truncate text-xl font-black tracking-tight text-white sm:text-3xl">
-                {t.poolName}
-              </h2>
+          <div className="relative px-3 pb-3 pt-7 sm:px-5 sm:pb-5 sm:pt-8">
+            <div className="mb-3 flex items-start justify-between gap-3 sm:mb-4">
+              <div className="min-w-0">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-emerald-200 sm:text-[10px]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.9)]" />
+                    {t.leaderboard}
+                  </span>
 
-              <p className="mt-1 text-xs font-semibold text-zinc-400 sm:text-sm">
-                {t.poolSubtitle}
-              </p>
-            </div>
-          </div>
+                  <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[9px] font-bold text-zinc-300 sm:text-[10px]">
+                    {t.players}
+                  </span>
+                </div>
 
-          <div className="mb-3 grid grid-cols-3 gap-2 sm:mb-4">
-            <div className="rounded-2xl border border-yellow-300/25 bg-yellow-300/[0.08] px-2 py-2.5 text-center sm:py-3">
-              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-yellow-100/80">
-                {t.leader}
-              </p>
-              <p className="mt-1 truncate text-sm font-black text-white">
-                Alex
-              </p>
-            </div>
+                <h2 className="truncate text-lg font-black tracking-tight text-white sm:text-3xl">
+                  {t.poolName}
+                </h2>
 
-            <div className="rounded-2xl border border-emerald-300/25 bg-emerald-300/[0.09] px-2 py-2.5 text-center sm:py-3">
-              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-emerald-200">
-                {t.yourRank}
-              </p>
-              <p className="mt-1 text-sm font-black text-white">#3</p>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-black/20 px-2 py-2.5 text-center sm:py-3">
-              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500">
-                {t.points}
-              </p>
-              <p className="mt-1 text-sm font-black text-white">35</p>
-            </div>
-          </div>
-
-          <div className="mb-3 rounded-2xl border border-white/10 bg-black/20 p-3 sm:mb-4">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-300">
-                  {t.currentPodium}
+                <p className="mt-1 line-clamp-1 text-[11px] font-semibold text-zinc-400 sm:text-sm">
+                  {t.poolSubtitle}
                 </p>
-                <p className="mt-1 text-sm font-black text-white">
-                  {t.topPlayers}
+              </div>
+            </div>
+
+            <div className="mb-3 grid grid-cols-3 gap-2 sm:mb-4">
+              <div className="rounded-2xl border border-yellow-300/25 bg-yellow-300/[0.08] px-2 py-2 text-center sm:py-3">
+                <p className="text-[8px] font-black uppercase tracking-[0.12em] text-yellow-100/80 sm:text-[9px]">
+                  {t.leader}
+                </p>
+                <p className="mt-1 truncate text-xs font-black text-white sm:text-sm">
+                  Alex
                 </p>
               </div>
 
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-bold text-zinc-300">
-                {t.liveRanking}
-              </span>
+              <div className="rounded-2xl border border-emerald-300/25 bg-emerald-300/[0.09] px-2 py-2 text-center sm:py-3">
+                <p className="text-[8px] font-black uppercase tracking-[0.12em] text-emerald-200 sm:text-[9px]">
+                  {t.yourRank}
+                </p>
+                <p className="mt-1 text-xs font-black text-white sm:text-sm">
+                  #3
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/20 px-2 py-2 text-center sm:py-3">
+                <p className="text-[8px] font-black uppercase tracking-[0.12em] text-zinc-500 sm:text-[9px]">
+                  {t.points}
+                </p>
+                <p className="mt-1 text-xs font-black text-white sm:text-sm">
+                  35
+                </p>
+              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
-              {leaderboardRows.slice(0, 3).map((row) => {
+            <div className="mb-3 rounded-2xl border border-white/10 bg-black/20 p-3 sm:mb-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.16em] text-emerald-300 sm:text-[10px]">
+                    {t.currentPodium}
+                  </p>
+                  <p className="mt-1 text-xs font-black text-white sm:text-sm">
+                    {t.topPlayers}
+                  </p>
+                </div>
+
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[9px] font-bold text-zinc-300 sm:text-[10px]">
+                  {t.liveRanking}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {leaderboardRows.slice(0, 3).map((row) => {
+                  const isUser = row.name === "You";
+                  const displayName = isUser ? t.you : row.name;
+
+                  return (
+                    <div
+                      key={row.rank}
+                      className={`rounded-xl border px-2 py-2 text-center ${getRowClasses(
+                        row.rank,
+                        isUser
+                      )}`}
+                    >
+                      <div
+                        className={`mx-auto flex h-7 w-7 items-center justify-center rounded-lg border text-[9px] font-black sm:h-8 sm:w-8 sm:rounded-xl sm:text-[10px] ${getRankBadgeClasses(
+                          row.rank,
+                          isUser
+                        )}`}
+                      >
+                        #{row.rank}
+                      </div>
+
+                      <p className="mt-2 truncate text-[11px] font-black text-white sm:text-xs">
+                        {displayName}
+                      </p>
+
+                      <p className="mt-1 text-[10px] font-black text-zinc-300 sm:text-[11px]">
+                        {row.total} {t.pts}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className={compact ? "hidden sm:grid sm:gap-2" : "grid gap-2"}>
+              {leaderboardRows.map((row) => {
                 const isUser = row.name === "You";
                 const displayName = isUser ? t.you : row.name;
 
                 return (
                   <div
                     key={row.rank}
-                    className={`rounded-xl border px-2 py-2 text-center ${getRowClasses(
+                    className={`rounded-2xl border px-3 py-3 ${getRowClasses(
                       row.rank,
                       isUser
                     )}`}
                   >
-                    <div
-                      className={`mx-auto flex h-8 w-8 items-center justify-center rounded-xl border text-[10px] font-black ${getRankBadgeClasses(
-                        row.rank,
-                        isUser
-                      )}`}
-                    >
-                      #{row.rank}
+                    <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+                      <div
+                        className={`flex h-10 w-10 items-center justify-center rounded-xl border text-xs font-black ${getRankBadgeClasses(
+                          row.rank,
+                          isUser
+                        )}`}
+                      >
+                        #{row.rank}
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-black text-white">
+                          {displayName}
+                        </p>
+                        <p className="mt-0.5 text-xs font-semibold text-zinc-500">
+                          {t.match} {row.match} · {t.bonus} {row.bonus}
+                        </p>
+                      </div>
+
+                      <div className="rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-3 py-2 text-center">
+                        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-emerald-200">
+                          {t.total}
+                        </p>
+                        <p className="mt-0.5 text-sm font-black text-white">
+                          {row.total}
+                        </p>
+                      </div>
                     </div>
-
-                    <p className="mt-2 truncate text-xs font-black text-white">
-                      {displayName}
-                    </p>
-
-                    <p className="mt-1 text-[11px] font-black text-zinc-300">
-                      {row.total} {t.pts}
-                    </p>
                   </div>
                 );
               })}
             </div>
-          </div>
 
-          <div className={compact ? "hidden sm:grid sm:gap-2" : "grid gap-2"}>
-            {leaderboardRows.map((row) => {
-              const isUser = row.name === "You";
-              const displayName = isUser ? t.you : row.name;
-
-              return (
-                <div
-                  key={row.rank}
-                  className={`rounded-2xl border px-3 py-3 ${getRowClasses(
-                    row.rank,
-                    isUser
-                  )}`}
-                >
-                  <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
-                    <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-xl border text-xs font-black ${getRankBadgeClasses(
-                        row.rank,
-                        isUser
-                      )}`}
-                    >
-                      #{row.rank}
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-black text-white">
-                        {displayName}
-                      </p>
-                      <p className="mt-0.5 text-xs font-semibold text-zinc-500">
-                        {t.match} {row.match} · {t.bonus} {row.bonus}
-                      </p>
-                    </div>
-
-                    <div className="rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-3 py-2 text-center">
-                      <p className="text-[9px] font-black uppercase tracking-[0.12em] text-emerald-200">
-                        {t.total}
-                      </p>
-                      <p className="mt-0.5 text-sm font-black text-white">
-                        {row.total}
-                      </p>
-                    </div>
+            <div className={compact ? "mt-3 hidden sm:block" : "mt-4"}>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                      {t.nextMatch}
+                    </p>
+                    <p className="mt-1 truncate text-sm font-black text-white">
+                      {t.matchName}
+                    </p>
                   </div>
-                </div>
-              );
-            })}
-          </div>
 
-          <div className={compact ? "mt-3 hidden sm:block" : "mt-4"}>
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-              <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
-                <div className="min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
-                    {t.nextMatch}
-                  </p>
-                  <p className="mt-1 truncate text-sm font-black text-white">
-                    {t.matchName}
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-4 py-2 text-center">
-                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-emerald-200">
-                    {t.locksIn}
-                  </p>
-                  <p className="mt-0.5 text-sm font-black text-white">
-                    02:14:33
-                  </p>
+                  <div className="rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-4 py-2 text-center">
+                    <p className="text-[9px] font-black uppercase tracking-[0.12em] text-emerald-200">
+                      {t.locksIn}
+                    </p>
+                    <p className="mt-0.5 text-sm font-black text-white">
+                      02:14:33
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+
+          <div className="mx-auto mb-3 h-1 w-20 rounded-full bg-white/20" />
         </div>
       </div>
     </div>
@@ -532,7 +545,7 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
                 </h1>
 
                 <div className="mt-5 lg:hidden">
-                  <LeaderboardPreview t={t} compact />
+                  <LeaderboardMockup t={t} compact />
                 </div>
 
                 <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-300 sm:mt-6 sm:text-xl sm:leading-8">
@@ -568,7 +581,7 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
               </div>
 
               <div className="hidden lg:block">
-                <LeaderboardPreview t={t} />
+                <LeaderboardMockup t={t} />
               </div>
             </div>
           </div>
