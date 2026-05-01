@@ -4,6 +4,7 @@ import Container from "@/components/Container";
 import SignOutButton from "@/components/SignOutButton";
 import DeletePoolButton from "@/components/admin/DeletePoolButton";
 import { createClient } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase-admin";
 import { getPoolTypeMeta } from "@/lib/pool-types";
 
 type PoolMembershipRow = {
@@ -33,6 +34,8 @@ type AppPoolRow = {
   game_type: string;
   invite_code: string;
   created_at: string;
+  plan_code: string | null;
+  max_members: number | null;
 };
 
 type PoolMemberCountRow = {
@@ -60,6 +63,21 @@ function getPoolTypeDisplay(poolType: string) {
   }
 }
 
+function getPlanDisplay(planCode: string | null) {
+  switch (planCode) {
+    case "starter":
+      return "Starter";
+    case "small":
+      return "Small";
+    case "pro":
+      return "Pro";
+    case "business":
+      return "Business";
+    default:
+      return "Starter";
+  }
+}
+
 function countByPoolId<T extends { pool_id: string }>(rows: T[]) {
   const counts = new Map<string, number>();
 
@@ -72,6 +90,7 @@ function countByPoolId<T extends { pool_id: string }>(rows: T[]) {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -143,9 +162,13 @@ export default async function DashboardPage() {
   let bonusAnswerCounts = new Map<string, number>();
 
   if (appAdmin) {
-    const { data: pools } = await supabase
+    const adminSupabase = createAdminClient();
+
+    const { data: pools } = await adminSupabase
       .from("pools")
-      .select("id, name, game_type, invite_code, created_at")
+      .select(
+        "id, name, game_type, invite_code, created_at, plan_code, max_members"
+      )
       .order("created_at", { ascending: false });
 
     appPools = (pools ?? []) as AppPoolRow[];
@@ -153,17 +176,17 @@ export default async function DashboardPage() {
     const appPoolIds = appPools.map((pool) => pool.id);
 
     if (appPoolIds.length > 0) {
-      const { data: poolMembers } = await supabase
+      const { data: poolMembers } = await adminSupabase
         .from("pool_members")
         .select("pool_id")
         .in("pool_id", appPoolIds);
 
-      const { data: predictions } = await supabase
+      const { data: predictions } = await adminSupabase
         .from("predictions")
         .select("pool_id")
         .in("pool_id", appPoolIds);
 
-      const { data: bonusAnswers } = await supabase
+      const { data: bonusAnswers } = await adminSupabase
         .from("bonus_question_answers")
         .select("pool_id")
         .in("pool_id", appPoolIds);
@@ -293,6 +316,8 @@ export default async function DashboardPage() {
                     <div className="mt-6 grid gap-3">
                       {appPools.map((pool) => {
                         const isWorldCup = pool.game_type === "world_cup";
+                        const memberCount = memberCounts.get(pool.id) ?? 0;
+                        const maxMembers = pool.max_members ?? 10;
 
                         return (
                           <div
@@ -312,6 +337,10 @@ export default async function DashboardPage() {
                                   <span className="rounded-full border border-zinc-700 px-2.5 py-1 text-[11px] uppercase tracking-wide text-zinc-300">
                                     {getPoolTypeDisplay(pool.game_type)}
                                   </span>
+
+                                  <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] uppercase tracking-wide text-emerald-200">
+                                    {getPlanDisplay(pool.plan_code)}
+                                  </span>
                                 </div>
 
                                 <div className="mt-2 flex flex-wrap gap-2 text-xs text-zinc-500">
@@ -323,7 +352,17 @@ export default async function DashboardPage() {
                                   </span>
                                   <span>·</span>
                                   <span>
-                                    Leden: {memberCounts.get(pool.id) ?? 0}
+                                    Pakket:{" "}
+                                    <span className="font-semibold text-zinc-300">
+                                      {getPlanDisplay(pool.plan_code)}
+                                    </span>
+                                  </span>
+                                  <span>·</span>
+                                  <span>
+                                    Leden:{" "}
+                                    <span className="font-semibold text-zinc-300">
+                                      {memberCount}/{maxMembers}
+                                    </span>
                                   </span>
                                   <span>·</span>
                                   <span>
