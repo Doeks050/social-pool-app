@@ -33,6 +33,7 @@ type OfficeBingoRoundRow = {
   id: string;
   event_id: string;
   pool_id: string;
+  round_number: number;
   status: string;
   grid_size: number;
   diagonal_enabled: boolean;
@@ -104,7 +105,7 @@ function getFormString(formData: FormData, key: string) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-async function getFirstRound(poolId: string) {
+async function getCurrentRound(poolId: string) {
   const { supabase } = await getCurrentUserOrRedirect();
 
   const { data: event } = await supabase
@@ -122,9 +123,12 @@ async function getFirstRound(poolId: string) {
 
   const { data: round } = await supabase
     .from("office_bingo_rounds")
-    .select("id, event_id, pool_id, status, grid_size, diagonal_enabled")
+    .select(
+      "id, event_id, pool_id, round_number, status, grid_size, diagonal_enabled"
+    )
     .eq("event_id", event.id)
-    .eq("round_number", 1)
+    .order("round_number", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   return {
@@ -133,7 +137,10 @@ async function getFirstRound(poolId: string) {
   };
 }
 
-async function completeOfficeBingoRound(poolId: string, round: OfficeBingoRoundRow) {
+async function completeOfficeBingoRound(
+  poolId: string,
+  round: OfficeBingoRoundRow
+) {
   const { supabase } = await getCurrentUserOrRedirect();
 
   const { error: roundError } = await supabase
@@ -254,7 +261,7 @@ export async function createFreeOfficeBingoAction(
 export async function generateOfficeBingoCardsAction(poolId: string) {
   const { supabase } = await assertPoolAdmin(poolId);
 
-  const { event, round } = await getFirstRound(poolId);
+  const { event, round } = await getCurrentRound(poolId);
 
   if (!event || !round) {
     throw new Error("Office Bingo is nog niet ingesteld.");
@@ -371,7 +378,7 @@ export async function callOfficeBingoItemAction(
     throw new Error("Geen bingo item gekozen.");
   }
 
-  const { event, round } = await getFirstRound(poolId);
+  const { event, round } = await getCurrentRound(poolId);
 
   if (!event || !round) {
     throw new Error("Office Bingo is nog niet ingesteld.");
@@ -421,7 +428,7 @@ export async function uncallOfficeBingoItemAction(
     throw new Error("Geen bingo item gekozen.");
   }
 
-  const { event, round } = await getFirstRound(poolId);
+  const { event, round } = await getCurrentRound(poolId);
 
   if (!event || !round) {
     throw new Error("Office Bingo is nog niet ingesteld.");
@@ -562,7 +569,7 @@ export async function sendOfficeBingoMessageAction(
     throw new Error("Je bent geen lid van deze poule.");
   }
 
-  const { event, round } = await getFirstRound(poolId);
+  const { event, round } = await getCurrentRound(poolId);
 
   const { error } = await supabase.from("office_bingo_messages").insert({
     pool_id: poolId,

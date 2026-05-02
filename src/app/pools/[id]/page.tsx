@@ -91,13 +91,13 @@ type OfficeBingoCardCellRow = {
   item_id: string;
   position_index: number;
   office_bingo_items:
-    | {
-        label: string;
-      }
-    | {
-        label: string;
-      }[]
-    | null;
+  | {
+    label: string;
+  }
+  | {
+    label: string;
+  }[]
+  | null;
 };
 
 const copy = {
@@ -280,24 +280,21 @@ function ActionCard({
   return (
     <Link
       href={href}
-      className={`group relative flex min-h-[132px] flex-col items-center justify-center overflow-hidden rounded-2xl border p-4 text-center transition active:scale-[0.99] ${
-        primary
+      className={`group relative flex min-h-[132px] flex-col items-center justify-center overflow-hidden rounded-2xl border p-4 text-center transition active:scale-[0.99] ${primary
           ? "border-emerald-300/35 bg-emerald-300/[0.10] hover:border-emerald-200/50 hover:bg-emerald-300/[0.14]"
           : "border-white/10 bg-black/20 hover:border-emerald-300/30 hover:bg-emerald-300/[0.05]"
-      }`}
+        }`}
     >
       <div
-        className={`absolute inset-x-0 top-0 h-px ${
-          primary
+        className={`absolute inset-x-0 top-0 h-px ${primary
             ? "bg-gradient-to-r from-transparent via-emerald-200/70 to-transparent"
             : "bg-gradient-to-r from-transparent via-white/15 to-transparent"
-        }`}
+          }`}
       />
 
       <p
-        className={`text-[10px] font-black uppercase tracking-[0.22em] ${
-          primary ? "text-emerald-200" : "text-zinc-500"
-        }`}
+        className={`text-[10px] font-black uppercase tracking-[0.22em] ${primary ? "text-emerald-200" : "text-zinc-500"
+          }`}
       >
         {label}
       </p>
@@ -328,27 +325,24 @@ function MemberCard({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border p-4 ${
-        isCurrentUser
+      className={`relative overflow-hidden rounded-2xl border p-4 ${isCurrentUser
           ? "border-emerald-300/35 bg-emerald-300/[0.09]"
           : "border-white/10 bg-black/20"
-      }`}
+        }`}
     >
       <div
-        className={`absolute inset-x-0 top-0 h-px ${
-          isCurrentUser
+        className={`absolute inset-x-0 top-0 h-px ${isCurrentUser
             ? "bg-gradient-to-r from-transparent via-emerald-200/70 to-transparent"
             : "bg-gradient-to-r from-transparent via-white/15 to-transparent"
-        }`}
+          }`}
       />
 
       <div className="flex items-center gap-3">
         <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-sm font-black ${
-            isCurrentUser
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-sm font-black ${isCurrentUser
               ? "border-emerald-200/30 bg-emerald-300/15 text-emerald-100"
               : "border-white/10 bg-white/[0.04] text-zinc-200"
-          }`}
+            }`}
         >
           {getInitials(displayName)}
         </div>
@@ -372,13 +366,12 @@ function MemberCard({
         </div>
 
         <span
-          className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
-            member.role === "owner"
+          className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${member.role === "owner"
               ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-200"
               : member.role === "admin"
                 ? "border-sky-300/25 bg-sky-300/10 text-sky-200"
                 : "border-white/10 bg-white/[0.04] text-zinc-400"
-          }`}
+            }`}
         >
           {getRoleLabel(member.role, language)}
         </span>
@@ -530,7 +523,8 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
           "id, event_id, pool_id, round_number, title, status, grid_size, diagonal_enabled"
         )
         .eq("event_id", officeBingoEvent.id)
-        .eq("round_number", 1)
+        .order("round_number", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       officeBingoRound = (roundData ?? null) as OfficeBingoRoundRow | null;
@@ -703,22 +697,22 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                   event={
                     officeBingoEvent
                       ? {
-                          id: officeBingoEvent.id,
-                          plan: officeBingoEvent.plan,
-                          status: officeBingoEvent.status,
-                          target_name: officeBingoEvent.target_name,
-                          expires_at: officeBingoEvent.expires_at,
-                        }
+                        id: officeBingoEvent.id,
+                        plan: officeBingoEvent.plan,
+                        status: officeBingoEvent.status,
+                        target_name: officeBingoEvent.target_name,
+                        expires_at: officeBingoEvent.expires_at,
+                      }
                       : null
                   }
                   round={
                     officeBingoRound
                       ? {
-                          id: officeBingoRound.id,
-                          title: officeBingoRound.title,
-                          status: officeBingoRound.status,
-                          grid_size: officeBingoRound.grid_size,
-                        }
+                        id: officeBingoRound.id,
+                        title: officeBingoRound.title,
+                        status: officeBingoRound.status,
+                        grid_size: officeBingoRound.grid_size,
+                      }
                       : null
                   }
                   calledItemIds={[...officeBingoCalledItemIds]}
