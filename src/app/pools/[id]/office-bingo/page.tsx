@@ -1,38 +1,19 @@
 import Image from "next/image";
-import Link from "next/link";
+import { unstable_noStore as noStore } from "next/cache";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import { unstable_noStore as noStore } from "next/cache";
+import Link from "next/link";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
 import { getLanguageFromCookieValue, type Language } from "@/lib/i18n";
-import {
-  callOfficeBingoItemAction,
-  createFreeOfficeBingoAction,
-  generateOfficeBingoCardsAction,
-  uncallOfficeBingoItemAction,
-} from "./actions";
+import { getPoolTypeMeta } from "@/lib/pool-types";
+import { getDefaultPoolPlan, getPoolPlan } from "@/lib/plans";
+import NextMatchHighlight from "@/components/world-cup/NextMatchHighlight";
 
-type OfficeBingoPageProps = {
+type PoolPageProps = {
   params: Promise<{
     id: string;
   }>;
-};
-
-type PoolRow = {
-  id: string;
-  name: string;
-  game_type: string;
-  invite_code: string;
-};
-
-type MembershipRow = {
-  role: string;
-};
-
-type ProfileRow = {
-  id: string;
-  display_name: string | null;
 };
 
 type PoolMemberRow = {
@@ -41,182 +22,138 @@ type PoolMemberRow = {
   joined_at: string;
 };
 
-type OfficeBingoEventRow = {
+type ProfileRow = {
   id: string;
-  pool_id: string;
-  plan: string;
-  status: string;
-  target_name: string | null;
-  expires_at: string;
+  display_name: string | null;
 };
 
-type OfficeBingoRoundRow = {
+type NextMatchRow = {
   id: string;
-  event_id: string;
-  pool_id: string;
-  round_number: number;
-  title: string;
-  status: string;
-  grid_size: number;
-  diagonal_enabled: boolean;
-};
-
-type OfficeBingoItemRow = {
-  id: string;
-  label: string;
-  sort_order: number;
-};
-
-type OfficeBingoCalledItemRow = {
-  item_id: string;
-  called_at: string;
-};
-
-type OfficeBingoWinnerRow = {
-  id: string;
-  user_id: string;
-  win_type: "line" | "full_card";
-  winning_positions: number[];
-  won_at: string;
-};
-
-type OfficeBingoCardRow = {
-  id: string;
-  user_id: string;
-};
-
-type OfficeBingoCardCellRow = {
-  id: string;
-  card_id: string;
-  item_id: string;
-  position_index: number;
-  office_bingo_items:
-    | {
-        label: string;
-      }
-    | {
-        label: string;
-      }[]
-    | null;
+  starts_at: string;
+  stage: string | null;
+  round_name: string | null;
+  group_label: string | null;
+  match_number: number | null;
+  home_team: string | null;
+  away_team: string | null;
+  home_slot: string | null;
+  away_slot: string | null;
 };
 
 const copy = {
   en: {
     dashboard: "Dashboard",
-    backToPool: "Back to pool",
-    officeBingo: "Office Bingo",
-    setupTitle: "Create your Office Bingo",
-    setupIntro:
-      "Enter the colleague name. The free version uses a fixed 3x3 card with safe office humor.",
-    colleagueName: "Colleague name",
-    colleaguePlaceholder: "For example: Mark",
-    createBingo: "Create Office Bingo",
-    eventInfo: "Game info",
-    plan: "Plan",
-    status: "Status",
-    expires: "Expires",
-    joinCode: "Join code",
-    adminPanel: "Admin panel",
-    generateCards: "Generate cards for members",
-    calledItems: "Official results",
-    calledItemsIntro:
-      "Only the host/admin marks what officially happened. Cards update from these results.",
-    mark: "Mark",
-    undo: "Undo",
-    playerCard: "Your card",
-    noCard:
-      "Your card is not generated yet. Ask the host to generate cards after members joined.",
-    winners: "Winners",
-    noWinners: "No winners yet.",
-    lineBingo: "Line bingo",
-    fullCard: "Full card",
+    you: "You",
+    joined: "Joined",
+    owner: "Owner",
+    admin: "Admin",
+    appAdmin: "App admin",
+    member: "Member",
     members: "members",
-    cardsGenerated: "cards generated",
-    setupNeeded: "Setup needed",
-    active: "Active",
-    draft: "Draft",
-    published: "Published",
-    completed: "Completed",
-    expired: "Expired",
-    archived: "Archived",
+    oneMember: "member",
+    worldCupPool: "World Cup Pool",
+    officeBingo: "Office Bingo",
+    f1Pool: "F1 Pool",
+    poolDashboard: "pool dashboard",
+    joinCode: "Join code",
+    predict: "Predict",
+    plan: "Package",
+    memberLimit: "Members",
+    poolMenu: "Pool menu",
+    poolMenuIntro: "Go directly to the right part of this pool.",
+    predictLabel: "Predict",
+    matchesTitle: "Matches",
+    matchesDescription: "Submit and review match predictions.",
+    bonusLabel: "Bonus",
+    questionsTitle: "Questions",
+    questionsDescription: "Extra predictions for bonus points.",
+    groupsLabel: "Groups",
+    standingsTitle: "Standings",
+    standingsDescription: "View group tables and progress.",
+    rankingLabel: "Ranking",
+    leaderboardTitle: "Leaderboard",
+    leaderboardDescription: "Follow the pool ranking.",
+    cardLabel: "Play",
+    myCardTitle: "My Office Bingo card",
+    myCardDescription: "Open your personal bingo card and follow the game.",
+    hostLabel: "Host",
+    hostDashboardTitle: "Host dashboard",
+    hostDashboardDescription: "Start cards, update members and manage the game.",
+    resultsLabel: "Results",
+    officialResultsTitle: "Official results",
+    officialResultsDescription: "Mark moments that officially happened.",
+    weekendsLabel: "Weekends",
+    raceWeekendsTitle: "Race weekends",
+    raceWeekendsDescription: "Manage F1 sessions.",
+    predictionsTitle: "Predictions",
+    predictionsDescription: "Open prediction forms.",
+    poolMembers: "Pool members",
+    inThisPool: "in this pool.",
+    noMembers: "No members found yet.",
     unknownUserPrefix: "User",
-    called: "Called",
-    notCalled: "Not called",
   },
   nl: {
     dashboard: "Dashboard",
-    backToPool: "Terug naar poule",
-    officeBingo: "Office Bingo",
-    setupTitle: "Maak je Office Bingo",
-    setupIntro:
-      "Vul de naam van de collega in. De gratis versie gebruikt een vaste 3x3 kaart met veilige kantoorhumor.",
-    colleagueName: "Naam collega",
-    colleaguePlaceholder: "Bijvoorbeeld: Mark",
-    createBingo: "Office Bingo maken",
-    eventInfo: "Spelinfo",
-    plan: "Pakket",
-    status: "Status",
-    expires: "Verloopt",
-    joinCode: "Join code",
-    adminPanel: "Admin paneel",
-    generateCards: "Kaarten maken voor leden",
-    calledItems: "Officiële resultaten",
-    calledItemsIntro:
-      "Alleen de host/admin vinkt af wat officieel is gebeurd. Kaarten worden bijgewerkt op basis van deze resultaten.",
-    mark: "Afvinken",
-    undo: "Terugzetten",
-    playerCard: "Jouw kaart",
-    noCard:
-      "Jouw kaart is nog niet gemaakt. Vraag de host om kaarten te maken nadat leden zijn gejoined.",
-    winners: "Winnaars",
-    noWinners: "Nog geen winnaars.",
-    lineBingo: "Rij bingo",
-    fullCard: "Volle kaart",
+    you: "Jij",
+    joined: "Lid sinds",
+    owner: "Eigenaar",
+    admin: "Admin",
+    appAdmin: "App admin",
+    member: "Lid",
     members: "leden",
-    cardsGenerated: "kaarten gemaakt",
-    setupNeeded: "Instellen nodig",
-    active: "Actief",
-    draft: "Concept",
-    published: "Gepubliceerd",
-    completed: "Afgerond",
-    expired: "Verlopen",
-    archived: "Gearchiveerd",
+    oneMember: "lid",
+    worldCupPool: "WK-poule",
+    officeBingo: "Office Bingo",
+    f1Pool: "F1-poule",
+    poolDashboard: "poule dashboard",
+    joinCode: "Join code",
+    predict: "Voorspellen",
+    plan: "Pakket",
+    memberLimit: "Leden",
+    poolMenu: "Poule menu",
+    poolMenuIntro: "Ga direct naar het juiste onderdeel van deze poule.",
+    predictLabel: "Voorspel",
+    matchesTitle: "Wedstrijden",
+    matchesDescription: "Vul voorspellingen in en bekijk ze terug.",
+    bonusLabel: "Bonus",
+    questionsTitle: "Vragen",
+    questionsDescription: "Extra voorspellingen voor bonuspunten.",
+    groupsLabel: "Groepen",
+    standingsTitle: "Standen",
+    standingsDescription: "Bekijk poulestanden en voortgang.",
+    rankingLabel: "Ranking",
+    leaderboardTitle: "Ranglijst",
+    leaderboardDescription: "Volg de ranking binnen deze poule.",
+    cardLabel: "Spelen",
+    myCardTitle: "Mijn Office Bingo kaart",
+    myCardDescription: "Open je persoonlijke bingo kaart en volg het spel.",
+    hostLabel: "Host",
+    hostDashboardTitle: "Host dashboard",
+    hostDashboardDescription:
+      "Start kaarten, update leden en beheer het spel.",
+    resultsLabel: "Resultaten",
+    officialResultsTitle: "Officiële resultaten",
+    officialResultsDescription: "Vink momenten af die officieel zijn gebeurd.",
+    weekendsLabel: "Weekends",
+    raceWeekendsTitle: "Raceweekends",
+    raceWeekendsDescription: "Beheer F1-sessies.",
+    predictionsTitle: "Voorspellingen",
+    predictionsDescription: "Open voorspelformulieren.",
+    poolMembers: "Pouleleden",
+    inThisPool: "in deze poule.",
+    noMembers: "Nog geen leden gevonden.",
     unknownUserPrefix: "Gebruiker",
-    called: "Afgevinkt",
-    notCalled: "Niet afgevinkt",
   },
 } satisfies Record<Language, Record<string, string>>;
 
-function getStatusLabel(status: string, language: Language) {
-  const t = copy[language];
-
-  switch (status) {
-    case "active":
-      return t.active;
-    case "draft":
-      return t.draft;
-    case "published":
-      return t.published;
-    case "completed":
-      return t.completed;
-    case "expired":
-      return t.expired;
-    case "archived":
-      return t.archived;
-    default:
-      return status;
-  }
-}
-
-function formatDate(value: string, language: Language) {
-  return new Intl.DateTimeFormat(language === "nl" ? "nl-NL" : "en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Europe/Amsterdam",
-  }).format(new Date(value));
+function isPoolActiveAndPaid(input: {
+  status: string | null;
+  paymentStatus: string | null;
+}) {
+  return (
+    input.status === "active" &&
+    (input.paymentStatus === "paid" || input.paymentStatus === "waived")
+  );
 }
 
 function getDisplayName(
@@ -233,118 +170,201 @@ function getDisplayName(
   return `${copy[language].unknownUserPrefix} ${userId.slice(0, 8)}`;
 }
 
-function getCellLabel(cell: OfficeBingoCardCellRow) {
-  const item = Array.isArray(cell.office_bingo_items)
-    ? cell.office_bingo_items[0]
-    : cell.office_bingo_items;
+function getInitials(name: string) {
+  const cleanName = name.trim();
 
-  return item?.label ?? "";
+  if (!cleanName) {
+    return "U";
+  }
+
+  const parts = cleanName.split(/\s+/).filter(Boolean);
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
 }
 
-function SetupForm({
-  poolId,
-  language,
-}: {
-  poolId: string;
-  language: Language;
-}) {
+function formatJoinedDate(value: string, language: Language) {
+  return new Intl.DateTimeFormat(language === "nl" ? "nl-NL" : "en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "Europe/Amsterdam",
+  }).format(new Date(value));
+}
+
+function getRoleLabel(role: string, language: Language) {
   const t = copy[language];
-  const action = createFreeOfficeBingoAction.bind(null, poolId);
 
+  switch (role) {
+    case "owner":
+      return t.owner;
+    case "admin":
+      return t.admin;
+    case "app_admin":
+      return t.appAdmin;
+    default:
+      return t.member;
+  }
+}
+
+function getPoolTypeDisplay(poolType: string, language: Language) {
+  const t = copy[language];
+
+  switch (poolType) {
+    case "world_cup":
+      return t.worldCupPool;
+    case "office_bingo":
+      return t.officeBingo;
+    case "f1":
+      return t.f1Pool;
+    default:
+      return poolType;
+  }
+}
+
+type ActionCardProps = {
+  href: string;
+  title: string;
+  description: string;
+  label: string;
+  primary?: boolean;
+};
+
+function ActionCard({
+  href,
+  title,
+  description,
+  label,
+  primary = false,
+}: ActionCardProps) {
   return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
-      <div className="mx-auto max-w-2xl text-center">
-        <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-          {t.setupNeeded}
+    <Link
+      href={href}
+      className={`group relative flex min-h-[118px] flex-col justify-center overflow-hidden rounded-2xl border p-4 transition active:scale-[0.99] ${
+        primary
+          ? "border-emerald-300/35 bg-emerald-300/[0.10] hover:border-emerald-200/50 hover:bg-emerald-300/[0.14]"
+          : "border-white/10 bg-black/20 hover:border-emerald-300/30 hover:bg-emerald-300/[0.05]"
+      }`}
+    >
+      <div
+        className={`absolute inset-x-0 top-0 h-px ${
+          primary
+            ? "bg-gradient-to-r from-transparent via-emerald-200/70 to-transparent"
+            : "bg-gradient-to-r from-transparent via-white/15 to-transparent"
+        }`}
+      />
+
+      <div className="flex items-center justify-between gap-3">
+        <p
+          className={`text-[10px] font-black uppercase tracking-[0.22em] ${
+            primary ? "text-emerald-200" : "text-zinc-500"
+          }`}
+        >
+          {label}
         </p>
 
-        <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
-          {t.setupTitle}
-        </h1>
-
-        <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-400">
-          {t.setupIntro}
-        </p>
+        <span
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-base font-black transition ${
+            primary
+              ? "border-emerald-200/35 bg-emerald-300/15 text-emerald-100 group-hover:bg-emerald-300/25"
+              : "border-white/10 bg-white/[0.04] text-zinc-300 group-hover:border-emerald-300/30 group-hover:text-emerald-100"
+          }`}
+        >
+          →
+        </span>
       </div>
 
-      <form action={action} className="mx-auto mt-6 max-w-xl">
-        <label
-          htmlFor="targetName"
-          className="text-xs font-black uppercase tracking-[0.18em] text-zinc-400"
-        >
-          {t.colleagueName}
-        </label>
+      <h3 className="mt-2 text-lg font-black tracking-tight text-white">
+        {title}
+      </h3>
 
-        <input
-          id="targetName"
-          name="targetName"
-          type="text"
-          required
-          maxLength={40}
-          placeholder={t.colleaguePlaceholder}
-          className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-base font-bold text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50"
-        />
-
-        <button
-          type="submit"
-          className="mt-4 w-full rounded-2xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
-        >
-          {t.createBingo}
-        </button>
-      </form>
-    </section>
-  );
-}
-
-function InfoPill({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
-        {label}
+      <p className="mt-1 max-w-[280px] text-sm leading-5 text-zinc-400">
+        {description}
       </p>
-      <p className="mt-1 text-sm font-black text-white">{value}</p>
-    </div>
+    </Link>
   );
 }
 
-function WinnerBadge({
-  winner,
-  displayName,
-  language,
-}: {
-  winner: OfficeBingoWinnerRow;
+type MemberCardProps = {
+  member: PoolMemberRow;
   displayName: string;
+  isCurrentUser: boolean;
   language: Language;
-}) {
+};
+
+function MemberCard({
+  member,
+  displayName,
+  isCurrentUser,
+  language,
+}: MemberCardProps) {
   const t = copy[language];
-  const isFullCard = winner.win_type === "full_card";
 
   return (
     <div
-      className={`rounded-2xl border p-4 ${
-        isFullCard
-          ? "border-amber-300/35 bg-amber-300/[0.10]"
-          : "border-emerald-300/30 bg-emerald-300/[0.08]"
+      className={`relative overflow-hidden rounded-2xl border p-4 ${
+        isCurrentUser
+          ? "border-emerald-300/35 bg-emerald-300/[0.09]"
+          : "border-white/10 bg-black/20"
       }`}
     >
-      <p
-        className={`text-[10px] font-black uppercase tracking-[0.18em] ${
-          isFullCard ? "text-amber-200" : "text-emerald-200"
+      <div
+        className={`absolute inset-x-0 top-0 h-px ${
+          isCurrentUser
+            ? "bg-gradient-to-r from-transparent via-emerald-200/70 to-transparent"
+            : "bg-gradient-to-r from-transparent via-white/15 to-transparent"
         }`}
-      >
-        {isFullCard ? t.fullCard : t.lineBingo}
-      </p>
-      <p className="mt-1 text-base font-black text-white">{displayName}</p>
-      <p className="mt-1 text-xs font-semibold text-zinc-500">
-        {formatDate(winner.won_at, language)}
-      </p>
+      />
+
+      <div className="flex items-center gap-3">
+        <div
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-sm font-black ${
+            isCurrentUser
+              ? "border-emerald-200/30 bg-emerald-300/15 text-emerald-100"
+              : "border-white/10 bg-white/[0.04] text-zinc-200"
+          }`}
+        >
+          {getInitials(displayName)}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <p className="truncate text-sm font-black text-white">
+              {displayName}
+            </p>
+
+            {isCurrentUser ? (
+              <span className="shrink-0 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-emerald-200">
+                {t.you}
+              </span>
+            ) : null}
+          </div>
+
+          <p className="mt-1 text-xs font-semibold text-zinc-500">
+            {t.joined} {formatJoinedDate(member.joined_at, language)}
+          </p>
+        </div>
+
+        <span
+          className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
+            member.role === "owner"
+              ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-200"
+              : member.role === "admin"
+                ? "border-sky-300/25 bg-sky-300/10 text-sky-200"
+                : "border-white/10 bg-white/[0.04] text-zinc-400"
+          }`}
+        >
+          {getRoleLabel(member.role, language)}
+        </span>
+      </div>
     </div>
   );
 }
 
-export default async function OfficeBingoPage({
-  params,
-}: OfficeBingoPageProps) {
+export default async function PoolDetailPage({ params }: PoolPageProps) {
   noStore();
 
   const { id } = await params;
@@ -365,6 +385,14 @@ export default async function OfficeBingoPage({
     redirect("/auth");
   }
 
+  const { data: appAdmin } = await supabase
+    .from("app_admins")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const isAppAdmin = Boolean(appAdmin);
+
   const { data: membership } = await supabase
     .from("pool_members")
     .select("role")
@@ -372,16 +400,15 @@ export default async function OfficeBingoPage({
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!membership) {
+  if (!membership && !isAppAdmin) {
     notFound();
   }
 
-  const typedMembership = membership as MembershipRow;
-  const isAdmin = ["owner", "admin"].includes(typedMembership.role);
-
   const { data: pool } = await supabase
     .from("pools")
-    .select("id, name, game_type, invite_code")
+    .select(
+      "id, name, game_type, invite_code, created_at, status, payment_status, plan_code, max_members"
+    )
     .eq("id", id)
     .maybeSingle();
 
@@ -389,10 +416,14 @@ export default async function OfficeBingoPage({
     notFound();
   }
 
-  const typedPool = pool as PoolRow;
-
-  if (typedPool.game_type !== "office_bingo") {
-    notFound();
+  if (
+    !isAppAdmin &&
+    !isPoolActiveAndPaid({
+      status: pool.status,
+      paymentStatus: pool.payment_status,
+    })
+  ) {
+    redirect(`/pools/${pool.id}/payment`);
   }
 
   const { data: members } = await supabase
@@ -420,90 +451,35 @@ export default async function OfficeBingoPage({
     );
   }
 
-  const { data: event } = await supabase
-    .from("office_bingo_events")
-    .select("id, pool_id, plan, status, target_name, expires_at")
-    .eq("pool_id", id)
-    .maybeSingle();
+  const poolType = getPoolTypeMeta(pool.game_type);
+  const poolPlan = getPoolPlan(pool.plan_code) ?? getDefaultPoolPlan();
+  const maxMembers =
+    typeof pool.max_members === "number" && pool.max_members > 0
+      ? pool.max_members
+      : poolPlan.maxMembers;
 
-  const typedEvent = (event ?? null) as OfficeBingoEventRow | null;
+  const currentRole = membership?.role ?? "app_admin";
+  const isPoolAdmin =
+    isAppAdmin || currentRole === "owner" || currentRole === "admin";
+  const isWorldCup = pool.game_type === "world_cup";
 
-  let round: OfficeBingoRoundRow | null = null;
-  let items: OfficeBingoItemRow[] = [];
-  let calledItemIds = new Set<string>();
-  let winners: OfficeBingoWinnerRow[] = [];
-  let userCard: OfficeBingoCardRow | null = null;
-  let userCardCells: OfficeBingoCardCellRow[] = [];
-  let cardCount = 0;
+  let nextMatch: NextMatchRow | null = null;
 
-  if (typedEvent) {
-    const { data: roundData } = await supabase
-      .from("office_bingo_rounds")
+  if (isWorldCup) {
+    const { data: nextMatchData } = await supabase
+      .from("matches")
       .select(
-        "id, event_id, pool_id, round_number, title, status, grid_size, diagonal_enabled"
+        "id, starts_at, stage, round_name, group_label, match_number, home_team, away_team, home_slot, away_slot"
       )
-      .eq("event_id", typedEvent.id)
-      .eq("round_number", 1)
+      .eq("tournament", "world_cup_2026")
+      .gt("starts_at", new Date().toISOString())
+      .order("starts_at", { ascending: true })
+      .order("match_number", { ascending: true })
+      .limit(1)
       .maybeSingle();
 
-    round = (roundData ?? null) as OfficeBingoRoundRow | null;
+    nextMatch = (nextMatchData ?? null) as NextMatchRow | null;
   }
-
-  if (round) {
-    const { data: itemData } = await supabase
-      .from("office_bingo_items")
-      .select("id, label, sort_order")
-      .eq("round_id", round.id)
-      .order("sort_order", { ascending: true });
-
-    items = (itemData ?? []) as OfficeBingoItemRow[];
-
-    const { data: calledData } = await supabase
-      .from("office_bingo_called_items")
-      .select("item_id, called_at")
-      .eq("round_id", round.id);
-
-    const calledItems = (calledData ?? []) as OfficeBingoCalledItemRow[];
-    calledItemIds = new Set(calledItems.map((item) => item.item_id));
-
-    const { data: winnerData } = await supabase
-      .from("office_bingo_winners")
-      .select("id, user_id, win_type, winning_positions, won_at")
-      .eq("round_id", round.id)
-      .order("won_at", { ascending: true });
-
-    winners = (winnerData ?? []) as OfficeBingoWinnerRow[];
-
-    const { count } = await supabase
-      .from("office_bingo_cards")
-      .select("id", { count: "exact", head: true })
-      .eq("round_id", round.id);
-
-    cardCount = count ?? 0;
-
-    const { data: cardData } = await supabase
-      .from("office_bingo_cards")
-      .select("id, user_id")
-      .eq("round_id", round.id)
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    userCard = (cardData ?? null) as OfficeBingoCardRow | null;
-
-    if (userCard) {
-      const { data: cellData } = await supabase
-        .from("office_bingo_card_cells")
-        .select(
-          "id, card_id, item_id, position_index, office_bingo_items(label)"
-        )
-        .eq("card_id", userCard.id)
-        .order("position_index", { ascending: true });
-
-      userCardCells = (cellData ?? []) as OfficeBingoCardCellRow[];
-    }
-  }
-
-  const generateCardsAction = generateOfficeBingoCardsAction.bind(null, id);
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
@@ -525,240 +501,219 @@ export default async function OfficeBingoPage({
                 />
               </Link>
 
-              <div className="flex items-center gap-2">
-                <Link
-                  href={`/pools/${id}`}
-                  className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:text-sm"
-                >
-                  {t.backToPool}
-                </Link>
-
-                <Link
-                  href="/dashboard"
-                  className="hidden rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:inline-flex sm:text-sm"
-                >
-                  {t.dashboard}
-                </Link>
-              </div>
+              <Link
+                href="/dashboard"
+                className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:text-sm"
+              >
+                {t.dashboard}
+              </Link>
             </header>
 
             <div className="mx-auto mt-4 flex max-w-6xl flex-col gap-4">
               <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-                      {t.officeBingo}
-                    </p>
+                <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                  <div className="min-w-0">
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-200">
+                        <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_14px_rgba(110,231,183,0.9)]" />
+                        {getPoolTypeDisplay(pool.game_type, language)}
+                      </span>
 
-                    <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
-                      {typedPool.name}
+                      <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
+                        {getRoleLabel(currentRole, language)}
+                      </span>
+
+                      <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
+                        {t.plan}: {poolPlan.name}
+                      </span>
+
+                      <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
+                        {t.memberLimit}: {typedMembers.length}/{maxMembers}
+                      </span>
+                    </div>
+
+                    <h1 className="truncate text-3xl font-black tracking-tight text-white sm:text-4xl">
+                      {pool.name}
                     </h1>
+
+                    <p className="mt-1 text-sm font-semibold text-zinc-400">
+                      {poolType.shortLabel} {t.poolDashboard}
+                    </p>
                   </div>
 
-                  <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3">
+                  <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 lg:min-w-[260px]">
                     <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
                       {t.joinCode}
                     </p>
-                    <p className="mt-1 text-2xl font-black tracking-widest text-white">
-                      {typedPool.invite_code}
-                    </p>
+
+                    <div className="mt-1 flex items-end justify-between gap-3">
+                      <p className="text-2xl font-black tracking-widest text-white">
+                        {pool.invite_code}
+                      </p>
+
+                      {isWorldCup ? (
+                        <Link
+                          href={`/pools/${pool.id}/matches`}
+                          className="hidden rounded-xl bg-emerald-300 px-3 py-2 text-xs font-black text-zinc-950 transition hover:bg-emerald-200 sm:inline-flex"
+                        >
+                          {t.predict}
+                        </Link>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
               </section>
 
-              {!typedEvent || !round ? (
-                isAdmin ? (
-                  <SetupForm poolId={id} language={language} />
+              {isWorldCup ? (
+                <NextMatchHighlight poolId={pool.id} match={nextMatch} />
+              ) : null}
+
+              <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
+                <div className="mb-4 text-center">
+                  <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+                    {t.poolMenu}
+                  </h2>
+                  <p className="mx-auto mt-2 max-w-xl text-sm leading-5 text-zinc-400">
+                    {t.poolMenuIntro}
+                  </p>
+                </div>
+
+                <div
+                  className={`grid gap-3 ${
+                    pool.game_type === "office_bingo"
+                      ? isPoolAdmin
+                        ? "lg:grid-cols-3"
+                        : "lg:grid-cols-1"
+                      : "sm:grid-cols-2 lg:grid-cols-4"
+                  }`}
+                >
+                  {pool.game_type === "world_cup" ? (
+                    <>
+                      <ActionCard
+                        href={`/pools/${pool.id}/matches`}
+                        label={t.predictLabel}
+                        title={t.matchesTitle}
+                        description={t.matchesDescription}
+                        primary
+                      />
+
+                      <ActionCard
+                        href={`/pools/${pool.id}/bonus`}
+                        label={t.bonusLabel}
+                        title={t.questionsTitle}
+                        description={t.questionsDescription}
+                      />
+
+                      <ActionCard
+                        href={`/pools/${pool.id}/standings`}
+                        label={t.groupsLabel}
+                        title={t.standingsTitle}
+                        description={t.standingsDescription}
+                      />
+
+                      <ActionCard
+                        href={`/pools/${pool.id}/leaderboard`}
+                        label={t.rankingLabel}
+                        title={t.leaderboardTitle}
+                        description={t.leaderboardDescription}
+                      />
+                    </>
+                  ) : pool.game_type === "office_bingo" ? (
+                    <>
+                      <ActionCard
+                        href={`/pools/${pool.id}/office-bingo`}
+                        label={t.cardLabel}
+                        title={t.myCardTitle}
+                        description={t.myCardDescription}
+                        primary
+                      />
+
+                      {isPoolAdmin ? (
+                        <>
+                          <ActionCard
+                            href={`/pools/${pool.id}/office-bingo`}
+                            label={t.hostLabel}
+                            title={t.hostDashboardTitle}
+                            description={t.hostDashboardDescription}
+                          />
+
+                          <ActionCard
+                            href={`/pools/${pool.id}/office-bingo`}
+                            label={t.resultsLabel}
+                            title={t.officialResultsTitle}
+                            description={t.officialResultsDescription}
+                          />
+                        </>
+                      ) : null}
+                    </>
+                  ) : (
+                    <>
+                      <ActionCard
+                        href={`/pools/${pool.id}`}
+                        label={t.weekendsLabel}
+                        title={t.raceWeekendsTitle}
+                        description={t.raceWeekendsDescription}
+                        primary
+                      />
+
+                      <ActionCard
+                        href={`/pools/${pool.id}`}
+                        label={t.predictLabel}
+                        title={t.predictionsTitle}
+                        description={t.predictionsDescription}
+                      />
+
+                      <ActionCard
+                        href={`/pools/${pool.id}`}
+                        label={t.rankingLabel}
+                        title={t.standingsTitle}
+                        description={t.leaderboardDescription}
+                      />
+                    </>
+                  )}
+                </div>
+              </section>
+
+              <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
+                <div className="mb-4 text-center">
+                  <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+                    {t.poolMembers}
+                  </h2>
+                  <p className="mx-auto mt-2 max-w-xl text-sm leading-5 text-zinc-400">
+                    {typedMembers.length}{" "}
+                    {typedMembers.length === 1 ? t.oneMember : t.members}{" "}
+                    {t.inThisPool}
+                  </p>
+                </div>
+
+                {typedMembers.length > 0 ? (
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {typedMembers.map((member) => {
+                      const displayName = getDisplayName(
+                        member.user_id,
+                        profilesMap,
+                        language
+                      );
+
+                      return (
+                        <MemberCard
+                          key={member.user_id}
+                          member={member}
+                          displayName={displayName}
+                          isCurrentUser={member.user_id === user.id}
+                          language={language}
+                        />
+                      );
+                    })}
+                  </div>
                 ) : (
-                  <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-6 text-center backdrop-blur-xl">
-                    <h2 className="text-2xl font-black text-white">
-                      {t.setupNeeded}
-                    </h2>
-                    <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-zinc-400">
-                      {language === "nl"
-                        ? "De host moet deze Office Bingo nog instellen."
-                        : "The host still needs to set up this Office Bingo."}
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-5 text-center">
+                    <p className="text-sm font-semibold text-zinc-400">
+                      {t.noMembers}
                     </p>
-                  </section>
-                )
-              ) : (
-                <>
-                  <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <InfoPill label={t.plan} value={typedEvent.plan} />
-                    <InfoPill
-                      label={t.status}
-                      value={getStatusLabel(round.status, language)}
-                    />
-                    <InfoPill
-                      label={t.expires}
-                      value={formatDate(typedEvent.expires_at, language)}
-                    />
-                    <InfoPill
-                      label={t.members}
-                      value={`${typedMembers.length} ${t.members} · ${cardCount} ${t.cardsGenerated}`}
-                    />
-                  </section>
-
-                  {isAdmin ? (
-                    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
-                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-                            {t.adminPanel}
-                          </p>
-                          <h2 className="mt-1 text-2xl font-black tracking-tight text-white">
-                            {round.title}
-                          </h2>
-                        </div>
-
-                        <form action={generateCardsAction}>
-                          <button
-                            type="submit"
-                            className="w-full rounded-2xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200 sm:w-auto"
-                          >
-                            {t.generateCards}
-                          </button>
-                        </form>
-                      </div>
-                    </section>
-                  ) : null}
-
-                  <section className="grid gap-4 lg:grid-cols-[1fr_380px]">
-                    <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
-                      <div className="mb-4">
-                        <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-                          {t.calledItems}
-                        </p>
-                        <p className="mt-2 text-sm leading-6 text-zinc-400">
-                          {t.calledItemsIntro}
-                        </p>
-                      </div>
-
-                      <div className="grid gap-2">
-                        {items.map((item) => {
-                          const isCalled = calledItemIds.has(item.id);
-                          const action = isCalled
-                            ? uncallOfficeBingoItemAction.bind(null, id)
-                            : callOfficeBingoItemAction.bind(null, id);
-
-                          return (
-                            <div
-                              key={item.id}
-                              className={`rounded-2xl border p-3 ${
-                                isCalled
-                                  ? "border-emerald-300/30 bg-emerald-300/[0.08]"
-                                  : "border-white/10 bg-black/20"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between gap-3">
-                                <div className="min-w-0">
-                                  <p className="text-sm font-black text-white">
-                                    {item.label}
-                                  </p>
-                                  <p
-                                    className={`mt-1 text-[10px] font-black uppercase tracking-[0.16em] ${
-                                      isCalled
-                                        ? "text-emerald-200"
-                                        : "text-zinc-500"
-                                    }`}
-                                  >
-                                    {isCalled ? t.called : t.notCalled}
-                                  </p>
-                                </div>
-
-                                {isAdmin ? (
-                                  <form action={action}>
-                                    <input
-                                      type="hidden"
-                                      name="itemId"
-                                      value={item.id}
-                                    />
-                                    <button
-                                      type="submit"
-                                      className={`rounded-xl px-3 py-2 text-xs font-black transition ${
-                                        isCalled
-                                          ? "border border-white/10 bg-white/5 text-zinc-200 hover:bg-white/10"
-                                          : "bg-emerald-300 text-zinc-950 hover:bg-emerald-200"
-                                      }`}
-                                    >
-                                      {isCalled ? t.undo : t.mark}
-                                    </button>
-                                  </form>
-                                ) : null}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-4">
-                      <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
-                        <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-                          {t.playerCard}
-                        </p>
-
-                        {userCard && userCardCells.length > 0 ? (
-                          <div
-                            className="mt-4 grid gap-2"
-                            style={{
-                              gridTemplateColumns: `repeat(${round.grid_size}, minmax(0, 1fr))`,
-                            }}
-                          >
-                            {userCardCells.map((cell) => {
-                              const isCalled = calledItemIds.has(cell.item_id);
-
-                              return (
-                                <div
-                                  key={cell.id}
-                                  className={`flex aspect-square items-center justify-center rounded-2xl border p-2 text-center text-[11px] font-black leading-tight sm:text-xs ${
-                                    isCalled
-                                      ? "border-emerald-300/40 bg-emerald-300/[0.14] text-emerald-50"
-                                      : "border-white/10 bg-black/25 text-zinc-200"
-                                  }`}
-                                >
-                                  {getCellLabel(cell)}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <p className="mt-3 text-sm leading-6 text-zinc-400">
-                            {t.noCard}
-                          </p>
-                        )}
-                      </section>
-
-                      <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
-                        <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-                          {t.winners}
-                        </p>
-
-                        {winners.length > 0 ? (
-                          <div className="mt-4 grid gap-3">
-                            {winners.map((winner) => (
-                              <WinnerBadge
-                                key={winner.id}
-                                winner={winner}
-                                displayName={getDisplayName(
-                                  winner.user_id,
-                                  profilesMap,
-                                  language
-                                )}
-                                language={language}
-                              />
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="mt-3 text-sm leading-6 text-zinc-400">
-                            {t.noWinners}
-                          </p>
-                        )}
-                      </section>
-                    </div>
-                  </section>
-                </>
-              )}
+                  </div>
+                )}
+              </section>
             </div>
           </div>
         </Container>
