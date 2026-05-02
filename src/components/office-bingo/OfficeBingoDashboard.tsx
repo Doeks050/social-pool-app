@@ -78,6 +78,11 @@ const copy = {
     memberSetupDescription: "The host still needs to set up this Office Bingo.",
     myCard: "My card",
     myCardIntro: "Your live Office Bingo card.",
+    completedCardIntro: "This round is completed. Your card is now locked.",
+    completedTitle: "Round completed",
+    completedDescription:
+      "A full card winner has been found. This Office Bingo is now closed.",
+    fullCardWinnerKnown: "Full card winner known",
     noCardTitle: "No card yet",
     noCardDescription:
       "The host still needs to start or update cards for this round.",
@@ -119,6 +124,11 @@ const copy = {
     memberSetupDescription: "De host moet deze Office Bingo nog instellen.",
     myCard: "Mijn kaart",
     myCardIntro: "Jouw live Office Bingo kaart.",
+    completedCardIntro: "Deze ronde is afgerond. Je kaart is nu vergrendeld.",
+    completedTitle: "Ronde afgerond",
+    completedDescription:
+      "Er is een volle kaart winnaar gevonden. Deze Office Bingo is nu gesloten.",
+    fullCardWinnerKnown: "Volle kaart winnaar bekend",
     noCardTitle: "Nog geen kaart",
     noCardDescription:
       "De host moet nog kaarten starten of updaten voor deze ronde.",
@@ -145,7 +155,7 @@ const copy = {
     send: "Verstuur",
     active: "Actief",
     draft: "Concept",
-    published: "Published",
+    published: "Gepubliceerd",
     completed: "Afgerond",
     expired: "Verlopen",
     archived: "Gearchiveerd",
@@ -263,6 +273,41 @@ function InfoRow({ label, value }: { label: string; value: string }) {
       <span className="text-xs font-bold text-zinc-400">{label}</span>
       <span className="text-right text-sm font-black text-white">{value}</span>
     </div>
+  );
+}
+
+function CompletedBanner({
+  language,
+  fullCardWinner,
+}: {
+  language: Language;
+  fullCardWinner: OfficeBingoDashboardWinner | null;
+}) {
+  const t = copy[language];
+
+  return (
+    <section className="rounded-[1.5rem] border border-emerald-300/25 bg-emerald-300/[0.10] p-5 text-center backdrop-blur-xl">
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
+        {t.fullCardWinnerKnown}
+      </p>
+      <h2 className="mt-2 text-3xl font-black tracking-tight text-white">
+        {t.completedTitle}
+      </h2>
+      <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-emerald-50/80">
+        {t.completedDescription}
+      </p>
+
+      {fullCardWinner ? (
+        <div className="mx-auto mt-4 w-fit rounded-2xl border border-emerald-300/25 bg-black/20 px-5 py-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-200">
+            {t.fullCard}
+          </p>
+          <p className="mt-1 text-lg font-black text-white">
+            {fullCardWinner.display_name}
+          </p>
+        </div>
+      ) : null}
+    </section>
   );
 }
 
@@ -401,6 +446,10 @@ export default function OfficeBingoDashboard({
   const t = copy[language];
   const calledSet = new Set(calledItemIds);
   const leaderboardRows = getLeaderboardRows(winners);
+  const isCompleted =
+    round?.status === "completed" || event?.status === "completed";
+  const fullCardWinner =
+    winners.find((winner) => winner.win_type === "full_card") ?? null;
 
   if (!event || !round) {
     return (
@@ -433,6 +482,10 @@ export default function OfficeBingoDashboard({
 
   return (
     <div className="flex flex-col gap-4">
+      {isCompleted ? (
+        <CompletedBanner language={language} fullCardWinner={fullCardWinner} />
+      ) : null}
+
       <section className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -441,7 +494,7 @@ export default function OfficeBingoDashboard({
                 {t.myCard}
               </p>
               <h2 className="mt-1 text-2xl font-black tracking-tight text-white">
-                {t.myCardIntro}
+                {isCompleted ? t.completedCardIntro : t.myCardIntro}
               </h2>
             </div>
 
@@ -506,7 +559,11 @@ export default function OfficeBingoDashboard({
                 {winners.map((winner) => (
                   <div
                     key={winner.id}
-                    className="rounded-2xl border border-white/10 bg-black/20 p-3"
+                    className={`rounded-2xl border p-3 ${
+                      winner.win_type === "full_card"
+                        ? "border-emerald-300/35 bg-emerald-300/[0.12]"
+                        : "border-white/10 bg-black/20"
+                    }`}
                   >
                     <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200">
                       {winner.win_type === "full_card"
