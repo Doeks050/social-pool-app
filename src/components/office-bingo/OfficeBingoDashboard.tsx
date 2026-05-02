@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Language } from "@/lib/i18n";
+import { sendOfficeBingoMessageAction } from "@/app/pools/[id]/office-bingo/actions";
 
 export type OfficeBingoDashboardPool = {
   id: string;
@@ -36,6 +37,14 @@ export type OfficeBingoDashboardWinner = {
   won_at: string;
 };
 
+export type OfficeBingoDashboardMessage = {
+  id: string;
+  user_id: string;
+  display_name: string;
+  message: string;
+  created_at: string;
+};
+
 export type OfficeBingoDashboardProps = {
   pool: OfficeBingoDashboardPool;
   language: Language;
@@ -45,6 +54,7 @@ export type OfficeBingoDashboardProps = {
   calledItemIds: string[];
   calledLabels: string[];
   winners: OfficeBingoDashboardWinner[];
+  messages: OfficeBingoDashboardMessage[];
   cardCells: OfficeBingoDashboardCardCell[];
 };
 
@@ -88,8 +98,9 @@ const copy = {
     lineShort: "line",
     fullShort: "full",
     chat: "Chat",
-    chatPlaceholder:
-      "Pool chat will be added here so players can react during the game.",
+    noMessages: "No messages yet.",
+    messagePlaceholder: "Type a message...",
+    send: "Send",
     active: "Active",
     draft: "Draft",
     published: "Published",
@@ -129,11 +140,12 @@ const copy = {
     lineShort: "rij",
     fullShort: "vol",
     chat: "Chat",
-    chatPlaceholder:
-      "Hier komt straks de poolchat zodat spelers kunnen reageren tijdens het spel.",
+    noMessages: "Nog geen berichten.",
+    messagePlaceholder: "Typ een bericht...",
+    send: "Verstuur",
     active: "Actief",
     draft: "Concept",
-    published: "Gepubliceerd",
+    published: "Published",
     completed: "Afgerond",
     expired: "Verlopen",
     archived: "Gearchiveerd",
@@ -254,23 +266,6 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ChatPlaceholder({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.035] p-4 backdrop-blur-xl sm:p-5">
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-        {title}
-      </p>
-      <p className="mt-2 text-sm leading-6 text-zinc-400">{description}</p>
-    </section>
-  );
-}
-
 function LeaderboardCard({
   rows,
   language,
@@ -324,6 +319,73 @@ function LeaderboardCard({
   );
 }
 
+function ChatCard({
+  poolId,
+  language,
+  messages,
+}: {
+  poolId: string;
+  language: Language;
+  messages: OfficeBingoDashboardMessage[];
+}) {
+  const t = copy[language];
+  const action = sendOfficeBingoMessageAction.bind(null, poolId);
+
+  return (
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
+        {t.chat}
+      </p>
+
+      <div className="mt-4 flex max-h-[320px] flex-col gap-2 overflow-y-auto rounded-2xl border border-white/10 bg-black/20 p-3">
+        {messages.length > 0 ? (
+          messages.map((message) => (
+            <div
+              key={message.id}
+              className="rounded-2xl border border-white/10 bg-white/[0.04] p-3"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <p className="min-w-0 truncate text-xs font-black text-white">
+                  {message.display_name}
+                </p>
+                <p className="shrink-0 text-[10px] font-semibold text-zinc-500">
+                  {formatDateTime(message.created_at, language)}
+                </p>
+              </div>
+
+              <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-5 text-zinc-300">
+                {message.message}
+              </p>
+            </div>
+          ))
+        ) : (
+          <p className="py-6 text-center text-sm leading-6 text-zinc-400">
+            {t.noMessages}
+          </p>
+        )}
+      </div>
+
+      <form action={action} className="mt-3 flex gap-2">
+        <input
+          name="message"
+          type="text"
+          maxLength={500}
+          required
+          placeholder={t.messagePlaceholder}
+          className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-semibold text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50"
+        />
+
+        <button
+          type="submit"
+          className="rounded-2xl bg-emerald-300 px-4 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
+        >
+          {t.send}
+        </button>
+      </form>
+    </section>
+  );
+}
+
 export default function OfficeBingoDashboard({
   pool,
   language,
@@ -333,6 +395,7 @@ export default function OfficeBingoDashboard({
   calledItemIds,
   calledLabels,
   winners,
+  messages,
   cardCells,
 }: OfficeBingoDashboardProps) {
   const t = copy[language];
@@ -493,7 +556,7 @@ export default function OfficeBingoDashboard({
 
       <section className="grid gap-4 lg:grid-cols-2">
         <LeaderboardCard rows={leaderboardRows} language={language} />
-        <ChatPlaceholder title={t.chat} description={t.chatPlaceholder} />
+        <ChatCard poolId={pool.id} language={language} messages={messages} />
       </section>
     </div>
   );

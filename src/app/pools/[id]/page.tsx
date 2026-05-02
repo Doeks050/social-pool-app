@@ -78,6 +78,13 @@ type OfficeBingoCardRow = {
   user_id: string;
 };
 
+type OfficeBingoMessageRow = {
+  id: string;
+  user_id: string;
+  message: string;
+  created_at: string;
+};
+
 type OfficeBingoCardCellRow = {
   id: string;
   card_id: string;
@@ -503,6 +510,7 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
   let officeBingoCalledItemIds = new Set<string>();
   let officeBingoCalledLabels: string[] = [];
   let officeBingoWinners: OfficeBingoWinnerRow[] = [];
+  let officeBingoMessages: OfficeBingoMessageRow[] = [];
   let officeBingoUserCard: OfficeBingoCardRow | null = null;
   let officeBingoUserCardCells: OfficeBingoCardCellRow[] = [];
 
@@ -563,6 +571,16 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
         .order("won_at", { ascending: true });
 
       officeBingoWinners = (winnerData ?? []) as OfficeBingoWinnerRow[];
+
+      const { data: messageData } = await supabase
+        .from("office_bingo_messages")
+        .select("id, user_id, message, created_at")
+        .eq("pool_id", pool.id)
+        .eq("round_id", officeBingoRound.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      officeBingoMessages = (messageData ?? []) as OfficeBingoMessageRow[];
 
       const { data: cardData } = await supabase
         .from("office_bingo_cards")
@@ -716,6 +734,20 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                     win_type: winner.win_type,
                     won_at: winner.won_at,
                   }))}
+                  messages={officeBingoMessages
+                    .slice()
+                    .reverse()
+                    .map((message) => ({
+                      id: message.id,
+                      user_id: message.user_id,
+                      display_name: getDisplayName(
+                        message.user_id,
+                        profilesMap,
+                        language
+                      ),
+                      message: message.message,
+                      created_at: message.created_at,
+                    }))}
                   cardCells={officeBingoUserCardCells.map((cell) => {
                     const item = Array.isArray(cell.office_bingo_items)
                       ? cell.office_bingo_items[0]
