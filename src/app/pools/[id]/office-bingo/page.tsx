@@ -56,10 +56,6 @@ type OfficeBingoWinnerRow = {
   won_at: string;
 };
 
-type OfficeBingoCardRow = {
-  id: string;
-};
-
 const copy = {
   en: {
     dashboard: "Dashboard",
@@ -79,13 +75,21 @@ const copy = {
     generateCards: "Generate / update cards",
     generateDescription:
       "Creates one unique card for every pool member that does not have a card yet.",
+    completedGenerateDescription:
+      "This round is completed. Cards cannot be generated or changed anymore.",
+    completedTitle: "Round completed",
+    completedDescription:
+      "A full card winner has been found. This Office Bingo is now closed.",
     officialMoments: "Official moments",
     officialMomentsDescription:
       "Click a moment to mark it as officially happened. Click again to undo.",
+    completedMomentsDescription:
+      "This round is completed. Official moments are locked.",
     called: "Called",
     notCalled: "Not called",
     markCalled: "Mark called",
     undo: "Undo",
+    locked: "Locked",
     noItems: "No bingo moments found yet.",
     winners: "Winners",
     noWinners: "No winners yet.",
@@ -123,13 +127,21 @@ const copy = {
     generateCards: "Kaarten genereren / updaten",
     generateDescription:
       "Maakt één unieke kaart voor ieder poulelid dat nog geen kaart heeft.",
+    completedGenerateDescription:
+      "Deze ronde is afgerond. Kaarten kunnen niet meer worden gegenereerd of aangepast.",
+    completedTitle: "Ronde afgerond",
+    completedDescription:
+      "Er is een volle kaart winnaar gevonden. Deze Office Bingo is nu gesloten.",
     officialMoments: "Officiële momenten",
     officialMomentsDescription:
       "Klik op een moment om hem officieel af te vinken. Klik opnieuw om terug te draaien.",
+    completedMomentsDescription:
+      "Deze ronde is afgerond. Officiële momenten zijn vergrendeld.",
     called: "Afgevinkt",
     notCalled: "Niet afgevinkt",
     markCalled: "Afvinken",
     undo: "Terugdraaien",
+    locked: "Vergrendeld",
     noItems: "Nog geen bingo momenten gevonden.",
     winners: "Winnaars",
     noWinners: "Nog geen winnaars.",
@@ -337,6 +349,8 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
   }
 
   const generateCards = generateOfficeBingoCardsAction.bind(null, pool.id);
+  const isCompleted =
+    round?.status === "completed" || event?.status === "completed";
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
@@ -459,6 +473,20 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
                 </section>
               ) : (
                 <>
+                  {isCompleted ? (
+                    <section className="rounded-[1.5rem] border border-emerald-300/25 bg-emerald-300/[0.10] p-5 text-center backdrop-blur-xl">
+                      <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
+                        {t.fullCard}
+                      </p>
+                      <h2 className="mt-2 text-3xl font-black tracking-tight text-white">
+                        {t.completedTitle}
+                      </h2>
+                      <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-emerald-50/80">
+                        {t.completedDescription}
+                      </p>
+                    </section>
+                  ) : null}
+
                   <section className="grid gap-4 lg:grid-cols-[0.75fr_1.25fr]">
                     <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
                       <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
@@ -468,15 +496,22 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
                         {cardCount} {t.cardCount}
                       </h2>
                       <p className="mt-2 text-sm leading-6 text-zinc-400">
-                        {t.generateDescription}
+                        {isCompleted
+                          ? t.completedGenerateDescription
+                          : t.generateDescription}
                       </p>
 
                       <form action={generateCards} className="mt-5">
                         <button
                           type="submit"
-                          className="w-full rounded-2xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
+                          disabled={isCompleted}
+                          className={`w-full rounded-2xl px-5 py-3 text-sm font-black transition ${
+                            isCompleted
+                              ? "cursor-not-allowed bg-zinc-700 text-zinc-400"
+                              : "bg-emerald-300 text-zinc-950 hover:bg-emerald-200"
+                          }`}
                         >
-                          {t.generateCards}
+                          {isCompleted ? t.locked : t.generateCards}
                         </button>
                       </form>
                     </div>
@@ -491,7 +526,11 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
                           {winners.map((winner) => (
                             <div
                               key={winner.id}
-                              className="rounded-2xl border border-white/10 bg-black/20 p-3"
+                              className={`rounded-2xl border p-3 ${
+                                winner.win_type === "full_card"
+                                  ? "border-emerald-300/35 bg-emerald-300/[0.12]"
+                                  : "border-white/10 bg-black/20"
+                              }`}
                             >
                               <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200">
                                 {winner.win_type === "full_card"
@@ -528,7 +567,9 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
                         {t.officialMoments}
                       </h2>
                       <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-                        {t.officialMomentsDescription}
+                        {isCompleted
+                          ? t.completedMomentsDescription
+                          : t.officialMomentsDescription}
                       </p>
                     </div>
 
@@ -550,10 +591,13 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
 
                               <button
                                 type="submit"
+                                disabled={isCompleted}
                                 className={`group flex min-h-[132px] w-full flex-col justify-between rounded-2xl border p-4 text-left transition active:scale-[0.99] ${
-                                  isCalled
-                                    ? "border-emerald-300/40 bg-emerald-300/[0.14] hover:bg-emerald-300/[0.18]"
-                                    : "border-white/10 bg-black/20 hover:border-emerald-300/30 hover:bg-emerald-300/[0.06]"
+                                  isCompleted
+                                    ? "cursor-not-allowed border-white/10 bg-black/20 opacity-70"
+                                    : isCalled
+                                      ? "border-emerald-300/40 bg-emerald-300/[0.14] hover:bg-emerald-300/[0.18]"
+                                      : "border-white/10 bg-black/20 hover:border-emerald-300/30 hover:bg-emerald-300/[0.06]"
                                 }`}
                               >
                                 <div>
@@ -573,12 +617,18 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
 
                                 <span
                                   className={`mt-4 inline-flex w-fit rounded-full border px-3 py-1.5 text-xs font-black ${
-                                    isCalled
-                                      ? "border-white/10 bg-black/20 text-white"
-                                      : "border-emerald-300/25 bg-emerald-300/10 text-emerald-100"
+                                    isCompleted
+                                      ? "border-white/10 bg-white/[0.04] text-zinc-400"
+                                      : isCalled
+                                        ? "border-white/10 bg-black/20 text-white"
+                                        : "border-emerald-300/25 bg-emerald-300/10 text-emerald-100"
                                   }`}
                                 >
-                                  {isCalled ? t.undo : t.markCalled}
+                                  {isCompleted
+                                    ? t.locked
+                                    : isCalled
+                                      ? t.undo
+                                      : t.markCalled}
                                 </span>
                               </button>
                             </form>

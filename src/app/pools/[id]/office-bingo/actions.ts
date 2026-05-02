@@ -25,6 +25,7 @@ type OfficeBingoEventRow = {
   id: string;
   pool_id: string;
   plan: OfficeBingoPlan;
+  status: string;
   target_name: string | null;
 };
 
@@ -32,6 +33,7 @@ type OfficeBingoRoundRow = {
   id: string;
   event_id: string;
   pool_id: string;
+  status: string;
   grid_size: number;
   diagonal_enabled: boolean;
 };
@@ -107,7 +109,7 @@ async function getFirstRound(poolId: string) {
 
   const { data: event } = await supabase
     .from("office_bingo_events")
-    .select("id, pool_id, plan, target_name")
+    .select("id, pool_id, plan, status, target_name")
     .eq("pool_id", poolId)
     .maybeSingle();
 
@@ -120,7 +122,7 @@ async function getFirstRound(poolId: string) {
 
   const { data: round } = await supabase
     .from("office_bingo_rounds")
-    .select("id, event_id, pool_id, grid_size, diagonal_enabled")
+    .select("id, event_id, pool_id, status, grid_size, diagonal_enabled")
     .eq("event_id", event.id)
     .eq("round_number", 1)
     .maybeSingle();
@@ -129,6 +131,33 @@ async function getFirstRound(poolId: string) {
     event: event as OfficeBingoEventRow,
     round: (round ?? null) as OfficeBingoRoundRow | null,
   };
+}
+
+async function completeOfficeBingoRound(poolId: string, round: OfficeBingoRoundRow) {
+  const { supabase } = await getCurrentUserOrRedirect();
+
+  const { error: roundError } = await supabase
+    .from("office_bingo_rounds")
+    .update({
+      status: "completed",
+    })
+    .eq("id", round.id);
+
+  if (roundError) {
+    throw new Error(roundError.message);
+  }
+
+  const { error: eventError } = await supabase
+    .from("office_bingo_events")
+    .update({
+      status: "completed",
+    })
+    .eq("id", round.event_id)
+    .eq("pool_id", poolId);
+
+  if (eventError) {
+    throw new Error(eventError.message);
+  }
 }
 
 export async function createFreeOfficeBingoAction(
@@ -231,6 +260,10 @@ export async function generateOfficeBingoCardsAction(poolId: string) {
     throw new Error("Office Bingo is nog niet ingesteld.");
   }
 
+  if (round.status === "completed" || event.status === "completed") {
+    throw new Error("Deze Office Bingo ronde is al afgerond.");
+  }
+
   const { data: members } = await supabase
     .from("pool_members")
     .select("user_id, role")
@@ -315,6 +348,13 @@ export async function generateOfficeBingoCardsAction(poolId: string) {
     })
     .eq("id", round.id);
 
+  await supabase
+    .from("office_bingo_events")
+    .update({
+      status: "active",
+    })
+    .eq("id", event.id);
+
   revalidatePath(`/pools/${poolId}`);
   revalidatePath(`/pools/${poolId}/office-bingo`);
 }
@@ -335,6 +375,10 @@ export async function callOfficeBingoItemAction(
 
   if (!event || !round) {
     throw new Error("Office Bingo is nog niet ingesteld.");
+  }
+
+  if (round.status === "completed" || event.status === "completed") {
+    throw new Error("Deze Office Bingo ronde is al afgerond.");
   }
 
   const { data: existingCalledItem } = await supabase
@@ -377,10 +421,14 @@ export async function uncallOfficeBingoItemAction(
     throw new Error("Geen bingo item gekozen.");
   }
 
-  const { round } = await getFirstRound(poolId);
+  const { event, round } = await getFirstRound(poolId);
 
-  if (!round) {
+  if (!event || !round) {
     throw new Error("Office Bingo is nog niet ingesteld.");
+  }
+
+  if (round.status === "completed" || event.status === "completed") {
+    throw new Error("Deze Office Bingo ronde is al afgerond.");
   }
 
   const { error } = await supabase
@@ -425,6 +473,7 @@ async function recalculateOfficeBingoWinners(
     .eq("round_id", round.id);
 
   const typedCards = (cards ?? []) as OfficeBingoCardRow[];
+  let hasFullCardWinner = false;
 
   for (const card of typedCards) {
     const { data: cells } = await supabase
@@ -462,6 +511,8 @@ async function recalculateOfficeBingoWinners(
     }
 
     if (winResult.hasFullCard) {
+      hasFullCardWinner = true;
+
       await supabase.from("office_bingo_winners").upsert(
         {
           round_id: round.id,
@@ -477,6 +528,10 @@ async function recalculateOfficeBingoWinners(
         }
       );
     }
+  }
+
+  if (hasFullCardWinner) {
+    await completeOfficeBingoRound(poolId, round);
   }
 }
 
