@@ -479,3 +479,48 @@ async function recalculateOfficeBingoWinners(
     }
   }
 }
+
+export async function sendOfficeBingoMessageAction(
+  poolId: string,
+  formData: FormData
+) {
+  const { supabase, user } = await getCurrentUserOrRedirect();
+
+  const message = getFormString(formData, "message");
+
+  if (!message) {
+    return;
+  }
+
+  if (message.length > 500) {
+    throw new Error("Bericht mag maximaal 500 tekens zijn.");
+  }
+
+  const { data: membership } = await supabase
+    .from("pool_members")
+    .select("user_id")
+    .eq("pool_id", poolId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!membership) {
+    throw new Error("Je bent geen lid van deze poule.");
+  }
+
+  const { event, round } = await getFirstRound(poolId);
+
+  const { error } = await supabase.from("office_bingo_messages").insert({
+    pool_id: poolId,
+    event_id: event?.id ?? null,
+    round_id: round?.id ?? null,
+    user_id: user.id,
+    message,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/pools/${poolId}`);
+  revalidatePath(`/pools/${poolId}/office-bingo`);
+}
