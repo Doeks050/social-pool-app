@@ -9,6 +9,7 @@ import { getLanguageFromCookieValue, type Language } from "@/lib/i18n";
 import { getPoolTypeMeta } from "@/lib/pool-types";
 import { getDefaultPoolPlan, getPoolPlan } from "@/lib/plans";
 import NextMatchHighlight from "@/components/world-cup/NextMatchHighlight";
+import OfficeBingoDashboard from "@/components/office-bingo/OfficeBingoDashboard";
 
 type PoolPageProps = {
   params: Promise<{
@@ -132,34 +133,6 @@ const copy = {
     inThisPool: "in this pool.",
     noMembers: "No members found yet.",
     unknownUserPrefix: "User",
-    myCard: "My card",
-    myCardIntro: "Your live Office Bingo card.",
-    noCardTitle: "No card yet",
-    noCardDescription:
-      "The host still needs to start or update cards for this round.",
-    hostSetupTitle: "Office Bingo is not set up yet",
-    hostSetupDescription:
-      "Create the first round and generate cards from the host dashboard.",
-    memberSetupTitle: "Office Bingo is not ready yet",
-    memberSetupDescription: "The host still needs to set up this Office Bingo.",
-    hostDashboard: "Host dashboard",
-    hostDashboardDescription: "Start cards and mark official results.",
-    openHostDashboard: "Open host dashboard",
-    winners: "Winners",
-    noWinners: "No winners yet.",
-    lineBingo: "Line bingo",
-    fullCard: "Full card",
-    calledMoments: "Called moments",
-    noCalledMoments: "No moments have been called yet.",
-    gameStatus: "Game status",
-    round: "Round",
-    target: "Target",
-    status: "Status",
-    active: "Active",
-    draft: "Draft",
-    completed: "Completed",
-    expired: "Expired",
-    archived: "Archived",
   },
   nl: {
     dashboard: "Dashboard",
@@ -200,34 +173,6 @@ const copy = {
     inThisPool: "in deze poule.",
     noMembers: "Nog geen leden gevonden.",
     unknownUserPrefix: "Gebruiker",
-    myCard: "Mijn kaart",
-    myCardIntro: "Jouw live Office Bingo kaart.",
-    noCardTitle: "Nog geen kaart",
-    noCardDescription:
-      "De host moet nog kaarten starten of updaten voor deze ronde.",
-    hostSetupTitle: "Office Bingo is nog niet ingesteld",
-    hostSetupDescription:
-      "Maak de eerste ronde en genereer kaarten via het host dashboard.",
-    memberSetupTitle: "Office Bingo is nog niet klaar",
-    memberSetupDescription: "De host moet deze Office Bingo nog instellen.",
-    hostDashboard: "Host dashboard",
-    hostDashboardDescription: "Start kaarten en vink officiële resultaten af.",
-    openHostDashboard: "Open host dashboard",
-    winners: "Winnaars",
-    noWinners: "Nog geen winnaars.",
-    lineBingo: "Rij bingo",
-    fullCard: "Volle kaart",
-    calledMoments: "Afgevinkte momenten",
-    noCalledMoments: "Nog geen momenten afgevinkt.",
-    gameStatus: "Spelstatus",
-    round: "Ronde",
-    target: "Doel",
-    status: "Status",
-    active: "Actief",
-    draft: "Concept",
-    completed: "Afgerond",
-    expired: "Verlopen",
-    archived: "Gearchiveerd",
   },
 } satisfies Record<Language, Record<string, string>>;
 
@@ -280,16 +225,6 @@ function formatJoinedDate(value: string, language: Language) {
   }).format(new Date(value));
 }
 
-function formatDateTime(value: string, language: Language) {
-  return new Intl.DateTimeFormat(language === "nl" ? "nl-NL" : "en-GB", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Europe/Amsterdam",
-  }).format(new Date(value));
-}
-
 function getRoleLabel(role: string, language: Language) {
   const t = copy[language];
 
@@ -318,33 +253,6 @@ function getPoolTypeDisplay(poolType: string, language: Language) {
     default:
       return poolType;
   }
-}
-
-function getStatusLabel(status: string, language: Language) {
-  const t = copy[language];
-
-  switch (status) {
-    case "active":
-      return t.active;
-    case "draft":
-      return t.draft;
-    case "completed":
-      return t.completed;
-    case "expired":
-      return t.expired;
-    case "archived":
-      return t.archived;
-    default:
-      return status;
-  }
-}
-
-function getCellLabel(cell: OfficeBingoCardCellRow) {
-  const item = Array.isArray(cell.office_bingo_items)
-    ? cell.office_bingo_items[0]
-    : cell.office_bingo_items;
-
-  return item?.label ?? "";
 }
 
 type ActionCardProps = {
@@ -468,42 +376,6 @@ function MemberCard({
           {getRoleLabel(member.role, language)}
         </span>
       </div>
-    </div>
-  );
-}
-
-function BingoCardPreview({
-  cells,
-  calledItemIds,
-  gridSize,
-}: {
-  cells: OfficeBingoCardCellRow[];
-  calledItemIds: Set<string>;
-  gridSize: number;
-}) {
-  return (
-    <div
-      className="grid gap-2"
-      style={{
-        gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
-      }}
-    >
-      {cells.map((cell) => {
-        const isCalled = calledItemIds.has(cell.item_id);
-
-        return (
-          <div
-            key={cell.id}
-            className={`flex aspect-square items-center justify-center rounded-2xl border p-2 text-center text-[11px] font-black leading-tight sm:text-xs ${
-              isCalled
-                ? "border-emerald-300/45 bg-emerald-300/[0.16] text-emerald-50"
-                : "border-white/10 bg-black/25 text-zinc-200"
-            }`}
-          >
-            {getCellLabel(cell)}
-          </div>
-        );
-      })}
     </div>
   );
 }
@@ -667,20 +539,22 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
         calledRows.map((item) => item.item_id)
       );
 
-      const { data: calledLabelData } = await supabase
-        .from("office_bingo_items")
-        .select("id, label")
-        .eq("round_id", officeBingoRound.id)
-        .in(
-          "id",
-          calledRows.map((item) => item.item_id)
-        )
-        .limit(6);
+      if (calledRows.length > 0) {
+        const { data: calledLabelData } = await supabase
+          .from("office_bingo_items")
+          .select("id, label")
+          .eq("round_id", officeBingoRound.id)
+          .in(
+            "id",
+            calledRows.map((item) => item.item_id)
+          )
+          .limit(6);
 
-      officeBingoCalledLabels = ((calledLabelData ?? []) as {
-        id: string;
-        label: string;
-      }[]).map((item) => item.label);
+        officeBingoCalledLabels = ((calledLabelData ?? []) as {
+          id: string;
+          label: string;
+        }[]).map((item) => item.label);
+      }
 
       const { data: winnerData } = await supabase
         .from("office_bingo_winners")
@@ -801,199 +675,60 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
               ) : null}
 
               {isOfficeBingo ? (
-                <>
-                  {!officeBingoEvent || !officeBingoRound ? (
-                    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
-                      <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
-                        <div>
-                          <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-                            {t.officeBingo}
-                          </p>
-                          <h2 className="mt-2 text-2xl font-black tracking-tight text-white">
-                            {isPoolAdmin
-                              ? t.hostSetupTitle
-                              : t.memberSetupTitle}
-                          </h2>
-                          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-                            {isPoolAdmin
-                              ? t.hostSetupDescription
-                              : t.memberSetupDescription}
-                          </p>
-                        </div>
+                <OfficeBingoDashboard
+                  pool={{
+                    id: pool.id,
+                    name: pool.name,
+                  }}
+                  language={language}
+                  isHost={isPoolAdmin}
+                  event={
+                    officeBingoEvent
+                      ? {
+                          id: officeBingoEvent.id,
+                          plan: officeBingoEvent.plan,
+                          status: officeBingoEvent.status,
+                          target_name: officeBingoEvent.target_name,
+                          expires_at: officeBingoEvent.expires_at,
+                        }
+                      : null
+                  }
+                  round={
+                    officeBingoRound
+                      ? {
+                          id: officeBingoRound.id,
+                          title: officeBingoRound.title,
+                          status: officeBingoRound.status,
+                          grid_size: officeBingoRound.grid_size,
+                        }
+                      : null
+                  }
+                  calledItemIds={[...officeBingoCalledItemIds]}
+                  calledLabels={officeBingoCalledLabels}
+                  winners={officeBingoWinners.map((winner) => ({
+                    id: winner.id,
+                    user_id: winner.user_id,
+                    display_name: getDisplayName(
+                      winner.user_id,
+                      profilesMap,
+                      language
+                    ),
+                    win_type: winner.win_type,
+                    won_at: winner.won_at,
+                  }))}
+                  cardCells={officeBingoUserCardCells.map((cell) => {
+                    const item = Array.isArray(cell.office_bingo_items)
+                      ? cell.office_bingo_items[0]
+                      : cell.office_bingo_items;
 
-                        {isPoolAdmin ? (
-                          <Link
-                            href={`/pools/${pool.id}/office-bingo`}
-                            className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
-                          >
-                            {t.openHostDashboard}
-                          </Link>
-                        ) : null}
-                      </div>
-                    </section>
-                  ) : (
-                    <>
-                      {isPoolAdmin ? (
-                        <section className="rounded-[1.5rem] border border-emerald-300/20 bg-emerald-300/[0.06] p-4 backdrop-blur-xl">
-                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                              <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-                                {t.hostDashboard}
-                              </p>
-                              <p className="mt-1 text-sm font-semibold text-zinc-400">
-                                {t.hostDashboardDescription}
-                              </p>
-                            </div>
-
-                            <Link
-                              href={`/pools/${pool.id}/office-bingo`}
-                              className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
-                            >
-                              {t.openHostDashboard}
-                            </Link>
-                          </div>
-                        </section>
-                      ) : null}
-
-                      <section className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-                        <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
-                          <div className="mb-4 flex items-center justify-between gap-3">
-                            <div>
-                              <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-                                {t.myCard}
-                              </p>
-                              <h2 className="mt-1 text-2xl font-black tracking-tight text-white">
-                                {t.myCardIntro}
-                              </h2>
-                            </div>
-
-                            <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-black text-zinc-300">
-                              {officeBingoRound.title}
-                            </div>
-                          </div>
-
-                          {officeBingoUserCard &&
-                          officeBingoUserCardCells.length > 0 ? (
-                            <BingoCardPreview
-                              cells={officeBingoUserCardCells}
-                              calledItemIds={officeBingoCalledItemIds}
-                              gridSize={officeBingoRound.grid_size}
-                            />
-                          ) : (
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-5 text-center">
-                              <h3 className="text-xl font-black text-white">
-                                {t.noCardTitle}
-                              </h3>
-                              <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-zinc-400">
-                                {t.noCardDescription}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex flex-col gap-4">
-                          <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
-                            <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-                              {t.gameStatus}
-                            </p>
-
-                            <div className="mt-4 grid gap-2">
-                              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-                                <span className="text-xs font-bold text-zinc-400">
-                                  {t.status}
-                                </span>
-                                <span className="text-sm font-black text-white">
-                                  {getStatusLabel(
-                                    officeBingoRound.status,
-                                    language
-                                  )}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-                                <span className="text-xs font-bold text-zinc-400">
-                                  {t.target}
-                                </span>
-                                <span className="text-sm font-black text-white">
-                                  {officeBingoEvent.target_name ?? "-"}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-                                <span className="text-xs font-bold text-zinc-400">
-                                  {t.round}
-                                </span>
-                                <span className="text-sm font-black text-white">
-                                  {officeBingoRound.title}
-                                </span>
-                              </div>
-                            </div>
-                          </section>
-
-                          <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
-                            <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-                              {t.winners}
-                            </p>
-
-                            {officeBingoWinners.length > 0 ? (
-                              <div className="mt-4 grid gap-2">
-                                {officeBingoWinners.map((winner) => (
-                                  <div
-                                    key={winner.id}
-                                    className="rounded-2xl border border-white/10 bg-black/20 p-3"
-                                  >
-                                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200">
-                                      {winner.win_type === "full_card"
-                                        ? t.fullCard
-                                        : t.lineBingo}
-                                    </p>
-                                    <p className="mt-1 text-sm font-black text-white">
-                                      {getDisplayName(
-                                        winner.user_id,
-                                        profilesMap,
-                                        language
-                                      )}
-                                    </p>
-                                    <p className="mt-1 text-xs font-semibold text-zinc-500">
-                                      {formatDateTime(winner.won_at, language)}
-                                    </p>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="mt-3 text-sm leading-6 text-zinc-400">
-                                {t.noWinners}
-                              </p>
-                            )}
-                          </section>
-                        </div>
-                      </section>
-
-                      <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
-                        <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-                          {t.calledMoments}
-                        </p>
-
-                        {officeBingoCalledLabels.length > 0 ? (
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            {officeBingoCalledLabels.map((label) => (
-                              <span
-                                key={label}
-                                className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-100"
-                              >
-                                {label}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="mt-3 text-sm leading-6 text-zinc-400">
-                            {t.noCalledMoments}
-                          </p>
-                        )}
-                      </section>
-                    </>
-                  )}
-                </>
+                    return {
+                      id: cell.id,
+                      item_id: cell.item_id,
+                      position_index: cell.position_index,
+                      label: item?.label ?? "",
+                    };
+                  })}
+                />
               ) : (
                 <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
                   <div className="mb-4 text-center">
