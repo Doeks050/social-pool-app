@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Language } from "@/lib/i18n";
 import { sendOfficeBingoMessageAction } from "@/app/pools/[id]/office-bingo/actions";
 
@@ -69,8 +68,6 @@ type LeaderboardRow = {
 const copy = {
   en: {
     officeBingo: "Office Bingo",
-    manageBingo: "Manage bingo",
-    openHostDashboard: "Open host dashboard",
     hostSetupTitle: "Office Bingo is not set up yet",
     hostSetupDescription:
       "Create the first round and generate cards from the host dashboard.",
@@ -114,8 +111,6 @@ const copy = {
   },
   nl: {
     officeBingo: "Office Bingo",
-    manageBingo: "Manage bingo",
-    openHostDashboard: "Open host dashboard",
     hostSetupTitle: "Office Bingo is nog niet ingesteld",
     hostSetupDescription:
       "Maak de eerste ronde en genereer kaarten via het host dashboard.",
@@ -272,10 +267,11 @@ function BingoCardPreview({
             return (
               <div
                 key={cell.id}
-                className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl border p-2 text-center text-[10px] font-black leading-tight transition sm:text-xs ${isCalled
+                className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl border p-2 text-center text-[10px] font-black leading-tight transition sm:text-xs ${
+                  isCalled
                     ? "border-rose-400/45 bg-[#fff1a7] text-zinc-950"
                     : "border-amber-900/15 bg-[#fff8d8] text-zinc-900"
-                  }`}
+                }`}
               >
                 <span className="relative z-10 line-clamp-4">{cell.label}</span>
 
@@ -384,10 +380,11 @@ function WinnersCard({
           {winners.map((winner) => (
             <div
               key={winner.id}
-              className={`rounded-2xl border p-3 ${winner.win_type === "full_card"
+              className={`rounded-2xl border p-3 ${
+                winner.win_type === "full_card"
                   ? "border-emerald-300/35 bg-emerald-300/[0.12]"
                   : "border-white/10 bg-black/20"
-                }`}
+              }`}
             >
               <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200">
                 {winner.win_type === "full_card" ? t.fullCard : t.lineBingo}
@@ -612,17 +609,6 @@ export default function OfficeBingoDashboard({
     <div className="flex flex-col gap-4">
       {isCompleted ? (
         <CompletedBanner language={language} fullCardWinner={fullCardWinner} />
-      ) : null}
-
-      {isHost ? (
-        <div className="flex justify-end">
-          <Link
-            href={`/pools/${pool.id}/office-bingo`}
-            className="rounded-2xl bg-emerald-300 px-6 py-3 text-sm font-black text-zinc-950 shadow-[0_14px_35px_rgba(110,231,183,0.18)] transition hover:bg-emerald-200"
-          >
-            {t.manageBingo}
-          </Link>
-        </div>
       ) : null}
 
       <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
