@@ -586,3 +586,90 @@ export async function sendOfficeBingoMessageAction(
   revalidatePath(`/pools/${poolId}`);
   revalidatePath(`/pools/${poolId}/office-bingo`);
 }
+export async function createNextOfficeBingoRoundAction(poolId: string) {
+  const { supabase, user } = await assertPoolAdmin(poolId);
+  const language = await getLanguage();
+
+  const { event, round } = await getCurrentRound(poolId);
+
+  if (!event || !round) {
+    throw new Error("Office Bingo is nog niet ingesteld.");
+  }
+
+  if (round.status !== "completed") {
+    throw new Error(
+      "Je kunt pas een nieuwe ronde starten als de huidige ronde is afgerond."
+    );
+  }
+
+  const { data: currentItems } = await supabase
+    .from("office_bingo_items")
+    .select("label, sort_order, is_template_item, is_custom_item")
+    .eq("round_id", round.id)
+    .order("sort_order", { ascending: true });
+
+  const typedCurrentItems = (currentItems ?? []) as {
+    label: string;
+    sort_order: number;
+    is_template_item: boolean;
+    is_custom_item: boolean;
+  }[];
+
+  if (typedCurrentItems.length === 0) {
+    throw new Error("Geen bingo momenten gevonden om te kopiëren.");
+  }
+
+  const nextRoundNumber = round.round_number + 1;
+
+  const { data: nextRound, error: roundError } = await supabase
+    .from("office_bingo_rounds")
+    .insert({
+      event_id: event.id,
+      pool_id: poolId,
+      round_number: nextRoundNumber,
+      title:
+        language === "nl"
+          ? `Ronde ${nextRoundNumber}`
+          : `Round ${nextRoundNumber}`,
+      status: "draft",
+      grid_size: round.grid_size,
+      win_line_enabled: true,
+      win_full_card_enabled: true,
+      continue_after_line: true,
+      diagonal_enabled: round.diagonal_enabled,
+      created_by: user.id,
+    })
+    .select("id")
+    .single();
+
+  if (roundError || !nextRound) {
+    throw new Error(roundError?.message ?? "Nieuwe ronde aanmaken mislukt.");
+  }
+
+  const { error: itemsError } = await supabase.from("office_bingo_items").insert(
+    typedCurrentItems.map((item, index) => ({
+      round_id: nextRound.id,
+      pool_id: poolId,
+      label: item.label,
+      sort_order: index + 1,
+      is_template_item: item.is_template_item,
+      is_custom_item: item.is_custom_item,
+      created_by: user.id,
+    }))
+  );
+
+  if (itemsError) {
+    throw new Error(itemsError.message);
+  }
+
+  await supabase
+    .from("office_bingo_events")
+    .update({
+      status: "active",
+    })
+    .eq("id", event.id)
+    .eq("pool_id", poolId);
+
+  revalidatePath(`/pools/${poolId}`);
+  revalidatePath(`/pools/${poolId}/office-bingo`);
+}

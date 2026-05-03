@@ -9,6 +9,7 @@ import { getLanguageFromCookieValue, type Language } from "@/lib/i18n";
 import {
     callOfficeBingoItemAction,
     createFreeOfficeBingoAction,
+    createNextOfficeBingoRoundAction,
     generateOfficeBingoCardsAction,
     uncallOfficeBingoItemAction,
 } from "./actions";
@@ -80,6 +81,9 @@ const copy = {
         completedTitle: "Round completed",
         completedDescription:
             "A full card winner has been found. This Office Bingo is now closed.",
+        prepareNextRound: "Prepare next round",
+        nextRoundDescription:
+            "Create a new draft round with the same moments. You can generate fresh cards afterwards.",
         officialMoments: "Official moments",
         officialMomentsDescription:
             "Click a moment to mark it as officially happened. Click again to undo.",
@@ -132,6 +136,9 @@ const copy = {
         completedTitle: "Ronde afgerond",
         completedDescription:
             "Er is een volle kaart winnaar gevonden. Deze Office Bingo is nu gesloten.",
+        prepareNextRound: "Nieuwe ronde voorbereiden",
+        nextRoundDescription:
+            "Maak een nieuwe conceptronde met dezelfde momenten. Daarna kun je opnieuw kaarten genereren.",
         officialMoments: "Officiële momenten",
         officialMomentsDescription:
             "Klik op een moment om hem officieel af te vinken. Klik opnieuw om terug te draaien.",
@@ -350,6 +357,7 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
     }
 
     const generateCards = generateOfficeBingoCardsAction.bind(null, pool.id);
+    const createNextRound = createNextOfficeBingoRoundAction.bind(null, pool.id);
     const isCompleted =
         round?.status === "completed" || event?.status === "completed";
 
@@ -485,6 +493,19 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
                                             <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-emerald-50/80">
                                                 {t.completedDescription}
                                             </p>
+
+                                            <form action={createNextRound} className="mx-auto mt-5 max-w-sm">
+                                                <button
+                                                    type="submit"
+                                                    className="w-full rounded-2xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
+                                                >
+                                                    {t.prepareNextRound}
+                                                </button>
+                                            </form>
+
+                                            <p className="mx-auto mt-3 max-w-md text-xs font-semibold leading-5 text-emerald-50/70">
+                                                {t.nextRoundDescription}
+                                            </p>
                                         </section>
                                     ) : null}
 
@@ -507,8 +528,8 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
                                                     type="submit"
                                                     disabled={isCompleted}
                                                     className={`w-full rounded-2xl px-5 py-3 text-sm font-black transition ${isCompleted
-                                                            ? "cursor-not-allowed bg-zinc-700 text-zinc-400"
-                                                            : "bg-emerald-300 text-zinc-950 hover:bg-emerald-200"
+                                                        ? "cursor-not-allowed bg-zinc-700 text-zinc-400"
+                                                        : "bg-emerald-300 text-zinc-950 hover:bg-emerald-200"
                                                         }`}
                                                 >
                                                     {isCompleted ? t.locked : t.generateCards}
@@ -527,8 +548,8 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
                                                         <div
                                                             key={winner.id}
                                                             className={`rounded-2xl border p-3 ${winner.win_type === "full_card"
-                                                                    ? "border-emerald-300/35 bg-emerald-300/[0.12]"
-                                                                    : "border-white/10 bg-black/20"
+                                                                ? "border-emerald-300/35 bg-emerald-300/[0.12]"
+                                                                : "border-white/10 bg-black/20"
                                                                 }`}
                                                         >
                                                             <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200">
@@ -592,17 +613,17 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
                                                                 type="submit"
                                                                 disabled={isCompleted}
                                                                 className={`group flex min-h-[132px] w-full flex-col justify-between rounded-2xl border p-4 text-left transition active:scale-[0.99] ${isCompleted
-                                                                        ? "cursor-not-allowed border-white/10 bg-black/20 opacity-70"
-                                                                        : isCalled
-                                                                            ? "border-emerald-300/40 bg-emerald-300/[0.14] hover:bg-emerald-300/[0.18]"
-                                                                            : "border-white/10 bg-black/20 hover:border-emerald-300/30 hover:bg-emerald-300/[0.06]"
+                                                                    ? "cursor-not-allowed border-white/10 bg-black/20 opacity-70"
+                                                                    : isCalled
+                                                                        ? "border-emerald-300/40 bg-emerald-300/[0.14] hover:bg-emerald-300/[0.18]"
+                                                                        : "border-white/10 bg-black/20 hover:border-emerald-300/30 hover:bg-emerald-300/[0.06]"
                                                                     }`}
                                                             >
                                                                 <div>
                                                                     <p
                                                                         className={`text-[10px] font-black uppercase tracking-[0.18em] ${isCalled
-                                                                                ? "text-emerald-200"
-                                                                                : "text-zinc-500"
+                                                                            ? "text-emerald-200"
+                                                                            : "text-zinc-500"
                                                                             }`}
                                                                     >
                                                                         {isCalled ? t.called : t.notCalled}
@@ -614,10 +635,10 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
 
                                                                 <span
                                                                     className={`mt-4 inline-flex w-fit rounded-full border px-3 py-1.5 text-xs font-black ${isCompleted
-                                                                            ? "border-white/10 bg-white/[0.04] text-zinc-400"
-                                                                            : isCalled
-                                                                                ? "border-white/10 bg-black/20 text-white"
-                                                                                : "border-emerald-300/25 bg-emerald-300/10 text-emerald-100"
+                                                                        ? "border-white/10 bg-white/[0.04] text-zinc-400"
+                                                                        : isCalled
+                                                                            ? "border-white/10 bg-black/20 text-white"
+                                                                            : "border-emerald-300/25 bg-emerald-300/10 text-emerald-100"
                                                                         }`}
                                                                 >
                                                                     {isCompleted
