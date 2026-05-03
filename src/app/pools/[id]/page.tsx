@@ -281,14 +281,14 @@ function ActionCard({
     <Link
       href={href}
       className={`group relative flex min-h-[132px] flex-col items-center justify-center overflow-hidden rounded-2xl border p-4 text-center transition active:scale-[0.99] ${primary
-          ? "border-emerald-300/35 bg-emerald-300/[0.10] hover:border-emerald-200/50 hover:bg-emerald-300/[0.14]"
-          : "border-white/10 bg-black/20 hover:border-emerald-300/30 hover:bg-emerald-300/[0.05]"
+        ? "border-emerald-300/35 bg-emerald-300/[0.10] hover:border-emerald-200/50 hover:bg-emerald-300/[0.14]"
+        : "border-white/10 bg-black/20 hover:border-emerald-300/30 hover:bg-emerald-300/[0.05]"
         }`}
     >
       <div
         className={`absolute inset-x-0 top-0 h-px ${primary
-            ? "bg-gradient-to-r from-transparent via-emerald-200/70 to-transparent"
-            : "bg-gradient-to-r from-transparent via-white/15 to-transparent"
+          ? "bg-gradient-to-r from-transparent via-emerald-200/70 to-transparent"
+          : "bg-gradient-to-r from-transparent via-white/15 to-transparent"
           }`}
       />
 
@@ -326,22 +326,22 @@ function MemberCard({
   return (
     <div
       className={`relative overflow-hidden rounded-2xl border p-4 ${isCurrentUser
-          ? "border-emerald-300/35 bg-emerald-300/[0.09]"
-          : "border-white/10 bg-black/20"
+        ? "border-emerald-300/35 bg-emerald-300/[0.09]"
+        : "border-white/10 bg-black/20"
         }`}
     >
       <div
         className={`absolute inset-x-0 top-0 h-px ${isCurrentUser
-            ? "bg-gradient-to-r from-transparent via-emerald-200/70 to-transparent"
-            : "bg-gradient-to-r from-transparent via-white/15 to-transparent"
+          ? "bg-gradient-to-r from-transparent via-emerald-200/70 to-transparent"
+          : "bg-gradient-to-r from-transparent via-white/15 to-transparent"
           }`}
       />
 
       <div className="flex items-center gap-3">
         <div
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-sm font-black ${isCurrentUser
-              ? "border-emerald-200/30 bg-emerald-300/15 text-emerald-100"
-              : "border-white/10 bg-white/[0.04] text-zinc-200"
+            ? "border-emerald-200/30 bg-emerald-300/15 text-emerald-100"
+            : "border-white/10 bg-white/[0.04] text-zinc-200"
             }`}
         >
           {getInitials(displayName)}
@@ -367,10 +367,10 @@ function MemberCard({
 
         <span
           className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${member.role === "owner"
-              ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-200"
-              : member.role === "admin"
-                ? "border-sky-300/25 bg-sky-300/10 text-sky-200"
-                : "border-white/10 bg-white/[0.04] text-zinc-400"
+            ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-200"
+            : member.role === "admin"
+              ? "border-sky-300/25 bg-sky-300/10 text-sky-200"
+              : "border-white/10 bg-white/[0.04] text-zinc-400"
             }`}
         >
           {getRoleLabel(member.role, language)}
@@ -659,25 +659,36 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 lg:min-w-[260px]">
-                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
-                      {t.joinCode}
-                    </p>
-
-                    <div className="mt-1 flex items-end justify-between gap-3">
-                      <p className="text-2xl font-black tracking-widest text-white">
-                        {pool.invite_code}
+                  <div className="grid gap-3 lg:min-w-[300px]">
+                    <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3">
+                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
+                        {t.joinCode}
                       </p>
 
-                      {isWorldCup ? (
-                        <Link
-                          href={`/pools/${pool.id}/matches`}
-                          className="hidden rounded-xl bg-emerald-300 px-3 py-2 text-xs font-black text-zinc-950 transition hover:bg-emerald-200 sm:inline-flex"
-                        >
-                          {t.predict}
-                        </Link>
-                      ) : null}
+                      <div className="mt-1 flex items-end justify-between gap-3">
+                        <p className="text-2xl font-black tracking-widest text-white">
+                          {pool.invite_code}
+                        </p>
+
+                        {isWorldCup ? (
+                          <Link
+                            href={`/pools/${pool.id}/matches`}
+                            className="hidden rounded-xl bg-emerald-300 px-3 py-2 text-xs font-black text-zinc-950 transition hover:bg-emerald-200 sm:inline-flex"
+                          >
+                            {t.predict}
+                          </Link>
+                        ) : null}
+                      </div>
                     </div>
+
+                    {isOfficeBingo && isPoolAdmin ? (
+                      <Link
+                        href={`/pools/${pool.id}/office-bingo`}
+                        className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 shadow-[0_14px_35px_rgba(110,231,183,0.18)] transition hover:bg-emerald-200"
+                      >
+                        Manage bingo
+                      </Link>
+                    ) : null}
                   </div>
                 </div>
               </section>

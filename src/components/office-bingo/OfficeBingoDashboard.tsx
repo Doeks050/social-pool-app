@@ -272,11 +272,10 @@ function BingoCardPreview({
             return (
               <div
                 key={cell.id}
-                className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl border p-2 text-center text-[10px] font-black leading-tight transition sm:text-xs ${
-                  isCalled
+                className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl border p-2 text-center text-[10px] font-black leading-tight transition sm:text-xs ${isCalled
                     ? "border-rose-400/45 bg-[#fff1a7] text-zinc-950"
                     : "border-amber-900/15 bg-[#fff8d8] text-zinc-900"
-                }`}
+                  }`}
               >
                 <span className="relative z-10 line-clamp-4">{cell.label}</span>
 
@@ -385,11 +384,10 @@ function WinnersCard({
           {winners.map((winner) => (
             <div
               key={winner.id}
-              className={`rounded-2xl border p-3 ${
-                winner.win_type === "full_card"
+              className={`rounded-2xl border p-3 ${winner.win_type === "full_card"
                   ? "border-emerald-300/35 bg-emerald-300/[0.12]"
                   : "border-white/10 bg-black/20"
-              }`}
+                }`}
             >
               <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200">
                 {winner.win_type === "full_card" ? t.fullCard : t.lineBingo}
@@ -605,15 +603,6 @@ export default function OfficeBingoDashboard({
               {isHost ? t.hostSetupDescription : t.memberSetupDescription}
             </p>
           </div>
-
-          {isHost ? (
-            <Link
-              href={`/pools/${pool.id}/office-bingo`}
-              className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
-            >
-              {t.manageBingo}
-            </Link>
-          ) : null}
         </div>
       </section>
     );
@@ -623,6 +612,17 @@ export default function OfficeBingoDashboard({
     <div className="flex flex-col gap-4">
       {isCompleted ? (
         <CompletedBanner language={language} fullCardWinner={fullCardWinner} />
+      ) : null}
+
+      {isHost ? (
+        <div className="flex justify-end">
+          <Link
+            href={`/pools/${pool.id}/office-bingo`}
+            className="rounded-2xl bg-emerald-300 px-6 py-3 text-sm font-black text-zinc-950 shadow-[0_14px_35px_rgba(110,231,183,0.18)] transition hover:bg-emerald-200"
+          >
+            {t.manageBingo}
+          </Link>
+        </div>
       ) : null}
 
       <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
@@ -636,20 +636,9 @@ export default function OfficeBingoDashboard({
             </h2>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-            <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-black text-zinc-300">
-              {round.title}
-            </span>
-
-            {isHost ? (
-              <Link
-                href={`/pools/${pool.id}/office-bingo`}
-                className="rounded-full bg-emerald-300 px-4 py-2 text-xs font-black text-zinc-950 transition hover:bg-emerald-200"
-              >
-                {t.manageBingo}
-              </Link>
-            ) : null}
-          </div>
+          <span className="w-fit rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-black text-zinc-300">
+            {round.title}
+          </span>
         </div>
 
         {cardCells.length > 0 ? (
