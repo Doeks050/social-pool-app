@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
+import OfficeBingoRoundHistory from "@/components/office-bingo/OfficeBingoRoundHistory";
 import { createClient } from "@/lib/supabase";
 import { getLanguageFromCookieValue, type Language } from "@/lib/i18n";
 import {
@@ -53,6 +54,22 @@ type OfficeBingoCalledItemRow = {
 type OfficeBingoWinnerRow = {
     id: string;
     user_id: string;
+    win_type: "line" | "full_card";
+    won_at: string;
+};
+
+type OfficeBingoRoundHistoryRow = {
+    id: string;
+    round_number: number;
+    title: string;
+    status: string;
+    created_at: string | null;
+};
+
+type OfficeBingoRoundHistoryWinnerRow = {
+    round_id: string;
+    user_id: string;
+    display_name: string;
     win_type: "line" | "full_card";
     won_at: string;
 };
@@ -285,6 +302,8 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
     let winners: OfficeBingoWinnerRow[] = [];
     let cardCount = 0;
     let profilesMap = new Map<string, string>();
+    let roundHistory: OfficeBingoRoundHistoryRow[] = [];
+    let roundHistoryWinners: OfficeBingoRoundHistoryWinnerRow[] = [];
 
     const { data: eventData } = await supabase
         .from("office_bingo_events")
@@ -295,17 +314,73 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
     event = (eventData ?? null) as OfficeBingoEventRow | null;
 
     if (event) {
-        const { data: roundData } = await supabase
+        const { data: roundHistoryData } = await supabase
             .from("office_bingo_rounds")
-            .select(
-                "id, event_id, pool_id, round_number, title, status, grid_size, diagonal_enabled"
-            )
+            .select("id, round_number, title, status, created_at")
             .eq("event_id", event.id)
-            .order("round_number", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+            .order("round_number", { ascending: false });
 
-        round = (roundData ?? null) as OfficeBingoRoundRow | null;
+        roundHistory = (roundHistoryData ?? []) as OfficeBingoRoundHistoryRow[];
+
+        const latestRoundId = roundHistory[0]?.id ?? null;
+
+        if (latestRoundId) {
+            const { data: roundData } = await supabase
+                .from("office_bingo_rounds")
+                .select(
+                    "id, event_id, pool_id, round_number, title, status, grid_size, diagonal_enabled"
+                )
+                .eq("id", latestRoundId)
+                .maybeSingle();
+
+            round = (roundData ?? null) as OfficeBingoRoundRow | null;
+        }
+
+        const roundIds = roundHistory.map((historyRound) => historyRound.id);
+
+        if (roundIds.length > 0) {
+            const { data: historyWinnerData } = await supabase
+                .from("office_bingo_winners")
+                .select("round_id, user_id, win_type, won_at")
+                .in("round_id", roundIds)
+                .order("won_at", { ascending: true });
+
+            const rawHistoryWinners = (historyWinnerData ?? []) as {
+                round_id: string;
+                user_id: string;
+                win_type: "line" | "full_card";
+                won_at: string;
+            }[];
+
+            const historyWinnerUserIds = [
+                ...new Set(rawHistoryWinners.map((winner) => winner.user_id)),
+            ];
+
+            let historyProfilesMap = new Map<string, string>();
+
+            if (historyWinnerUserIds.length > 0) {
+                const { data: historyProfiles } = await supabase
+                    .from("profiles")
+                    .select("id, display_name")
+                    .in("id", historyWinnerUserIds);
+
+                historyProfilesMap = new Map(
+                    (
+                        (historyProfiles ?? []) as {
+                            id: string;
+                            display_name: string | null;
+                        }[]
+                    ).map((profile) => [profile.id, profile.display_name ?? ""])
+                );
+            }
+
+            roundHistoryWinners = rawHistoryWinners.map((winner) => ({
+                ...winner,
+                display_name:
+                    historyProfilesMap.get(winner.user_id)?.trim() ||
+                    `${copy[language].unknownUserPrefix} ${winner.user_id.slice(0, 8)}`,
+            }));
+        }
     }
 
     if (round) {
@@ -660,6 +735,13 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
                                             </div>
                                         )}
                                     </section>
+
+                                    <OfficeBingoRoundHistory
+                                        language={language}
+                                        rounds={roundHistory}
+                                        currentRoundId={round.id}
+                                        winners={roundHistoryWinners}
+                                    />
                                 </>
                             )}
                         </div>

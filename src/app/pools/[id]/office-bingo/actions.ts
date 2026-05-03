@@ -465,6 +465,14 @@ async function recalculateOfficeBingoWinners(
 ) {
   const { supabase } = await getCurrentUserOrRedirect();
 
+  const { data: existingLineWinners } = await supabase
+    .from("office_bingo_winners")
+    .select("id")
+    .eq("round_id", round.id)
+    .eq("win_type", "line");
+
+  const lineBingoAlreadyClaimed = (existingLineWinners ?? []).length > 0;
+
   const { data: calledItems } = await supabase
     .from("office_bingo_called_items")
     .select("item_id")
@@ -502,7 +510,7 @@ async function recalculateOfficeBingoWinners(
       calledItemIds,
     });
 
-    if (winResult.hasLine) {
+    if (!lineBingoAlreadyClaimed && winResult.hasLine) {
       await supabase.from("office_bingo_winners").upsert(
         {
           round_id: round.id,
@@ -586,6 +594,7 @@ export async function sendOfficeBingoMessageAction(
   revalidatePath(`/pools/${poolId}`);
   revalidatePath(`/pools/${poolId}/office-bingo`);
 }
+
 export async function createNextOfficeBingoRoundAction(poolId: string) {
   const { supabase, user } = await assertPoolAdmin(poolId);
   const language = await getLanguage();
