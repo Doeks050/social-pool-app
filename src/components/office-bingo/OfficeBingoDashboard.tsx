@@ -76,17 +76,11 @@ const copy = {
     myCard: "My card",
     myCardIntro: "Your live Office Bingo card.",
     completedCardIntro: "This round is completed. Your card is now locked.",
-    completedTitle: "Round completed",
-    completedDescription:
-      "A full card winner has been found. This Office Bingo is now closed.",
-    fullCardWinnerKnown: "Full card winner known",
+    roundCompleted: "Round completed",
+    waitingForHost: "Waiting for host",
     noCardTitle: "No card yet",
     noCardDescription:
       "The host still needs to start or update cards for this round.",
-    status: "Status",
-    target: "Target",
-    round: "Round",
-    plan: "Plan",
     winners: "Winners",
     noWinners: "No winners yet.",
     lineBingo: "Line bingo",
@@ -102,12 +96,6 @@ const copy = {
     noMessages: "No messages yet.",
     messagePlaceholder: "Type a message...",
     send: "Send",
-    active: "Active",
-    draft: "Draft",
-    published: "Published",
-    completed: "Completed",
-    expired: "Expired",
-    archived: "Archived",
   },
   nl: {
     officeBingo: "Office Bingo",
@@ -119,17 +107,11 @@ const copy = {
     myCard: "Mijn kaart",
     myCardIntro: "Jouw live Office Bingo kaart.",
     completedCardIntro: "Deze ronde is afgerond. Je kaart is nu vergrendeld.",
-    completedTitle: "Ronde afgerond",
-    completedDescription:
-      "Er is een volle kaart winnaar gevonden. Deze Office Bingo is nu gesloten.",
-    fullCardWinnerKnown: "Volle kaart winnaar bekend",
+    roundCompleted: "Ronde voltooid",
+    waitingForHost: "Wachten op host",
     noCardTitle: "Nog geen kaart",
     noCardDescription:
       "De host moet nog kaarten starten of updaten voor deze ronde.",
-    status: "Status",
-    target: "Doel",
-    round: "Ronde",
-    plan: "Pakket",
     winners: "Winnaars",
     noWinners: "Nog geen winnaars.",
     lineBingo: "Rij bingo",
@@ -146,35 +128,8 @@ const copy = {
     noMessages: "Nog geen berichten.",
     messagePlaceholder: "Typ een bericht...",
     send: "Verstuur",
-    active: "Actief",
-    draft: "Concept",
-    published: "Gepubliceerd",
-    completed: "Afgerond",
-    expired: "Verlopen",
-    archived: "Gearchiveerd",
   },
 } satisfies Record<Language, Record<string, string>>;
-
-function getStatusLabel(status: string, language: Language) {
-  const t = copy[language];
-
-  switch (status) {
-    case "active":
-      return t.active;
-    case "draft":
-      return t.draft;
-    case "published":
-      return t.published;
-    case "completed":
-      return t.completed;
-    case "expired":
-      return t.expired;
-    case "archived":
-      return t.archived;
-    default:
-      return status;
-  }
-}
 
 function formatDateTime(value: string, language: Language) {
   return new Intl.DateTimeFormat(language === "nl" ? "nl-NL" : "en-GB", {
@@ -222,14 +177,20 @@ function BingoCardPreview({
   cells,
   calledItemIds,
   gridSize,
+  isCompleted,
+  language,
 }: {
   cells: OfficeBingoDashboardCardCell[];
   calledItemIds: Set<string>;
   gridSize: number;
+  isCompleted: boolean;
+  language: Language;
 }) {
+  const t = copy[language];
+
   return (
     <div className="mx-auto w-full max-w-[520px]">
-      <div className="overflow-hidden rounded-[1.75rem] border border-amber-300/60 bg-gradient-to-b from-[#ffe790] to-[#f3c84f] p-3 shadow-[0_24px_60px_rgba(0,0,0,0.32)] sm:p-4">
+      <div className="relative overflow-hidden rounded-[1.75rem] border border-amber-300/60 bg-gradient-to-b from-[#ffe790] to-[#f3c84f] p-3 shadow-[0_24px_60px_rgba(0,0,0,0.32)] sm:p-4">
         <div className="mb-3 rounded-[1.25rem] border border-white/10 bg-[#07150f] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
           <div className="grid grid-cols-[46px_1fr_46px] items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-300/30 bg-white">
@@ -286,77 +247,19 @@ function BingoCardPreview({
         <div className="mt-3 text-center text-[10px] font-black uppercase tracking-[0.22em] text-amber-950/65">
           Office Bingo
         </div>
+
+        {isCompleted ? (
+          <div className="absolute inset-x-4 top-1/2 z-20 -translate-y-1/2 rounded-[1.5rem] border border-emerald-300/35 bg-zinc-950/78 px-5 py-8 text-center shadow-[0_24px_70px_rgba(0,0,0,0.45)] backdrop-blur-md">
+            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-emerald-200">
+              {t.roundCompleted}
+            </p>
+            <h3 className="mt-2 text-3xl font-black tracking-tight text-white">
+              {t.waitingForHost}
+            </h3>
+          </div>
+        ) : null}
       </div>
     </div>
-  );
-}
-
-function CompactStatusBar({
-  event,
-  round,
-  language,
-}: {
-  event: OfficeBingoDashboardEvent;
-  round: OfficeBingoDashboardRound;
-  language: Language;
-}) {
-  const t = copy[language];
-
-  return (
-    <section className="rounded-[1.25rem] border border-white/10 bg-white/[0.035] px-4 py-3 backdrop-blur-xl">
-      <div className="flex flex-wrap items-center gap-2 text-xs font-black">
-        <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1.5 text-emerald-100">
-          {getStatusLabel(round.status, language)}
-        </span>
-
-        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-zinc-300">
-          {t.round}: {round.title}
-        </span>
-
-        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-zinc-300">
-          {t.plan}: {event.plan}
-        </span>
-
-        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-zinc-300">
-          {t.target}: {event.target_name ?? "-"}
-        </span>
-      </div>
-    </section>
-  );
-}
-
-function CompletedBanner({
-  language,
-  fullCardWinner,
-}: {
-  language: Language;
-  fullCardWinner: OfficeBingoDashboardWinner | null;
-}) {
-  const t = copy[language];
-
-  return (
-    <section className="rounded-[1.5rem] border border-emerald-300/25 bg-emerald-300/[0.10] p-5 text-center backdrop-blur-xl">
-      <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-        {t.fullCardWinnerKnown}
-      </p>
-      <h2 className="mt-2 text-3xl font-black tracking-tight text-white">
-        {t.completedTitle}
-      </h2>
-      <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-emerald-50/80">
-        {t.completedDescription}
-      </p>
-
-      {fullCardWinner ? (
-        <div className="mx-auto mt-4 w-fit rounded-2xl border border-emerald-300/25 bg-black/20 px-5 py-3">
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-200">
-            {t.fullCard}
-          </p>
-          <p className="mt-1 text-lg font-black text-white">
-            {fullCardWinner.display_name}
-          </p>
-        </div>
-      ) : null}
-    </section>
   );
 }
 
@@ -582,8 +485,6 @@ export default function OfficeBingoDashboard({
   const leaderboardRows = getLeaderboardRows(winners);
   const isCompleted =
     round?.status === "completed" || event?.status === "completed";
-  const fullCardWinner =
-    winners.find((winner) => winner.win_type === "full_card") ?? null;
 
   if (!event || !round) {
     return (
@@ -607,10 +508,6 @@ export default function OfficeBingoDashboard({
 
   return (
     <div className="flex flex-col gap-4">
-      {isCompleted ? (
-        <CompletedBanner language={language} fullCardWinner={fullCardWinner} />
-      ) : null}
-
       <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -632,6 +529,8 @@ export default function OfficeBingoDashboard({
             cells={cardCells}
             calledItemIds={calledSet}
             gridSize={round.grid_size}
+            isCompleted={isCompleted}
+            language={language}
           />
         ) : (
           <div className="rounded-2xl border border-white/10 bg-black/20 p-5 text-center">
@@ -642,8 +541,6 @@ export default function OfficeBingoDashboard({
           </div>
         )}
       </section>
-
-      <CompactStatusBar event={event} round={round} language={language} />
 
       <section className="grid gap-4 xl:grid-cols-3">
         <WinnersCard winners={winners} language={language} />
