@@ -69,7 +69,7 @@ type LeaderboardRow = {
 const copy = {
   en: {
     officeBingo: "Office Bingo",
-    hostDashboard: "Host dashboard",
+    manageBingo: "Manage bingo",
     openHostDashboard: "Open host dashboard",
     hostSetupTitle: "Office Bingo is not set up yet",
     hostSetupDescription:
@@ -86,7 +86,6 @@ const copy = {
     noCardTitle: "No card yet",
     noCardDescription:
       "The host still needs to start or update cards for this round.",
-    gameStatus: "Game status",
     status: "Status",
     target: "Target",
     round: "Round",
@@ -115,7 +114,7 @@ const copy = {
   },
   nl: {
     officeBingo: "Office Bingo",
-    hostDashboard: "Host dashboard",
+    manageBingo: "Manage bingo",
     openHostDashboard: "Open host dashboard",
     hostSetupTitle: "Office Bingo is nog niet ingesteld",
     hostSetupDescription:
@@ -132,7 +131,6 @@ const copy = {
     noCardTitle: "Nog geen kaart",
     noCardDescription:
       "De host moet nog kaarten starten of updaten voor deze ronde.",
-    gameStatus: "Spelstatus",
     status: "Status",
     target: "Doel",
     round: "Ronde",
@@ -298,12 +296,37 @@ function BingoCardPreview({
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function CompactStatusBar({
+  event,
+  round,
+  language,
+}: {
+  event: OfficeBingoDashboardEvent;
+  round: OfficeBingoDashboardRound;
+  language: Language;
+}) {
+  const t = copy[language];
+
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-      <span className="text-xs font-bold text-zinc-400">{label}</span>
-      <span className="text-right text-sm font-black text-white">{value}</span>
-    </div>
+    <section className="rounded-[1.25rem] border border-white/10 bg-white/[0.035] px-4 py-3 backdrop-blur-xl">
+      <div className="flex flex-wrap items-center gap-2 text-xs font-black">
+        <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1.5 text-emerald-100">
+          {getStatusLabel(round.status, language)}
+        </span>
+
+        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-zinc-300">
+          {t.round}: {round.title}
+        </span>
+
+        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-zinc-300">
+          {t.plan}: {event.plan}
+        </span>
+
+        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-zinc-300">
+          {t.target}: {event.target_name ?? "-"}
+        </span>
+      </div>
+    </section>
   );
 }
 
@@ -338,6 +361,86 @@ function CompletedBanner({
           </p>
         </div>
       ) : null}
+    </section>
+  );
+}
+
+function WinnersCard({
+  winners,
+  language,
+}: {
+  winners: OfficeBingoDashboardWinner[];
+  language: Language;
+}) {
+  const t = copy[language];
+
+  return (
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
+        {t.winners}
+      </p>
+
+      {winners.length > 0 ? (
+        <div className="mt-4 grid gap-2">
+          {winners.map((winner) => (
+            <div
+              key={winner.id}
+              className={`rounded-2xl border p-3 ${
+                winner.win_type === "full_card"
+                  ? "border-emerald-300/35 bg-emerald-300/[0.12]"
+                  : "border-white/10 bg-black/20"
+              }`}
+            >
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200">
+                {winner.win_type === "full_card" ? t.fullCard : t.lineBingo}
+              </p>
+              <p className="mt-1 text-sm font-black text-white">
+                {winner.display_name}
+              </p>
+              <p className="mt-1 text-xs font-semibold text-zinc-500">
+                {formatDateTime(winner.won_at, language)}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-3 text-sm leading-6 text-zinc-400">{t.noWinners}</p>
+      )}
+    </section>
+  );
+}
+
+function CalledMomentsCard({
+  labels,
+  language,
+}: {
+  labels: string[];
+  language: Language;
+}) {
+  const t = copy[language];
+
+  return (
+    <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
+        {t.calledMoments}
+      </p>
+
+      {labels.length > 0 ? (
+        <div className="mt-4 flex max-h-[210px] flex-wrap gap-2 overflow-y-auto pr-1">
+          {labels.map((label) => (
+            <span
+              key={label}
+              className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-100"
+            >
+              {label}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-3 text-sm leading-6 text-zinc-400">
+          {t.noCalledMoments}
+        </p>
+      )}
     </section>
   );
 }
@@ -413,47 +516,52 @@ function ChatCard({
         {t.chat}
       </p>
 
-      <div className="mt-4 flex max-h-[320px] flex-col gap-2 overflow-y-auto rounded-2xl border border-white/10 bg-black/20 p-3">
+      <div className="mt-4 min-h-[300px] max-h-[520px] overflow-y-auto rounded-[1.25rem] border border-white/10 bg-black/25 p-4">
         {messages.length > 0 ? (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className="rounded-2xl border border-white/10 bg-white/[0.04] p-3"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <p className="min-w-0 truncate text-xs font-black text-white">
-                  {message.display_name}
-                </p>
-                <p className="shrink-0 text-[10px] font-semibold text-zinc-500">
-                  {formatDateTime(message.created_at, language)}
+          <div className="flex flex-col gap-3">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className="rounded-2xl border border-white/10 bg-white/[0.045] p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="min-w-0 truncate text-sm font-black text-white">
+                    {message.display_name}
+                  </p>
+                  <p className="shrink-0 text-[11px] font-semibold text-zinc-500">
+                    {formatDateTime(message.created_at, language)}
+                  </p>
+                </div>
+
+                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-zinc-300">
+                  {message.message}
                 </p>
               </div>
-
-              <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-5 text-zinc-300">
-                {message.message}
-              </p>
-            </div>
-          ))
+            ))}
+          </div>
         ) : (
-          <p className="py-6 text-center text-sm leading-6 text-zinc-400">
-            {t.noMessages}
-          </p>
+          <div className="flex min-h-[260px] items-center justify-center text-center">
+            <p className="text-sm leading-6 text-zinc-400">{t.noMessages}</p>
+          </div>
         )}
       </div>
 
-      <form action={action} className="mt-3 flex gap-2">
+      <form
+        action={action}
+        className="mt-3 rounded-[1.25rem] border border-white/10 bg-black/20 p-2 sm:flex sm:gap-2"
+      >
         <input
           name="message"
           type="text"
           maxLength={500}
           required
           placeholder={t.messagePlaceholder}
-          className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-semibold text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50"
+          className="min-w-0 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-semibold text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50 sm:flex-1"
         />
 
         <button
           type="submit"
-          className="rounded-2xl bg-emerald-300 px-4 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
+          className="mt-2 w-full rounded-2xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200 sm:mt-0 sm:w-auto"
         >
           {t.send}
         </button>
@@ -503,7 +611,7 @@ export default function OfficeBingoDashboard({
               href={`/pools/${pool.id}/office-bingo`}
               className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
             >
-              {t.openHostDashboard}
+              {t.manageBingo}
             </Link>
           ) : null}
         </div>
@@ -536,9 +644,9 @@ export default function OfficeBingoDashboard({
             {isHost ? (
               <Link
                 href={`/pools/${pool.id}/office-bingo`}
-                className="rounded-full bg-emerald-300 px-3.5 py-1.5 text-xs font-black text-zinc-950 transition hover:bg-emerald-200"
+                className="rounded-full bg-emerald-300 px-4 py-2 text-xs font-black text-zinc-950 transition hover:bg-emerald-200"
               >
-                {t.hostDashboard}
+                {t.manageBingo}
               </Link>
             ) : null}
           </div>
@@ -560,88 +668,15 @@ export default function OfficeBingoDashboard({
         )}
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-            {t.gameStatus}
-          </p>
+      <CompactStatusBar event={event} round={round} language={language} />
 
-          <div className="mt-4 grid gap-2">
-            <InfoRow
-              label={t.status}
-              value={getStatusLabel(round.status, language)}
-            />
-            <InfoRow label={t.target} value={event.target_name ?? "-"} />
-            <InfoRow label={t.round} value={round.title} />
-            <InfoRow label={t.plan} value={event.plan} />
-          </div>
-        </section>
-
-        <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-            {t.winners}
-          </p>
-
-          {winners.length > 0 ? (
-            <div className="mt-4 grid gap-2">
-              {winners.map((winner) => (
-                <div
-                  key={winner.id}
-                  className={`rounded-2xl border p-3 ${
-                    winner.win_type === "full_card"
-                      ? "border-emerald-300/35 bg-emerald-300/[0.12]"
-                      : "border-white/10 bg-black/20"
-                  }`}
-                >
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200">
-                    {winner.win_type === "full_card"
-                      ? t.fullCard
-                      : t.lineBingo}
-                  </p>
-                  <p className="mt-1 text-sm font-black text-white">
-                    {winner.display_name}
-                  </p>
-                  <p className="mt-1 text-xs font-semibold text-zinc-500">
-                    {formatDateTime(winner.won_at, language)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-3 text-sm leading-6 text-zinc-400">
-              {t.noWinners}
-            </p>
-          )}
-        </section>
-      </section>
-
-      <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
-        <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-          {t.calledMoments}
-        </p>
-
-        {calledLabels.length > 0 ? (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {calledLabels.map((label) => (
-              <span
-                key={label}
-                className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-100"
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-3 text-sm leading-6 text-zinc-400">
-            {t.noCalledMoments}
-          </p>
-        )}
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="grid gap-4 xl:grid-cols-3">
+        <WinnersCard winners={winners} language={language} />
+        <CalledMomentsCard labels={calledLabels} language={language} />
         <LeaderboardCard rows={leaderboardRows} language={language} />
-        <ChatCard poolId={pool.id} language={language} messages={messages} />
       </section>
+
+      <ChatCard poolId={pool.id} language={language} messages={messages} />
     </div>
   );
 }
