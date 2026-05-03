@@ -83,12 +83,13 @@ const copy = {
     hostDashboardDescription:
       "Manage rounds, cards, official moments and winners.",
     roundControl: "Round control",
-    setupTitle: "Create Office Bingo",
+    setupTitle: "Create free Office Bingo",
     setupDescription:
-      "Create the first free 3x3 Office Bingo round. Cards can be generated after setup.",
-    targetLabel: "Who is this bingo about?",
-    targetPlaceholder: "For example: Alex",
-    createBingo: "Create Office Bingo",
+      "Start a free 3x3 Office Bingo with a safe general office template. You can generate cards after setup.",
+    freeTemplateTitle: "General Office Bingo",
+    freeTemplateDescription:
+      "Includes general office moments such as coffee, late arrivals, forgotten items and harmless office chaos.",
+    createBingo: "Start free Office Bingo",
     memberNoticeTitle: "Host controls are hidden",
     memberNoticeDescription:
       "Only the pool host can create cards and mark official moments. Go back to the pool dashboard to view your card.",
@@ -141,12 +142,13 @@ const copy = {
     hostDashboardDescription:
       "Beheer rondes, kaarten, officiële momenten en winnaars.",
     roundControl: "Rondebeheer",
-    setupTitle: "Office Bingo aanmaken",
+    setupTitle: "Gratis Office Bingo aanmaken",
     setupDescription:
-      "Maak de eerste gratis 3x3 Office Bingo ronde aan. Daarna kun je kaarten genereren.",
-    targetLabel: "Over wie gaat deze bingo?",
-    targetPlaceholder: "Bijvoorbeeld: Alex",
-    createBingo: "Office Bingo aanmaken",
+      "Start een gratis 3x3 Office Bingo met een veilige algemene kantoor-template. Daarna kun je kaarten genereren.",
+    freeTemplateTitle: "Algemene Office Bingo",
+    freeTemplateDescription:
+      "Met algemene kantoormomenten zoals koffie, te laat binnenkomen, iets vergeten en onschuldige kantoorchaos.",
+    createBingo: "Gratis Office Bingo starten",
     memberNoticeTitle: "Hostbeheer is verborgen",
     memberNoticeDescription:
       "Alleen de poule host kan kaarten maken en officiële momenten afvinken. Ga terug naar het pouledashboard om je kaart te bekijken.",
@@ -568,23 +570,20 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
                     description={t.setupDescription}
                   />
 
+                  <div className="mt-5 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4 sm:max-w-xl">
+                    <p className="text-sm font-black text-emerald-100">
+                      {t.freeTemplateTitle}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-emerald-50/75">
+                      {t.freeTemplateDescription}
+                    </p>
+                  </div>
+
                   <form
                     action={createFreeOfficeBingoAction.bind(null, pool.id)}
-                    className="mt-5 grid gap-3 sm:max-w-xl"
+                    className="mt-4 grid gap-3 sm:max-w-xl"
                   >
-                    <label className="grid gap-2">
-                      <span className="text-sm font-bold text-zinc-300">
-                        {t.targetLabel}
-                      </span>
-                      <input
-                        name="targetName"
-                        type="text"
-                        required
-                        maxLength={60}
-                        placeholder={t.targetPlaceholder}
-                        className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-semibold text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/50"
-                      />
-                    </label>
+                    <input type="hidden" name="targetName" value="" />
 
                     <button
                       type="submit"

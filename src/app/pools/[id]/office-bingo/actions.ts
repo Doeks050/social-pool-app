@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase";
 import {
   getFreeOfficeBingoLabels,
   getOfficeBingoExpiryDate,
+  getOfficeBingoPlanLimits,
   type OfficeBingoPlan,
 } from "@/lib/office-bingo";
 import {
@@ -103,6 +104,26 @@ function getFormString(formData: FormData, key: string) {
   const value = formData.get(key);
 
   return typeof value === "string" ? value.trim() : "";
+}
+
+function getPlanLimitMessage(plan: OfficeBingoPlan, language: "en" | "nl") {
+  const limits = getOfficeBingoPlanLimits(plan);
+
+  if (language === "nl") {
+    return `Deze ${limits.label.nl} Office Bingo ondersteunt maximaal ${limits.maxMembers} deelnemers.`;
+  }
+
+  return `This ${limits.label.en} Office Bingo supports up to ${limits.maxMembers} members.`;
+}
+
+function getMaxRoundsMessage(plan: OfficeBingoPlan, language: "en" | "nl") {
+  const limits = getOfficeBingoPlanLimits(plan);
+
+  if (language === "nl") {
+    return `Deze ${limits.label.nl} Office Bingo ondersteunt maximaal ${limits.maxRounds} ronde.`;
+  }
+
+  return `This ${limits.label.en} Office Bingo supports up to ${limits.maxRounds} round.`;
 }
 
 async function getCurrentRound(poolId: string) {
@@ -256,6 +277,7 @@ export async function createFreeOfficeBingoAction(
 
 export async function generateOfficeBingoCardsAction(poolId: string) {
   const { supabase } = await assertPoolAdmin(poolId);
+  const language = await getLanguage();
 
   const { event, round } = await getCurrentRound(poolId);
 
@@ -267,6 +289,8 @@ export async function generateOfficeBingoCardsAction(poolId: string) {
     throw new Error("Deze Office Bingo ronde is al afgerond.");
   }
 
+  const limits = getOfficeBingoPlanLimits(event.plan);
+
   const { data: members } = await supabase
     .from("pool_members")
     .select("user_id, role")
@@ -277,6 +301,14 @@ export async function generateOfficeBingoCardsAction(poolId: string) {
 
   if (typedMembers.length === 0) {
     throw new Error("Er zijn nog geen deelnemers in deze poule.");
+  }
+
+  if (typedMembers.length > limits.maxMembers) {
+    throw new Error(getPlanLimitMessage(event.plan, language));
+  }
+
+  if (!limits.allowedGridSizes.includes(round.grid_size)) {
+    throw new Error("Deze kaartgrootte is niet beschikbaar voor dit pakket.");
   }
 
   const { data: items } = await supabase
@@ -605,6 +637,12 @@ export async function createNextOfficeBingoRoundAction(poolId: string) {
     throw new Error(
       "Je kunt pas een nieuwe ronde starten als de huidige ronde is afgerond."
     );
+  }
+
+  const limits = getOfficeBingoPlanLimits(event.plan);
+
+  if (round.round_number >= limits.maxRounds) {
+    throw new Error(getMaxRoundsMessage(event.plan, language));
   }
 
   const { data: currentItems } = await supabase
