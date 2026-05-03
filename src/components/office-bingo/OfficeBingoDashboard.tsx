@@ -1,4 +1,5 @@
 import type { Language } from "@/lib/i18n";
+import OfficeBingoRoundHistory from "@/components/office-bingo/OfficeBingoRoundHistory";
 import { sendOfficeBingoMessageAction } from "@/app/pools/[id]/office-bingo/actions";
 
 export type OfficeBingoDashboardPool = {
@@ -44,6 +45,22 @@ export type OfficeBingoDashboardMessage = {
   created_at: string;
 };
 
+export type OfficeBingoDashboardRoundHistoryRound = {
+  id: string;
+  round_number: number;
+  title: string;
+  status: string;
+  created_at: string | null;
+};
+
+export type OfficeBingoDashboardRoundHistoryWinner = {
+  round_id: string;
+  user_id: string;
+  display_name: string;
+  win_type: "line" | "full_card";
+  won_at: string;
+};
+
 export type OfficeBingoDashboardProps = {
   pool: OfficeBingoDashboardPool;
   language: Language;
@@ -55,6 +72,8 @@ export type OfficeBingoDashboardProps = {
   winners: OfficeBingoDashboardWinner[];
   messages: OfficeBingoDashboardMessage[];
   cardCells: OfficeBingoDashboardCardCell[];
+  roundHistory: OfficeBingoDashboardRoundHistoryRound[];
+  roundHistoryWinners: OfficeBingoDashboardRoundHistoryWinner[];
 };
 
 type LeaderboardRow = {
@@ -479,6 +498,8 @@ export default function OfficeBingoDashboard({
   winners,
   messages,
   cardCells,
+  roundHistory,
+  roundHistoryWinners,
 }: OfficeBingoDashboardProps) {
   const t = copy[language];
   const calledSet = new Set(calledItemIds);
@@ -547,6 +568,13 @@ export default function OfficeBingoDashboard({
         <CalledMomentsCard labels={calledLabels} language={language} />
         <LeaderboardCard rows={leaderboardRows} language={language} />
       </section>
+
+      <OfficeBingoRoundHistory
+        language={language}
+        rounds={roundHistory}
+        currentRoundId={round.id}
+        winners={roundHistoryWinners}
+      />
 
       <ChatCard poolId={pool.id} language={language} messages={messages} />
     </div>
