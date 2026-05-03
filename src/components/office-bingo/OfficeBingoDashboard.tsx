@@ -219,14 +219,8 @@ function getLeaderboardRows(winners: OfficeBingoDashboardWinner[]) {
   }
 
   return [...rowsMap.values()].sort((a, b) => {
-    if (b.points !== a.points) {
-      return b.points - a.points;
-    }
-
-    if (b.fullCardWins !== a.fullCardWins) {
-      return b.fullCardWins - a.fullCardWins;
-    }
-
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.fullCardWins !== a.fullCardWins) return b.fullCardWins - a.fullCardWins;
     return b.lineWins - a.lineWins;
   });
 }
@@ -241,28 +235,65 @@ function BingoCardPreview({
   gridSize: number;
 }) {
   return (
-    <div
-      className="grid gap-2"
-      style={{
-        gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
-      }}
-    >
-      {cells.map((cell) => {
-        const isCalled = calledItemIds.has(cell.item_id);
+    <div className="mx-auto w-full max-w-[520px]">
+      <div className="overflow-hidden rounded-[1.75rem] border border-amber-300/60 bg-gradient-to-b from-[#ffe790] to-[#f3c84f] p-3 shadow-[0_24px_60px_rgba(0,0,0,0.32)] sm:p-4">
+        <div className="mb-3 rounded-[1.25rem] border border-white/10 bg-[#07150f] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <div className="grid grid-cols-[46px_1fr_46px] items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-300/30 bg-white">
+              <img
+                src="/brand/poolr-icon.png"
+                alt="Poolr"
+                className="h-8 w-8 object-contain"
+              />
+            </div>
 
-        return (
-          <div
-            key={cell.id}
-            className={`flex aspect-square items-center justify-center rounded-2xl border p-2 text-center text-[10px] font-black leading-tight sm:text-xs ${
-              isCalled
-                ? "border-emerald-300/45 bg-emerald-300/[0.16] text-emerald-50 shadow-[0_0_18px_rgba(110,231,183,0.10)]"
-                : "border-white/10 bg-black/25 text-zinc-200"
-            }`}
-          >
-            {cell.label}
+            <div className="min-w-0 text-center">
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-emerald-200">
+                Poolr
+              </p>
+              <h3 className="mt-0.5 text-3xl font-black uppercase leading-none tracking-[0.1em] text-white sm:text-4xl">
+                Bingo
+              </h3>
+            </div>
+
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-amber-200/50 bg-amber-100 text-xs font-black text-zinc-950">
+              {gridSize}×{gridSize}
+            </div>
           </div>
-        );
-      })}
+        </div>
+
+        <div
+          className="grid gap-2 rounded-[1.25rem] border border-amber-900/20 bg-amber-900/20 p-2"
+          style={{
+            gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
+          }}
+        >
+          {cells.map((cell) => {
+            const isCalled = calledItemIds.has(cell.item_id);
+
+            return (
+              <div
+                key={cell.id}
+                className={`relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl border p-2 text-center text-[10px] font-black leading-tight transition sm:text-xs ${
+                  isCalled
+                    ? "border-rose-400/45 bg-[#fff1a7] text-zinc-950"
+                    : "border-amber-900/15 bg-[#fff8d8] text-zinc-900"
+                }`}
+              >
+                <span className="relative z-10 line-clamp-4">{cell.label}</span>
+
+                {isCalled ? (
+                  <span className="absolute inset-[13%] rounded-full border-[5px] border-rose-500/85" />
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-3 text-center text-[10px] font-black uppercase tracking-[0.22em] text-amber-950/65">
+          Office Bingo
+        </div>
+      </div>
     </div>
   );
 }
@@ -486,106 +517,102 @@ export default function OfficeBingoDashboard({
         <CompletedBanner language={language} fullCardWinner={fullCardWinner} />
       ) : null}
 
-      <section className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-        <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-                {t.myCard}
-              </p>
-              <h2 className="mt-1 text-2xl font-black tracking-tight text-white">
-                {isCompleted ? t.completedCardIntro : t.myCardIntro}
-              </h2>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-              <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-black text-zinc-300">
-                {round.title}
-              </span>
-
-              {isHost ? (
-                <Link
-                  href={`/pools/${pool.id}/office-bingo`}
-                  className="rounded-full bg-emerald-300 px-3.5 py-1.5 text-xs font-black text-zinc-950 transition hover:bg-emerald-200"
-                >
-                  {t.hostDashboard}
-                </Link>
-              ) : null}
-            </div>
+      <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
+              {t.myCard}
+            </p>
+            <h2 className="mt-1 text-2xl font-black tracking-tight text-white">
+              {isCompleted ? t.completedCardIntro : t.myCardIntro}
+            </h2>
           </div>
 
-          {cardCells.length > 0 ? (
-            <BingoCardPreview
-              cells={cardCells}
-              calledItemIds={calledSet}
-              gridSize={round.grid_size}
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+            <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-black text-zinc-300">
+              {round.title}
+            </span>
+
+            {isHost ? (
+              <Link
+                href={`/pools/${pool.id}/office-bingo`}
+                className="rounded-full bg-emerald-300 px-3.5 py-1.5 text-xs font-black text-zinc-950 transition hover:bg-emerald-200"
+              >
+                {t.hostDashboard}
+              </Link>
+            ) : null}
+          </div>
+        </div>
+
+        {cardCells.length > 0 ? (
+          <BingoCardPreview
+            cells={cardCells}
+            calledItemIds={calledSet}
+            gridSize={round.grid_size}
+          />
+        ) : (
+          <div className="rounded-2xl border border-white/10 bg-black/20 p-5 text-center">
+            <h3 className="text-xl font-black text-white">{t.noCardTitle}</h3>
+            <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-zinc-400">
+              {t.noCardDescription}
+            </p>
+          </div>
+        )}
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
+            {t.gameStatus}
+          </p>
+
+          <div className="mt-4 grid gap-2">
+            <InfoRow
+              label={t.status}
+              value={getStatusLabel(round.status, language)}
             />
-          ) : (
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-5 text-center">
-              <h3 className="text-xl font-black text-white">
-                {t.noCardTitle}
-              </h3>
-              <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-zinc-400">
-                {t.noCardDescription}
-              </p>
-            </div>
-          )}
-        </div>
+            <InfoRow label={t.target} value={event.target_name ?? "-"} />
+            <InfoRow label={t.round} value={round.title} />
+            <InfoRow label={t.plan} value={event.plan} />
+          </div>
+        </section>
 
-        <div className="flex flex-col gap-4">
-          <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-              {t.gameStatus}
-            </p>
+        <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
+            {t.winners}
+          </p>
 
+          {winners.length > 0 ? (
             <div className="mt-4 grid gap-2">
-              <InfoRow
-                label={t.status}
-                value={getStatusLabel(round.status, language)}
-              />
-              <InfoRow label={t.target} value={event.target_name ?? "-"} />
-              <InfoRow label={t.round} value={round.title} />
-              <InfoRow label={t.plan} value={event.plan} />
+              {winners.map((winner) => (
+                <div
+                  key={winner.id}
+                  className={`rounded-2xl border p-3 ${
+                    winner.win_type === "full_card"
+                      ? "border-emerald-300/35 bg-emerald-300/[0.12]"
+                      : "border-white/10 bg-black/20"
+                  }`}
+                >
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200">
+                    {winner.win_type === "full_card"
+                      ? t.fullCard
+                      : t.lineBingo}
+                  </p>
+                  <p className="mt-1 text-sm font-black text-white">
+                    {winner.display_name}
+                  </p>
+                  <p className="mt-1 text-xs font-semibold text-zinc-500">
+                    {formatDateTime(winner.won_at, language)}
+                  </p>
+                </div>
+              ))}
             </div>
-          </section>
-
-          <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">
-              {t.winners}
+          ) : (
+            <p className="mt-3 text-sm leading-6 text-zinc-400">
+              {t.noWinners}
             </p>
-
-            {winners.length > 0 ? (
-              <div className="mt-4 grid gap-2">
-                {winners.map((winner) => (
-                  <div
-                    key={winner.id}
-                    className={`rounded-2xl border p-3 ${
-                      winner.win_type === "full_card"
-                        ? "border-emerald-300/35 bg-emerald-300/[0.12]"
-                        : "border-white/10 bg-black/20"
-                    }`}
-                  >
-                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200">
-                      {winner.win_type === "full_card"
-                        ? t.fullCard
-                        : t.lineBingo}
-                    </p>
-                    <p className="mt-1 text-sm font-black text-white">
-                      {winner.display_name}
-                    </p>
-                    <p className="mt-1 text-xs font-semibold text-zinc-500">
-                      {formatDateTime(winner.won_at, language)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="mt-3 text-sm leading-6 text-zinc-400">
-                {t.noWinners}
-              </p>
-            )}
-          </section>
-        </div>
+          )}
+        </section>
       </section>
 
       <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
