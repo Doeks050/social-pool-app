@@ -682,3 +682,28 @@ export async function createNextOfficeBingoRoundAction(poolId: string) {
   revalidatePath(`/pools/${poolId}`);
   revalidatePath(`/pools/${poolId}/office-bingo`);
 }
+export async function deleteOfficeBingoMessageAction(
+  poolId: string,
+  formData: FormData
+) {
+  const { supabase } = await assertPoolAdmin(poolId);
+
+  const messageId = getFormString(formData, "messageId");
+
+  if (!messageId) {
+    throw new Error("Geen chatbericht gekozen.");
+  }
+
+  const { error } = await supabase
+    .from("office_bingo_messages")
+    .delete()
+    .eq("id", messageId)
+    .eq("pool_id", poolId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/pools/${poolId}`);
+  revalidatePath(`/pools/${poolId}/office-bingo`);
+}

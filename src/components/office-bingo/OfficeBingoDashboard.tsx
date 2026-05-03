@@ -1,6 +1,9 @@
 import type { Language } from "@/lib/i18n";
 import OfficeBingoRoundHistory from "@/components/office-bingo/OfficeBingoRoundHistory";
-import { sendOfficeBingoMessageAction } from "@/app/pools/[id]/office-bingo/actions";
+import {
+  deleteOfficeBingoMessageAction,
+  sendOfficeBingoMessageAction,
+} from "@/app/pools/[id]/office-bingo/actions";
 
 export type OfficeBingoDashboardPool = {
   id: string;
@@ -115,6 +118,7 @@ const copy = {
     noMessages: "No messages yet.",
     messagePlaceholder: "Type a message...",
     send: "Send",
+    deleteMessage: "Delete",
   },
   nl: {
     officeBingo: "Office Bingo",
@@ -147,6 +151,7 @@ const copy = {
     noMessages: "Nog geen berichten.",
     messagePlaceholder: "Typ een bericht...",
     send: "Verstuur",
+    deleteMessage: "Verwijder",
   },
 } satisfies Record<Language, Record<string, string>>;
 
@@ -419,13 +424,16 @@ function ChatCard({
   poolId,
   language,
   messages,
+  isHost,
 }: {
   poolId: string;
   language: Language;
   messages: OfficeBingoDashboardMessage[];
+  isHost: boolean;
 }) {
   const t = copy[language];
-  const action = sendOfficeBingoMessageAction.bind(null, poolId);
+  const sendAction = sendOfficeBingoMessageAction.bind(null, poolId);
+  const deleteAction = deleteOfficeBingoMessageAction.bind(null, poolId);
 
   return (
     <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
@@ -442,15 +450,33 @@ function ChatCard({
                 className="rounded-2xl border border-white/10 bg-white/[0.045] p-4"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <p className="min-w-0 truncate text-sm font-black text-white">
-                    {message.display_name}
-                  </p>
-                  <p className="shrink-0 text-[11px] font-semibold text-zinc-500">
-                    {formatDateTime(message.created_at, language)}
-                  </p>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black text-white">
+                      {message.display_name}
+                    </p>
+                    <p className="mt-1 text-[11px] font-semibold text-zinc-500">
+                      {formatDateTime(message.created_at, language)}
+                    </p>
+                  </div>
+
+                  {isHost ? (
+                    <form action={deleteAction}>
+                      <input
+                        type="hidden"
+                        name="messageId"
+                        value={message.id}
+                      />
+                      <button
+                        type="submit"
+                        className="rounded-full border border-rose-300/20 bg-rose-300/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-rose-200 transition hover:bg-rose-300/15"
+                      >
+                        {t.deleteMessage}
+                      </button>
+                    </form>
+                  ) : null}
                 </div>
 
-                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-zinc-300">
+                <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-zinc-300">
                   {message.message}
                 </p>
               </div>
@@ -464,7 +490,7 @@ function ChatCard({
       </div>
 
       <form
-        action={action}
+        action={sendAction}
         className="mt-3 rounded-[1.25rem] border border-white/10 bg-black/20 p-2 sm:flex sm:gap-2"
       >
         <input
@@ -576,7 +602,12 @@ export default function OfficeBingoDashboard({
         winners={roundHistoryWinners}
       />
 
-      <ChatCard poolId={pool.id} language={language} messages={messages} />
+      <ChatCard
+        poolId={pool.id}
+        language={language}
+        messages={messages}
+        isHost={isHost}
+      />
     </div>
   );
 }
