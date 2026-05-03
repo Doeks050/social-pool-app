@@ -176,10 +176,6 @@ export async function createFreeOfficeBingoAction(
 
   const targetName = getFormString(formData, "targetName");
 
-  if (!targetName) {
-    throw new Error("Vul een naam in voor deze Office Bingo.");
-  }
-
   const { data: existingEvent } = await supabase
     .from("office_bingo_events")
     .select("id")
@@ -199,8 +195,8 @@ export async function createFreeOfficeBingoAction(
       pool_id: poolId,
       plan,
       status: "active",
-      target_name: targetName,
-      template_key: "colleague_free",
+      target_name: targetName || null,
+      template_key: "general_office",
       starts_at: new Date().toISOString(),
       expires_at: expiresAt.toISOString(),
       created_by: user.id,
@@ -682,6 +678,7 @@ export async function createNextOfficeBingoRoundAction(poolId: string) {
   revalidatePath(`/pools/${poolId}`);
   revalidatePath(`/pools/${poolId}/office-bingo`);
 }
+
 export async function deleteOfficeBingoMessageAction(
   poolId: string,
   formData: FormData
