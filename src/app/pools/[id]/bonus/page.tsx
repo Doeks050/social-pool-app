@@ -42,11 +42,9 @@ const copy = {
     worldCupPool: "World Cup Pool",
     bonusQuestions: "Bonus questions",
     intro:
-      "Bonus answers lock exactly when the first World Cup match kicks off. Submit them before the countdown reaches zero.",
+      "Answer the extra tournament questions before the first match starts.",
     questions: "Questions",
-    answered: "Answered",
-    maxPoints: "Max points",
-    deadlineTime: "Deadline time",
+    deadlineTime: "Deadline",
     notAvailable: "Not available",
     lockedWarning:
       "Bonus answers are locked because the first World Cup match has started.",
@@ -61,10 +59,8 @@ const copy = {
     worldCupPool: "WK-poule",
     bonusQuestions: "Bonusvragen",
     intro:
-      "Bonusantwoorden sluiten precies wanneer de eerste WK-wedstrijd begint. Vul ze in voordat de countdown op nul staat.",
+      "Beantwoord de extra toernooivragen voordat de eerste WK-wedstrijd begint.",
     questions: "Vragen",
-    answered: "Beantwoord",
-    maxPoints: "Max punten",
     deadlineTime: "Deadline",
     notAvailable: "Niet beschikbaar",
     lockedWarning:
@@ -183,15 +179,6 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
   const isLocked = lockAt ? new Date(lockAt).getTime() <= Date.now() : false;
   const formattedLockAt = lockAt ? formatDateTime(lockAt, language) : null;
 
-  const answeredCount = typedTemplates.filter((question) =>
-    answersMap.get(question.id)?.trim()
-  ).length;
-
-  const totalPoints = typedTemplates.reduce(
-    (total, question) => total + question.points_value,
-    0
-  );
-
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#030706] text-white">
       <section className="relative min-h-screen">
@@ -223,7 +210,7 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
 
               <div className="mt-4 flex flex-col gap-4">
                 <section className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-xl sm:p-5">
-                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
+                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-center">
                     <div className="min-w-0">
                       <div className="mb-3 flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-200">
@@ -232,60 +219,37 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
                         </span>
 
                         <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
-                          {t.bonusQuestions}
+                          {typedTemplates.length} {t.questions}
                         </span>
                       </div>
 
-                      <h1 className="break-words text-2xl font-black tracking-tight text-white sm:text-4xl">
-                        {pool.name}
+                      <h1 className="text-3xl font-black tracking-tight text-emerald-300 sm:text-5xl">
+                        {t.bonusQuestions}
                       </h1>
+
+                      <p className="mt-2 break-words text-base font-black text-white sm:text-xl">
+                        {pool.name}
+                      </p>
 
                       <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
                         {t.intro}
                       </p>
-
-                      <div className="mt-4 grid grid-cols-3 gap-2">
-                        <div className="rounded-2xl border border-white/10 bg-black/20 px-2 py-3 text-center sm:px-4">
-                          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500 sm:text-[10px]">
-                            {t.questions}
-                          </p>
-                          <p className="mt-1 text-lg font-black text-white sm:text-xl">
-                            {typedTemplates.length}
-                          </p>
-                        </div>
-
-                        <div className="rounded-2xl border border-white/10 bg-black/20 px-2 py-3 text-center sm:px-4">
-                          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500 sm:text-[10px]">
-                            {t.answered}
-                          </p>
-                          <p className="mt-1 text-lg font-black text-white sm:text-xl">
-                            {answeredCount}
-                          </p>
-                        </div>
-
-                        <div className="rounded-2xl border border-white/10 bg-black/20 px-2 py-3 text-center sm:px-4">
-                          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500 sm:text-[10px]">
-                            {t.maxPoints}
-                          </p>
-                          <p className="mt-1 text-lg font-black text-white sm:text-xl">
-                            {totalPoints}
-                          </p>
-                        </div>
-                      </div>
                     </div>
 
-                    <div className="grid min-w-0 gap-3">
-                      <BonusDeadlineCountdown
-                        lockAt={lockAt}
-                        isLocked={isLocked}
-                        language={language}
-                      />
+                    <div className="grid min-w-0 gap-2">
+                      <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-3">
+                        <BonusDeadlineCountdown
+                          lockAt={lockAt}
+                          isLocked={isLocked}
+                          language={language}
+                        />
+                      </div>
 
-                      <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-center">
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                      <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-center">
+                        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500">
                           {t.deadlineTime}
                         </p>
-                        <p className="mt-1 break-words text-sm font-black text-white">
+                        <p className="mt-1 break-words text-xs font-black text-white sm:text-sm">
                           {formattedLockAt ?? t.notAvailable}
                         </p>
                       </div>
