@@ -107,13 +107,13 @@ type OfficeBingoCardCellRow = {
   item_id: string;
   position_index: number;
   office_bingo_items:
-  | {
-    label: string;
-  }
-  | {
-    label: string;
-  }[]
-  | null;
+    | {
+        label: string;
+      }
+    | {
+        label: string;
+      }[]
+    | null;
 };
 
 const copy = {
@@ -216,9 +216,7 @@ function getDisplayName(
 ) {
   const profileName = profilesMap.get(userId)?.trim();
 
-  if (profileName) {
-    return profileName;
-  }
+  if (profileName) return profileName;
 
   return `${copy[language].unknownUserPrefix} ${userId.slice(0, 8)}`;
 }
@@ -226,15 +224,11 @@ function getDisplayName(
 function getInitials(name: string) {
   const cleanName = name.trim();
 
-  if (!cleanName) {
-    return "U";
-  }
+  if (!cleanName) return "U";
 
   const parts = cleanName.split(/\s+/).filter(Boolean);
 
-  if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase();
-  }
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
 
   return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
 }
@@ -296,30 +290,25 @@ function ActionCard({
   return (
     <Link
       href={href}
-      className={`group relative flex min-h-[96px] flex-col justify-center overflow-hidden rounded-2xl border p-3 text-left transition active:scale-[0.99] sm:min-h-[132px] sm:p-4 sm:text-center ${primary
-        ? "border-emerald-300/35 bg-emerald-300/[0.10] hover:border-emerald-200/50 hover:bg-emerald-300/[0.14]"
-        : "border-white/10 bg-black/20 hover:border-emerald-300/30 hover:bg-emerald-300/[0.05]"
-        }`}
+      className={`group flex min-h-24 flex-col justify-center rounded-2xl border p-3 text-left transition active:scale-[0.99] sm:min-h-32 sm:p-4 ${
+        primary
+          ? "border-emerald-300/30 bg-emerald-300/10 hover:border-emerald-200/50"
+          : "border-white/10 bg-black/20 hover:border-emerald-300/30"
+      }`}
     >
-      <div
-        className={`absolute inset-x-0 top-0 h-px ${primary
-          ? "bg-gradient-to-r from-transparent via-emerald-200/70 to-transparent"
-          : "bg-gradient-to-r from-transparent via-white/15 to-transparent"
-          }`}
-      />
-
       <p
-        className={`text-[9px] font-black uppercase tracking-[0.18em] sm:text-[10px] sm:tracking-[0.22em] ${primary ? "text-emerald-200" : "text-zinc-500"
-          }`}
+        className={`text-[9px] font-black uppercase tracking-[0.18em] sm:text-[10px] ${
+          primary ? "text-emerald-200" : "text-zinc-500"
+        }`}
       >
         {label}
       </p>
 
-      <h3 className="mt-1.5 text-base font-black tracking-tight text-white sm:mt-2 sm:text-lg">
+      <h3 className="mt-1.5 text-base font-black tracking-tight text-white sm:text-lg">
         {title}
       </h3>
 
-      <p className="mt-1 max-w-[260px] text-xs leading-5 text-zinc-400 sm:mx-auto sm:mt-2 sm:text-sm">
+      <p className="mt-1 text-xs leading-5 text-zinc-400 sm:text-sm">
         {description}
       </p>
     </Link>
@@ -341,31 +330,26 @@ function MemberCard({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border p-4 ${isCurrentUser
-        ? "border-emerald-300/35 bg-emerald-300/[0.09]"
-        : "border-white/10 bg-black/20"
-        }`}
+      className={`rounded-2xl border p-3 sm:p-4 ${
+        isCurrentUser
+          ? "border-emerald-300/30 bg-emerald-300/10"
+          : "border-white/10 bg-black/20"
+      }`}
     >
-      <div
-        className={`absolute inset-x-0 top-0 h-px ${isCurrentUser
-          ? "bg-gradient-to-r from-transparent via-emerald-200/70 to-transparent"
-          : "bg-gradient-to-r from-transparent via-white/15 to-transparent"
-          }`}
-      />
-
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-sm font-black ${isCurrentUser
-            ? "border-emerald-200/30 bg-emerald-300/15 text-emerald-100"
-            : "border-white/10 bg-white/[0.04] text-zinc-200"
-            }`}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border text-sm font-black sm:h-11 sm:w-11 ${
+            isCurrentUser
+              ? "border-emerald-200/30 bg-emerald-300/15 text-emerald-100"
+              : "border-white/10 bg-white/5 text-zinc-200"
+          }`}
         >
           {getInitials(displayName)}
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-center gap-2">
-            <p className="truncate text-sm font-black text-white">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <p className="min-w-0 break-words text-sm font-black text-white">
               {displayName}
             </p>
 
@@ -382,12 +366,13 @@ function MemberCard({
         </div>
 
         <span
-          className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${member.role === "owner"
-            ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-200"
-            : member.role === "admin"
+          className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
+            member.role === "owner"
+              ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-200"
+              : member.role === "admin"
               ? "border-sky-300/25 bg-sky-300/10 text-sky-200"
-              : "border-white/10 bg-white/[0.04] text-zinc-400"
-            }`}
+              : "border-white/10 bg-white/5 text-zinc-400"
+          }`}
         >
           {getRoleLabel(member.role, language)}
         </span>
@@ -413,9 +398,7 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/auth");
-  }
+  if (!user) redirect("/auth");
 
   const { data: appAdmin } = await supabase
     .from("app_admins")
@@ -432,9 +415,7 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!membership && !isAppAdmin) {
-    notFound();
-  }
+  if (!membership && !isAppAdmin) notFound();
 
   const { data: pool } = await supabase
     .from("pools")
@@ -444,9 +425,7 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
     .eq("id", id)
     .maybeSingle();
 
-  if (!pool) {
-    notFound();
-  }
+  if (!pool) notFound();
 
   if (
     !isAppAdmin &&
@@ -655,22 +634,22 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
+    <main className="min-h-screen overflow-x-hidden bg-[#030706] text-white">
       <section className="relative min-h-screen">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,255,160,0.13),transparent_34%),radial-gradient(circle_at_85%_38%,rgba(20,184,166,0.08),transparent_30%),linear-gradient(180deg,#04100c_0%,#030706_52%,#020403_100%)]" />
-        <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,255,160,0.12),transparent_34%),linear-gradient(180deg,#04100c_0%,#030706_52%,#020403_100%)]" />
+        <div className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
 
         <Container>
           <div className="relative z-10 py-4 sm:py-5">
-            <header className="flex items-center justify-between gap-4">
-              <Link href="/" className="flex items-center">
+            <header className="flex min-w-0 items-center justify-between gap-3">
+              <Link href="/" className="flex min-w-0 items-center">
                 <Image
                   src="/brand/poolr-logo-dark.png"
                   alt="Poolr"
                   width={340}
                   height={100}
                   priority
-                  className="h-[44px] w-auto sm:h-[64px]"
+                  className="h-11 w-auto max-w-[150px] sm:h-16 sm:max-w-none"
                 />
               </Link>
 
@@ -683,8 +662,8 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
             </header>
 
             <div className="mx-auto mt-4 flex max-w-6xl flex-col gap-4">
-              <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.045] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
-                <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+              <section className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-center">
                   <div className="min-w-0">
                     <div className="mb-3 flex flex-wrap items-center gap-2">
                       <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-200">
@@ -714,13 +693,13 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                     </p>
                   </div>
 
-                  <div className="grid gap-3 lg:min-w-[300px]">
+                  <div className="grid min-w-0 gap-3">
                     <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3">
                       <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
                         {t.joinCode}
                       </p>
 
-                      <div className="mt-1 flex items-end justify-between gap-3">
+                      <div className="mt-1 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                         <p className="min-w-0 break-all text-xl font-black tracking-[0.18em] text-white sm:text-2xl sm:tracking-widest">
                           {pool.invite_code}
                         </p>
@@ -728,7 +707,7 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                         {isWorldCup ? (
                           <Link
                             href={`/pools/${pool.id}/matches`}
-                            className="hidden rounded-xl bg-emerald-300 px-3 py-2 text-xs font-black text-zinc-950 transition hover:bg-emerald-200 sm:inline-flex"
+                            className="inline-flex w-full justify-center rounded-xl bg-emerald-300 px-3 py-2 text-xs font-black text-zinc-950 transition hover:bg-emerald-200 sm:w-auto"
                           >
                             {t.predict}
                           </Link>
@@ -754,31 +733,28 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
 
               {isOfficeBingo ? (
                 <OfficeBingoDashboard
-                  pool={{
-                    id: pool.id,
-                    name: pool.name,
-                  }}
+                  pool={{ id: pool.id, name: pool.name }}
                   language={language}
                   isHost={isPoolAdmin}
                   event={
                     officeBingoEvent
                       ? {
-                        id: officeBingoEvent.id,
-                        plan: officeBingoEvent.plan,
-                        status: officeBingoEvent.status,
-                        target_name: officeBingoEvent.target_name,
-                        expires_at: officeBingoEvent.expires_at,
-                      }
+                          id: officeBingoEvent.id,
+                          plan: officeBingoEvent.plan,
+                          status: officeBingoEvent.status,
+                          target_name: officeBingoEvent.target_name,
+                          expires_at: officeBingoEvent.expires_at,
+                        }
                       : null
                   }
                   round={
                     officeBingoRound
                       ? {
-                        id: officeBingoRound.id,
-                        title: officeBingoRound.title,
-                        status: officeBingoRound.status,
-                        grid_size: officeBingoRound.grid_size,
-                      }
+                          id: officeBingoRound.id,
+                          title: officeBingoRound.title,
+                          status: officeBingoRound.status,
+                          grid_size: officeBingoRound.grid_size,
+                        }
                       : null
                   }
                   calledItemIds={[...officeBingoCalledItemIds]}
@@ -824,7 +800,7 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                   roundHistoryWinners={officeBingoRoundHistoryWinners}
                 />
               ) : (
-                <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
+                <section className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl sm:p-5">
                   <div className="mb-4 text-center">
                     <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
                       {language === "nl" ? "Poule menu" : "Pool menu"}
@@ -846,21 +822,18 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                           description={t.matchesDescription}
                           primary
                         />
-
                         <ActionCard
                           href={`/pools/${pool.id}/bonus`}
                           label={t.bonusLabel}
                           title={t.questionsTitle}
                           description={t.questionsDescription}
                         />
-
                         <ActionCard
                           href={`/pools/${pool.id}/standings`}
                           label={t.groupsLabel}
                           title={t.standingsTitle}
                           description={t.standingsDescription}
                         />
-
                         <ActionCard
                           href={`/pools/${pool.id}/leaderboard`}
                           label={t.rankingLabel}
@@ -871,24 +844,22 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                     ) : (
                       <>
                         <ActionCard
-                          href={`/pools/${pool.id}`}
+                          href={`/pools/${pool.id}/weekends`}
                           label={t.weekendsLabel}
                           title={t.raceWeekendsTitle}
                           description={t.raceWeekendsDescription}
                           primary
                         />
-
                         <ActionCard
-                          href={`/pools/${pool.id}`}
+                          href={`/pools/${pool.id}/matches`}
                           label={t.predictLabel}
                           title={t.predictionsTitle}
                           description={t.predictionsDescription}
                         />
-
                         <ActionCard
-                          href={`/pools/${pool.id}`}
+                          href={`/pools/${pool.id}/leaderboard`}
                           label={t.rankingLabel}
-                          title={t.standingsTitle}
+                          title={t.leaderboardTitle}
                           description={t.leaderboardDescription}
                         />
                       </>
@@ -897,20 +868,30 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                 </section>
               )}
 
-              <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
-                <div className="mb-4 text-center">
-                  <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
-                    {t.poolMembers}
-                  </h2>
-                  <p className="mx-auto mt-2 max-w-xl text-sm leading-5 text-zinc-400">
+              <section className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl sm:p-5">
+                <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
+                      {t.members}
+                    </p>
+                    <h2 className="mt-1 text-2xl font-black tracking-tight text-white sm:text-3xl">
+                      {t.poolMembers}
+                    </h2>
+                  </div>
+
+                  <p className="text-sm font-semibold text-zinc-400">
                     {typedMembers.length}{" "}
                     {typedMembers.length === 1 ? t.oneMember : t.members}{" "}
                     {t.inThisPool}
                   </p>
                 </div>
 
-                {typedMembers.length > 0 ? (
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {typedMembers.length === 0 ? (
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-400">
+                    {t.noMembers}
+                  </div>
+                ) : (
+                  <div className="grid gap-3 lg:grid-cols-2">
                     {typedMembers.map((member) => {
                       const displayName = getDisplayName(
                         member.user_id,
@@ -928,12 +909,6 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                         />
                       );
                     })}
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-5 text-center">
-                    <p className="text-sm font-semibold text-zinc-400">
-                      {t.noMembers}
-                    </p>
                   </div>
                 )}
               </section>
