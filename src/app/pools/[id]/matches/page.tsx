@@ -146,13 +146,9 @@ function getMatchState(match: MatchRow): "open" | "locked" | "finished" {
     match.home_score !== null &&
     match.away_score !== null;
 
-  if (hasResult) {
-    return "finished";
-  }
+  if (hasResult) return "finished";
 
-  if (new Date(match.starts_at).getTime() <= Date.now()) {
-    return "locked";
-  }
+  if (new Date(match.starts_at).getTime() <= Date.now()) return "locked";
 
   return "open";
 }
@@ -170,9 +166,7 @@ function matchesFilter(match: MatchRow, activeFilter: MatchFilter) {
 }
 
 function getFilterHref(poolId: string, filter: MatchFilter) {
-  if (filter === "all") {
-    return `/pools/${poolId}/matches`;
-  }
+  if (filter === "all") return `/pools/${poolId}/matches`;
 
   return `/pools/${poolId}/matches?filter=${filter}`;
 }
@@ -182,7 +176,7 @@ function getFilterButtonClasses(isActive: boolean) {
     return "border-emerald-300 bg-emerald-300 text-zinc-950 shadow-[0_12px_35px_rgba(16,185,129,0.2)]";
   }
 
-  return "border-white/10 bg-white/[0.04] text-zinc-300 hover:border-emerald-300/30 hover:text-white";
+  return "border-white/10 bg-white/5 text-zinc-300 hover:border-emerald-300/30 hover:text-white";
 }
 
 function getFilterLabel(filter: MatchFilter, language: Language) {
@@ -222,9 +216,7 @@ export default async function PoolMatchesPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/auth");
-  }
+  if (!user) redirect("/auth");
 
   const { data: membership } = await supabase
     .from("pool_members")
@@ -233,9 +225,7 @@ export default async function PoolMatchesPage({
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!membership) {
-    notFound();
-  }
+  if (!membership) notFound();
 
   const { data: pool } = await supabase
     .from("pools")
@@ -243,9 +233,7 @@ export default async function PoolMatchesPage({
     .eq("id", id)
     .maybeSingle();
 
-  if (!pool || pool.game_type !== "world_cup") {
-    notFound();
-  }
+  if (!pool || pool.game_type !== "world_cup") notFound();
 
   if (
     !isPoolActiveAndPaid({
@@ -330,7 +318,7 @@ export default async function PoolMatchesPage({
   ];
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
+    <main className="min-h-screen overflow-x-hidden bg-[#030706] text-white">
       <section className="relative min-h-screen">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(34,255,160,0.13),transparent_32%),radial-gradient(circle_at_85%_45%,rgba(20,184,166,0.08),transparent_30%),linear-gradient(180deg,#04100c_0%,#030706_54%,#020403_100%)]" />
         <div className="absolute inset-0 opacity-[0.11] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
@@ -338,29 +326,29 @@ export default async function PoolMatchesPage({
         <Container>
           <div className="relative z-10 py-4 sm:py-5">
             <div className="mx-auto max-w-5xl">
-              <header className="flex items-center justify-between gap-4">
-                <Link href="/" className="flex items-center">
+              <header className="flex min-w-0 items-center justify-between gap-3">
+                <Link href="/" className="flex min-w-0 items-center">
                   <Image
                     src="/brand/poolr-logo-dark.png"
                     alt="Poolr"
                     width={340}
                     height={100}
                     priority
-                    className="h-[52px] w-auto sm:h-[64px]"
+                    className="h-11 w-auto max-w-[150px] sm:h-16 sm:max-w-none"
                   />
                 </Link>
 
                 <Link
                   href={`/pools/${pool.id}`}
-                  className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:text-sm"
+                  className="shrink-0 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:px-3.5 sm:text-sm"
                 >
                   {t.pool}
                 </Link>
               </header>
 
               <div className="mt-4 flex flex-col gap-4">
-                <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
-                  <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                <section className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
                     <div className="min-w-0">
                       <div className="mb-3 flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-200">
@@ -373,7 +361,7 @@ export default async function PoolMatchesPage({
                         </span>
                       </div>
 
-                      <h1 className="truncate text-3xl font-black tracking-tight text-white sm:text-4xl">
+                      <h1 className="break-words text-2xl font-black tracking-tight text-white sm:text-4xl">
                         {pool.name}
                       </h1>
 
@@ -382,11 +370,11 @@ export default async function PoolMatchesPage({
                       </p>
                     </div>
 
-                    <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 lg:min-w-[190px]">
+                    <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 lg:min-w-48">
                       <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
                         {t.activeFilter}
                       </p>
-                      <p className="mt-1 text-2xl font-black text-white">
+                      <p className="mt-1 text-xl font-black text-white sm:text-2xl">
                         {getFilterLabel(activeFilter, language)}
                       </p>
                       <p className="mt-1 text-sm font-semibold text-zinc-400">
@@ -397,10 +385,10 @@ export default async function PoolMatchesPage({
                 </section>
 
                 <details
-                  className="group rounded-[1.5rem] border border-white/10 bg-white/[0.04] backdrop-blur-xl"
+                  className="group rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl"
                   open={activeFilter !== "all"}
                 >
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3.5 transition hover:bg-white/[0.035] sm:px-5 [&::-webkit-details-marker]:hidden">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-white/5 sm:px-5 [&::-webkit-details-marker]:hidden">
                     <div className="min-w-0">
                       <h2 className="text-base font-black tracking-tight text-white sm:text-lg">
                         {t.filters}
@@ -418,16 +406,16 @@ export default async function PoolMatchesPage({
                   </summary>
 
                   <div className="border-t border-white/10 px-4 pb-4 pt-3 sm:px-5">
-                    <p className="mb-3 text-center text-sm leading-5 text-zinc-400">
+                    <p className="mb-3 text-sm leading-5 text-zinc-400 sm:text-center">
                       {t.filterIntro}
                     </p>
 
-                    <div className="flex flex-wrap justify-center gap-2">
+                    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center">
                       {filterOptions.map((option) => (
                         <Link
                           key={option.value}
                           href={getFilterHref(pool.id, option.value)}
-                          className={`rounded-full border px-4 py-2 text-sm font-black transition ${getFilterButtonClasses(
+                          className={`rounded-full border px-3 py-2 text-center text-xs font-black transition sm:px-4 sm:text-sm ${getFilterButtonClasses(
                             activeFilter === option.value
                           )}`}
                         >
@@ -454,7 +442,7 @@ export default async function PoolMatchesPage({
                     ))}
                   </div>
                 ) : (
-                  <section className="rounded-[1.5rem] border border-dashed border-white/15 bg-white/[0.04] p-6 text-center backdrop-blur">
+                  <section className="rounded-3xl border border-dashed border-white/15 bg-white/5 p-5 text-center backdrop-blur sm:p-6">
                     <h2 className="text-xl font-black">
                       {t.noMatchesTitle}
                     </h2>
@@ -464,7 +452,7 @@ export default async function PoolMatchesPage({
 
                     <Link
                       href={getFilterHref(pool.id, "all")}
-                      className="mt-5 inline-flex rounded-2xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
+                      className="mt-5 inline-flex w-full justify-center rounded-2xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200 sm:w-auto"
                     >
                       {t.viewAllMatches}
                     </Link>
