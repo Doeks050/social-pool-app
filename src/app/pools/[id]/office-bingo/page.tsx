@@ -102,6 +102,10 @@ const copy = {
     completedTitle: "Round completed",
     completedDescription:
       "A full card winner has been found. Prepare the next round when you are ready.",
+    freeRoundCompletedTitle: "Free round completed",
+    freeRoundCompletedDescription:
+      "The free Office Bingo includes 1 round. More rounds and editable templates will be available with paid Office Bingo.",
+    paidOfficeBingoComingSoon: "Paid Office Bingo coming soon",
     prepareNextRound: "Prepare next round",
     nextRoundDescription:
       "The next round starts as a draft with the same moments. You can review everything before generating new cards.",
@@ -161,6 +165,10 @@ const copy = {
     completedTitle: "Ronde afgerond",
     completedDescription:
       "Er is een volle kaart winnaar gevonden. Bereid de volgende ronde voor wanneer je klaar bent.",
+    freeRoundCompletedTitle: "Gratis ronde afgerond",
+    freeRoundCompletedDescription:
+      "De gratis Office Bingo bevat 1 ronde. Meer rondes en bewerkbare templates komen beschikbaar met betaalde Office Bingo.",
+    paidOfficeBingoComingSoon: "Betaalde Office Bingo komt binnenkort",
     prepareNextRound: "Nieuwe ronde voorbereiden",
     nextRoundDescription:
       "De volgende ronde start als concept met dezelfde momenten. Je kunt alles controleren voordat je nieuwe kaarten genereert.",
@@ -271,6 +279,26 @@ function SectionHeading({
           {description}
         </p>
       ) : null}
+    </div>
+  );
+}
+
+function FreeRoundCompletedNotice({
+  title,
+  description,
+  label,
+}: {
+  title: string;
+  description: string;
+  label: string;
+}) {
+  return (
+    <div className="mt-5 rounded-2xl border border-amber-300/25 bg-amber-300/10 p-4">
+      <p className="text-sm font-black text-amber-100">{title}</p>
+      <p className="mt-2 text-sm leading-6 text-amber-50/75">{description}</p>
+      <div className="mt-4 inline-flex rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-black text-zinc-300">
+        {label}
+      </div>
     </div>
   );
 }
@@ -469,6 +497,7 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
   const createNextRound = createNextOfficeBingoRoundAction.bind(null, pool.id);
   const isCompleted =
     round?.status === "completed" || event?.status === "completed";
+  const isFreePlan = event?.plan === "free";
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
@@ -613,7 +642,13 @@ export default async function OfficeBingoPage({ params }: OfficeBingoPageProps) 
                         }
                       />
 
-                      {isCompleted ? (
+                      {isCompleted && isFreePlan ? (
+                        <FreeRoundCompletedNotice
+                          title={t.freeRoundCompletedTitle}
+                          description={t.freeRoundCompletedDescription}
+                          label={t.paidOfficeBingoComingSoon}
+                        />
+                      ) : isCompleted ? (
                         <form action={createNextRound} className="mt-5">
                           <button
                             type="submit"
