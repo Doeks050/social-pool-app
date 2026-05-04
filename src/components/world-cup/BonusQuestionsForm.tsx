@@ -26,13 +26,6 @@ type BonusQuestionsFormProps = {
 const copy = {
   en: {
     bonusPredictions: "Bonus predictions",
-    intro: "These answers count toward your personal score in this pool.",
-    progress: "Progress",
-    of: "of",
-    answered: "answered",
-    complete: "Complete",
-    incomplete: "Incomplete",
-    tournamentPrediction: "Tournament prediction",
     pt: "pt",
     pts: "pts",
     chooseCountry: "Choose a country",
@@ -65,13 +58,6 @@ const copy = {
   },
   nl: {
     bonusPredictions: "Bonusvoorspellingen",
-    intro: "Deze antwoorden tellen mee voor jouw persoonlijke score in deze poule.",
-    progress: "Voortgang",
-    of: "van",
-    answered: "beantwoord",
-    complete: "Compleet",
-    incomplete: "Niet compleet",
-    tournamentPrediction: "Toernooi voorspelling",
     pt: "pt",
     pts: "ptn",
     chooseCountry: "Kies een land",
@@ -317,49 +303,11 @@ export default function BonusQuestionsForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
-        <div className="mb-4 text-center">
-          <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+      <section className="rounded-3xl border border-white/10 bg-white/4 p-4 backdrop-blur-xl sm:p-5">
+        <div className="mb-4">
+          <h2 className="text-xl font-black tracking-tight text-emerald-300 sm:text-2xl">
             {t.bonusPredictions}
           </h2>
-          <p className="mx-auto mt-2 max-w-xl text-sm leading-5 text-zinc-400">
-            {t.intro}
-          </p>
-        </div>
-
-        <div className="mb-4 rounded-2xl border border-white/10 bg-black/20 p-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
-                {t.progress}
-              </p>
-              <p className="mt-1 text-sm font-bold text-white">
-                {answeredCount} {t.of} {questions.length} {t.answered}
-              </p>
-            </div>
-
-            <div
-              className={`rounded-full border px-3 py-1.5 text-xs font-black ${
-                allAnswered
-                  ? "border-emerald-300/25 bg-emerald-300/10 text-emerald-200"
-                  : "border-white/10 bg-white/[0.04] text-zinc-400"
-              }`}
-            >
-              {allAnswered ? t.complete : t.incomplete}
-            </div>
-          </div>
-
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/[0.06]">
-            <div
-              className="h-full rounded-full bg-emerald-300 transition-all"
-              style={{
-                width:
-                  questions.length > 0
-                    ? `${Math.round((answeredCount / questions.length) * 100)}%`
-                    : "0%",
-              }}
-            />
-          </div>
         </div>
 
         <div className="grid gap-3">
@@ -373,8 +321,8 @@ export default function BonusQuestionsForm({
                 key={question.id}
                 className={`relative overflow-hidden rounded-2xl border p-4 transition sm:p-5 ${
                   hasAnswer
-                    ? "border-emerald-300/25 bg-emerald-300/[0.06]"
-                    : "border-white/10 bg-black/20 hover:border-emerald-300/25 hover:bg-white/[0.04]"
+                    ? "border-emerald-300/25 bg-emerald-300/6"
+                    : "border-white/10 bg-black/20 hover:border-emerald-300/25 hover:bg-white/4"
                 }`}
               >
                 <div
@@ -387,11 +335,7 @@ export default function BonusQuestionsForm({
 
                 <div className="mb-4 flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">
-                      {t.tournamentPrediction}
-                    </p>
-
-                    <h3 className="mt-1 text-base font-black leading-snug text-white sm:text-lg">
+                    <h3 className="text-base font-black leading-snug text-white sm:text-lg">
                       {label}
                     </h3>
                   </div>
@@ -427,13 +371,13 @@ export default function BonusQuestionsForm({
                   </select>
 
                   <div
-                    className={`rounded-xl border px-3 py-2 text-center text-xs font-black sm:min-w-[96px] ${
+                    className={`rounded-xl border px-3 py-2 text-center text-xs font-black sm:min-w-24 ${
                       hasAnswer
                         ? "border-emerald-300/25 bg-emerald-300/10 text-emerald-200"
-                        : "border-white/10 bg-white/[0.04] text-zinc-500"
+                        : "border-white/10 bg-white/4 text-zinc-500"
                     }`}
                   >
-                    {hasAnswer ? t.answered : t.open}
+                    {hasAnswer ? answeredCount > 0 && t.open ? t.open : t.open : t.open}
                   </div>
                 </div>
               </div>
@@ -454,11 +398,11 @@ export default function BonusQuestionsForm({
         </div>
       ) : null}
 
-      <div className="sticky bottom-3 z-20 rounded-[1.5rem] border border-white/10 bg-[#030706]/90 p-3 shadow-2xl backdrop-blur-xl sm:static sm:flex sm:justify-center sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
+      <div className="sticky bottom-3 z-20 rounded-3xl border border-white/10 bg-[#030706]/90 p-3 shadow-2xl backdrop-blur-xl sm:static sm:flex sm:justify-center sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
         <button
           type="submit"
           disabled={isLocked || loading}
-          className="w-full rounded-xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-[220px]"
+          className="w-full rounded-xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-56"
         >
           {isLocked
             ? t.locked
