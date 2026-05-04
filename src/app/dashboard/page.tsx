@@ -60,8 +60,6 @@ const copy = {
     joinPool: "Join pool",
     activePool: "Active pool",
     activePools: "Active pools",
-    worldCupReady: "World Cup pool ready",
-    modesInProgress: "Modes in progress",
     adminTools: "Admin tools",
     manageWorldCup: "Manage World Cup content",
     adminIntro:
@@ -73,8 +71,6 @@ const copy = {
     memberOfStart: "You are currently a member of",
     pool: "pool",
     pools: "pools",
-    joinViaCode: "Join via code",
-    newPool: "New pool",
     noPoolsYet: "No pools yet",
     noPoolsIntro:
       "Create your first Poolr competition or join an existing pool with a private invite code.",
@@ -102,8 +98,6 @@ const copy = {
     joinPool: "Poule joinen",
     activePool: "Actieve poule",
     activePools: "Actieve poules",
-    worldCupReady: "WK-poule klaar voor gebruik",
-    modesInProgress: "Speltypes in ontwikkeling",
     adminTools: "Admin tools",
     manageWorldCup: "WK-content beheren",
     adminIntro:
@@ -115,8 +109,6 @@ const copy = {
     memberOfStart: "Je bent momenteel lid van",
     pool: "poule",
     pools: "poules",
-    joinViaCode: "Join via code",
-    newPool: "Nieuwe poule",
     noPoolsYet: "Nog geen poules",
     noPoolsIntro:
       "Maak je eerste Poolr-competitie of doe mee met een bestaande poule via een privé invite code.",
@@ -138,10 +130,10 @@ const copy = {
 
 function getPoolCardClasses(gameType: string) {
   if (gameType === "world_cup") {
-    return "border-emerald-300/25 bg-emerald-300/[0.06] hover:border-emerald-300/50";
+    return "border-emerald-300/25 bg-emerald-300/10 hover:border-emerald-300/50";
   }
 
-  return "border-white/10 bg-white/[0.04] hover:border-white/20";
+  return "border-white/10 bg-white/5 hover:border-white/20";
 }
 
 function getPoolTypeBadgeClasses(gameType: string) {
@@ -149,19 +141,14 @@ function getPoolTypeBadgeClasses(gameType: string) {
     return "border-emerald-300/30 bg-emerald-300/10 text-emerald-200";
   }
 
-  return "border-white/10 bg-white/[0.04] text-zinc-300";
+  return "border-white/10 bg-white/5 text-zinc-300";
 }
 
 function getRoleLabel(role: string, language: "en" | "nl") {
   const t = copy[language];
 
-  if (role === "owner") {
-    return t.owner;
-  }
-
-  if (role === "admin") {
-    return t.admin;
-  }
+  if (role === "owner") return t.owner;
+  if (role === "admin") return t.admin;
 
   return t.member;
 }
@@ -188,17 +175,9 @@ function getPoolTypeLabel(
 ) {
   const t = copy[language];
 
-  if (gameType === "world_cup") {
-    return t.worldCupPool;
-  }
-
-  if (gameType === "office_bingo") {
-    return t.officeBingo;
-  }
-
-  if (gameType === "f1") {
-    return t.f1Pool;
-  }
+  if (gameType === "world_cup") return t.worldCupPool;
+  if (gameType === "office_bingo") return t.officeBingo;
+  if (gameType === "f1") return t.f1Pool;
 
   return fallback;
 }
@@ -210,17 +189,9 @@ function getPoolTypeShortLabel(
 ) {
   const t = copy[language];
 
-  if (gameType === "world_cup") {
-    return t.wkShort;
-  }
-
-  if (gameType === "office_bingo") {
-    return "Bingo";
-  }
-
-  if (gameType === "f1") {
-    return "F1";
-  }
+  if (gameType === "world_cup") return t.wkShort;
+  if (gameType === "office_bingo") return "Bingo";
+  if (gameType === "f1") return "F1";
 
   return fallback;
 }
@@ -271,9 +242,7 @@ export default async function DashboardPage() {
         ? membership.pools[0]
         : membership.pools;
 
-      if (!pool) {
-        return null;
-      }
+      if (!pool) return null;
 
       const typeMeta = getPoolTypeMeta(pool.game_type);
       const active = isActivePool({
@@ -311,30 +280,30 @@ export default async function DashboardPage() {
   const activePools = myPools.filter((pool) => pool.isActive);
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
+    <main className="min-h-screen overflow-x-hidden bg-[#030706] text-white">
       <section className="relative min-h-screen">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(34,255,160,0.13),transparent_32%),radial-gradient(circle_at_85%_45%,rgba(20,184,166,0.08),transparent_30%),linear-gradient(180deg,#04100c_0%,#030706_54%,#020403_100%)]" />
-        <div className="absolute inset-0 opacity-[0.11] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,255,160,0.12),transparent_34%),linear-gradient(180deg,#04100c_0%,#030706_52%,#020403_100%)]" />
+        <div className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
 
         <Container>
-          <div className="relative z-10 py-5 sm:py-6">
-            <header className="flex items-center justify-between gap-4">
-              <Link href="/" className="flex items-center">
+          <div className="relative z-10 py-4 sm:py-5">
+            <header className="flex min-w-0 items-center justify-between gap-3">
+              <Link href="/" className="flex min-w-0 items-center">
                 <Image
                   src="/brand/poolr-logo-dark.png"
                   alt="Poolr"
                   width={340}
                   height={100}
                   priority
-                  className="h-[72px] w-auto sm:h-[88px] lg:h-24"
+                  className="h-11 w-auto max-w-[150px] sm:h-16 sm:max-w-none"
                 />
               </Link>
 
-              <div className="flex items-center gap-3">
+              <div className="flex shrink-0 items-center gap-2">
                 {appAdmin ? (
                   <Link
                     href="/admin"
-                    className="hidden rounded-full border border-emerald-300/20 bg-emerald-300/10 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-300/15 sm:inline-flex"
+                    className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-xs font-bold text-emerald-100 transition hover:bg-emerald-300/15 sm:text-sm"
                   >
                     Admin
                   </Link>
@@ -343,25 +312,27 @@ export default async function DashboardPage() {
               </div>
             </header>
 
-            <div className="mt-8 grid gap-5">
-              <section className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-5 shadow-2xl backdrop-blur-xl sm:p-7">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
+            <div className="mx-auto mt-4 flex max-w-6xl flex-col gap-4">
+              <section className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300 sm:text-xs">
                       {t.dashboard}
                     </p>
-                    <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+
+                    <h1 className="mt-2 break-words text-2xl font-black tracking-tight text-white sm:text-4xl">
                       {t.welcome}, {displayName}
                     </h1>
-                    <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
+
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
                       {t.intro}
                     </p>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-2 sm:grid-cols-2 lg:shrink-0">
                     <Link
                       href="/pools/new"
-                      className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 shadow-[0_18px_60px_rgba(16,185,129,0.22)] transition hover:bg-emerald-200"
+                      className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
                     >
                       {t.createPool}
                     </Link>
@@ -375,38 +346,31 @@ export default async function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="mt-7 grid gap-3 sm:grid-cols-3">
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <p className="text-3xl font-black">{activePools.length}</p>
+                    <p className="text-2xl font-black">{activePools.length}</p>
                     <p className="mt-1 text-sm text-zinc-400">
                       {activePools.length === 1 ? t.activePool : t.activePools}
                     </p>
                   </div>
 
                   <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4">
-                    <p className="text-3xl font-black text-emerald-200">WK</p>
+                    <p className="text-2xl font-black text-emerald-200">WK</p>
                     <p className="mt-1 text-sm text-zinc-400">
-                      {t.worldCupReady}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <p className="text-3xl font-black">2</p>
-                    <p className="mt-1 text-sm text-zinc-400">
-                      {t.modesInProgress}
+                      WK-poule klaar voor gebruik
                     </p>
                   </div>
                 </div>
               </section>
 
               {appAdmin ? (
-                <section className="rounded-[2rem] border border-emerald-300/20 bg-emerald-300/[0.06] p-5 sm:p-6">
-                  <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
+                <section className="rounded-3xl border border-emerald-300/20 bg-emerald-300/10 p-4 sm:p-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300 sm:text-xs">
                         {t.adminTools}
                       </p>
-                      <h2 className="mt-2 text-2xl font-black tracking-tight">
+                      <h2 className="mt-1 text-xl font-black tracking-tight sm:text-2xl">
                         {t.manageWorldCup}
                       </h2>
                       <p className="mt-2 text-sm leading-6 text-zinc-400">
@@ -414,7 +378,7 @@ export default async function DashboardPage() {
                       </p>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-2 sm:grid-cols-2 lg:shrink-0">
                       <Link
                         href="/admin/world-cup/results"
                         className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
@@ -433,13 +397,13 @@ export default async function DashboardPage() {
                 </section>
               ) : null}
 
-              <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur sm:p-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
+              <section className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300 sm:text-xs">
                       {t.yourPools}
                     </p>
-                    <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">
+                    <h2 className="mt-1 text-xl font-black tracking-tight sm:text-3xl">
                       {t.continuePlaying}
                     </h2>
                     <p className="mt-2 text-sm leading-6 text-zinc-400">
@@ -448,31 +412,31 @@ export default async function DashboardPage() {
                     </p>
                   </div>
 
-                  <div className="hidden gap-3 sm:flex">
+                  <div className="grid gap-2 sm:flex">
                     <Link
                       href="/join"
-                      className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+                      className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-white/10"
                     >
-                      {t.joinViaCode}
+                      {t.joinPool}
                     </Link>
 
                     <Link
                       href="/pools/new"
-                      className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+                      className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-white/10"
                     >
-                      {t.newPool}
+                      {t.createPool}
                     </Link>
                   </div>
                 </div>
 
                 {myPools.length === 0 ? (
-                  <div className="mt-6 rounded-[1.5rem] border border-dashed border-white/15 bg-black/20 p-6">
-                    <h3 className="text-xl font-black">{t.noPoolsYet}</h3>
+                  <div className="mt-4 rounded-2xl border border-dashed border-white/15 bg-black/20 p-4 sm:p-5">
+                    <h3 className="text-lg font-black">{t.noPoolsYet}</h3>
                     <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-400">
                       {t.noPoolsIntro}
                     </p>
 
-                    <div className="mt-5 grid gap-3 sm:flex">
+                    <div className="mt-4 grid gap-2 sm:flex">
                       <Link
                         href="/pools/new"
                         className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
@@ -489,30 +453,30 @@ export default async function DashboardPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-6 grid gap-3">
+                  <div className="mt-4 grid gap-3">
                     {myPools.map((pool) => (
                       <Link
                         key={pool.id}
                         href={pool.href}
-                        className={`rounded-[1.5rem] border p-5 transition ${
+                        className={`rounded-2xl border p-4 transition ${
                           pool.needsPayment
-                            ? "border-amber-300/30 bg-amber-300/[0.08] hover:border-amber-300/50"
+                            ? "border-amber-300/30 bg-amber-300/10 hover:border-amber-300/50"
                             : getPoolCardClasses(pool.gameType)
                         }`}
                       >
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                          <div>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="text-xl font-black">
+                              <h3 className="min-w-0 break-words text-lg font-black sm:text-xl">
                                 {pool.name}
                               </h3>
 
-                              <span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-zinc-300">
+                              <span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-zinc-300">
                                 {getRoleLabel(pool.role, language)}
                               </span>
 
                               <span
-                                className={`rounded-full border px-2.5 py-1 text-xs font-bold uppercase tracking-wide ${getPoolTypeBadgeClasses(
+                                className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${getPoolTypeBadgeClasses(
                                   pool.gameType
                                 )}`}
                               >
@@ -520,7 +484,7 @@ export default async function DashboardPage() {
                               </span>
 
                               {pool.needsPayment ? (
-                                <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-amber-200">
+                                <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-200">
                                   {t.paymentRequired}
                                 </span>
                               ) : null}
@@ -533,9 +497,9 @@ export default async function DashboardPage() {
                             </p>
                           </div>
 
-                          <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-400">
+                          <div className="min-w-0 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-400">
                             {t.inviteCode}{" "}
-                            <span className="font-black text-white">
+                            <span className="break-all font-black text-white">
                               {pool.inviteCode}
                             </span>
                           </div>
