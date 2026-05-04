@@ -38,14 +38,9 @@ type FirstMatchRow = {
 
 const copy = {
   en: {
-    pool: "Pool",
-    worldCupPool: "World Cup Pool",
+    backToPool: "Back to pool",
     bonusQuestions: "Bonus questions",
-    intro:
-      "Answer the extra tournament questions before the first match starts.",
-    questions: "Questions",
-    deadlineTime: "Deadline",
-    notAvailable: "Not available",
+    intro: "Complete these before the first World Cup match starts.",
     lockedWarning:
       "Bonus answers are locked because the first World Cup match has started.",
     scheduleWarning:
@@ -55,14 +50,9 @@ const copy = {
       "Add active World Cup bonus questions in the bonus_question_templates table first.",
   },
   nl: {
-    pool: "Poule",
-    worldCupPool: "WK-poule",
+    backToPool: "Terug naar poule",
     bonusQuestions: "Bonusvragen",
-    intro:
-      "Beantwoord de extra toernooivragen voordat de eerste WK-wedstrijd begint.",
-    questions: "Vragen",
-    deadlineTime: "Deadline",
-    notAvailable: "Niet beschikbaar",
+    intro: "Vul deze in voordat de eerste WK-wedstrijd begint.",
     lockedWarning:
       "Bonusantwoorden zijn gesloten omdat de eerste WK-wedstrijd is begonnen.",
     scheduleWarning:
@@ -81,18 +71,6 @@ function isPoolActiveAndPaid(input: {
     input.status === "active" &&
     (input.paymentStatus === "paid" || input.paymentStatus === "waived")
   );
-}
-
-function formatDateTime(value: string, language: Language) {
-  return new Intl.DateTimeFormat(language === "nl" ? "nl-NL" : "en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "Europe/Amsterdam",
-  }).format(new Date(value));
 }
 
 export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
@@ -177,7 +155,6 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
 
   const lockAt = typedFirstMatch?.starts_at ?? null;
   const isLocked = lockAt ? new Date(lockAt).getTime() <= Date.now() : false;
-  const formattedLockAt = lockAt ? formatDateTime(lockAt, language) : null;
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#030706] text-white">
@@ -204,70 +181,40 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
                   href={`/pools/${pool.id}`}
                   className="shrink-0 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:px-3.5 sm:text-sm"
                 >
-                  {t.pool}
+                  {t.backToPool}
                 </Link>
               </header>
 
-              <div className="mt-4 flex flex-col gap-4">
-                <section className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-xl sm:p-5">
-                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-center">
-                    <div className="min-w-0">
-                      <div className="mb-3 flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-200">
-                          <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_14px_rgba(110,231,183,0.9)]" />
-                          {t.worldCupPool}
-                        </span>
+              <div className="mt-4 flex flex-col gap-3">
+                <section className="rounded-2xl border border-white/10 bg-white/5 p-3 shadow-xl backdrop-blur-xl sm:p-4">
+                  <h1 className="text-2xl font-black tracking-tight text-emerald-300 sm:text-4xl">
+                    {t.bonusQuestions}
+                  </h1>
 
-                        <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-bold text-zinc-300">
-                          {typedTemplates.length} {t.questions}
-                        </span>
-                      </div>
-
-                      <h1 className="text-3xl font-black tracking-tight text-emerald-300 sm:text-5xl">
-                        {t.bonusQuestions}
-                      </h1>
-
-                      <p className="mt-2 break-words text-base font-black text-white sm:text-xl">
-                        {pool.name}
-                      </p>
-
-                      <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-                        {t.intro}
-                      </p>
-                    </div>
-
-                    <div className="grid min-w-0 gap-2">
-                      <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-3">
-                        <BonusDeadlineCountdown
-                          lockAt={lockAt}
-                          isLocked={isLocked}
-                          language={language}
-                        />
-                      </div>
-
-                      <div className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-center">
-                        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-500">
-                          {t.deadlineTime}
-                        </p>
-                        <p className="mt-1 break-words text-xs font-black text-white sm:text-sm">
-                          {formattedLockAt ?? t.notAvailable}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {isLocked ? (
-                    <div className="mt-4 rounded-2xl border border-orange-300/25 bg-orange-300/10 px-4 py-3 text-center text-sm font-semibold text-orange-100">
-                      {t.lockedWarning}
-                    </div>
-                  ) : null}
-
-                  {!formattedLockAt ? (
-                    <div className="mt-4 rounded-2xl border border-orange-300/25 bg-orange-300/10 px-4 py-3 text-center text-sm font-semibold text-orange-100">
-                      {t.scheduleWarning}
-                    </div>
-                  ) : null}
+                  <p className="mt-1 text-sm leading-5 text-zinc-400">
+                    {t.intro}
+                  </p>
                 </section>
+
+                <div className="overflow-hidden rounded-2xl">
+                  <BonusDeadlineCountdown
+                    lockAt={lockAt}
+                    isLocked={isLocked}
+                    language={language}
+                  />
+                </div>
+
+                {isLocked ? (
+                  <div className="rounded-xl border border-orange-300/25 bg-orange-300/10 px-3 py-2 text-center text-xs font-semibold text-orange-100 sm:text-sm">
+                    {t.lockedWarning}
+                  </div>
+                ) : null}
+
+                {!lockAt ? (
+                  <div className="rounded-xl border border-orange-300/25 bg-orange-300/10 px-3 py-2 text-center text-xs font-semibold text-orange-100 sm:text-sm">
+                    {t.scheduleWarning}
+                  </div>
+                ) : null}
 
                 {typedTemplates.length > 0 ? (
                   <BonusQuestionsForm
@@ -286,7 +233,7 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
                     }))}
                   />
                 ) : (
-                  <section className="rounded-3xl border border-dashed border-white/15 bg-white/5 p-5 text-center backdrop-blur sm:p-6">
+                  <section className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-5 text-center backdrop-blur sm:p-6">
                     <h2 className="text-xl font-black">
                       {t.noQuestionsTitle}
                     </h2>
