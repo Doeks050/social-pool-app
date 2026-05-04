@@ -193,7 +193,7 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
   );
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
+    <main className="min-h-screen overflow-x-hidden bg-[#030706] text-white">
       <section className="relative min-h-screen">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(34,255,160,0.13),transparent_32%),radial-gradient(circle_at_85%_45%,rgba(20,184,166,0.08),transparent_30%),linear-gradient(180deg,#04100c_0%,#030706_54%,#020403_100%)]" />
         <div className="absolute inset-0 opacity-[0.11] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
@@ -201,29 +201,29 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
         <Container>
           <div className="relative z-10 py-4 sm:py-5">
             <div className="mx-auto max-w-5xl">
-              <header className="flex items-center justify-between gap-4">
-                <Link href="/" className="flex items-center">
+              <header className="flex min-w-0 items-center justify-between gap-3">
+                <Link href="/" className="flex min-w-0 items-center">
                   <Image
                     src="/brand/poolr-logo-dark.png"
                     alt="Poolr"
                     width={340}
                     height={100}
                     priority
-                    className="h-[52px] w-auto sm:h-[64px]"
+                    className="h-11 w-auto max-w-[150px] sm:h-16 sm:max-w-none"
                   />
                 </Link>
 
                 <Link
                   href={`/pools/${pool.id}`}
-                  className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:text-sm"
+                  className="shrink-0 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:px-3.5 sm:text-sm"
                 >
                   {t.pool}
                 </Link>
               </header>
 
               <div className="mt-4 flex flex-col gap-4">
-                <section className="rounded-[1.5rem] border border-white/10 bg-white/[0.05] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
-                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
+                <section className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
                     <div className="min-w-0">
                       <div className="mb-3 flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-xs font-bold text-emerald-200">
@@ -236,7 +236,7 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
                         </span>
                       </div>
 
-                      <h1 className="truncate text-3xl font-black tracking-tight text-white sm:text-4xl">
+                      <h1 className="break-words text-2xl font-black tracking-tight text-white sm:text-4xl">
                         {pool.name}
                       </h1>
 
@@ -244,37 +244,37 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
                         {t.intro}
                       </p>
 
-                      <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                        <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-center">
-                          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                      <div className="mt-4 grid grid-cols-3 gap-2">
+                        <div className="rounded-2xl border border-white/10 bg-black/20 px-2 py-3 text-center sm:px-4">
+                          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500 sm:text-[10px]">
                             {t.questions}
                           </p>
-                          <p className="mt-1 text-xl font-black text-white">
+                          <p className="mt-1 text-lg font-black text-white sm:text-xl">
                             {typedTemplates.length}
                           </p>
                         </div>
 
-                        <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-center">
-                          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                        <div className="rounded-2xl border border-white/10 bg-black/20 px-2 py-3 text-center sm:px-4">
+                          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500 sm:text-[10px]">
                             {t.answered}
                           </p>
-                          <p className="mt-1 text-xl font-black text-white">
+                          <p className="mt-1 text-lg font-black text-white sm:text-xl">
                             {answeredCount}
                           </p>
                         </div>
 
-                        <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-center">
-                          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                        <div className="rounded-2xl border border-white/10 bg-black/20 px-2 py-3 text-center sm:px-4">
+                          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500 sm:text-[10px]">
                             {t.maxPoints}
                           </p>
-                          <p className="mt-1 text-xl font-black text-white">
+                          <p className="mt-1 text-lg font-black text-white sm:text-xl">
                             {totalPoints}
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="grid gap-3">
+                    <div className="grid min-w-0 gap-3">
                       <BonusDeadlineCountdown
                         lockAt={lockAt}
                         isLocked={isLocked}
@@ -285,7 +285,7 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
                         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
                           {t.deadlineTime}
                         </p>
-                        <p className="mt-1 text-sm font-black text-white">
+                        <p className="mt-1 break-words text-sm font-black text-white">
                           {formattedLockAt ?? t.notAvailable}
                         </p>
                       </div>
@@ -322,7 +322,7 @@ export default async function PoolBonusPage({ params }: PoolBonusPageProps) {
                     }))}
                   />
                 ) : (
-                  <section className="rounded-[1.5rem] border border-dashed border-white/15 bg-white/[0.04] p-6 text-center backdrop-blur">
+                  <section className="rounded-3xl border border-dashed border-white/15 bg-white/5 p-5 text-center backdrop-blur sm:p-6">
                     <h2 className="text-xl font-black">
                       {t.noQuestionsTitle}
                     </h2>
