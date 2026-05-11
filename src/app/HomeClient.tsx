@@ -27,13 +27,13 @@ const copy = {
     login: "Login",
     dashboard: "Dashboard",
     primaryGuest: "Create a pool",
-    primaryUser: "Go to dashboard",
+    primaryUser: "Open dashboard",
     secondaryGuest: "Login",
-    secondaryUser: "My pools",
+    secondaryUser: "Create pool",
     heroTitle: ["Play.", "Predict.", "Compete."],
     heroText:
       "Create and join private pools for football, bingo, F1 and more. Built for friends, colleagues and every group that loves a leaderboard.",
-    chips: ["One-time entry", "Private invite links", "Mobile friendly"],
+    chips: ["Private pools", "Invite-only", "Works on mobile"],
 
     poolName: "Office World Cup 2026",
     predictionTitle: "Match predictions",
@@ -144,13 +144,13 @@ const copy = {
     login: "Inloggen",
     dashboard: "Dashboard",
     primaryGuest: "Maak een poule",
-    primaryUser: "Naar dashboard",
+    primaryUser: "Open dashboard",
     secondaryGuest: "Inloggen",
-    secondaryUser: "Mijn poules",
+    secondaryUser: "Poule maken",
     heroTitle: ["Speel.", "Voorspel.", "Win."],
     heroText:
       "Maak en speel privé-poules voor voetbal, Office Bingo, F1 en meer. Gebouwd voor vrienden, collega’s en elke groep die gek is op een ranglijst.",
-    chips: ["Eenmalige deelname", "Privé uitnodigingslinks", "Mobielvriendelijk"],
+    chips: ["Privé poules", "Alleen met uitnodiging", "Werkt op mobiel"],
 
     poolName: "Kantoor WK 2026",
     predictionTitle: "Wedstrijden voorspellen",
@@ -340,7 +340,9 @@ function PhoneMatchMockup({ t }: { t: Translation }) {
 
                     <div className="relative mb-3 flex items-center justify-between gap-3">
                       <span className="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[10px] font-black text-zinc-300">
-                        {index === 0 ? `${t.locksIn}: ${card.time}` : card.time}
+                        {index === 0
+                          ? `${t.locksIn}: ${card.time}`
+                          : card.time}
                       </span>
 
                       <span className="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[10px] font-black text-zinc-200">
@@ -464,7 +466,7 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
 
   const primaryHref = isLoggedIn ? "/dashboard" : "/auth?mode=register";
   const primaryLabel = isLoggedIn ? t.primaryUser : t.primaryGuest;
-  const secondaryHref = isLoggedIn ? "/dashboard" : "/auth";
+  const secondaryHref = isLoggedIn ? "/pools/new" : "/auth";
   const secondaryLabel = isLoggedIn ? t.secondaryUser : t.secondaryGuest;
 
   return (
@@ -545,30 +547,28 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
                   {t.heroText}
                 </p>
 
-                <div className="mt-6 flex flex-col gap-3 sm:mt-9 sm:flex-row sm:gap-4">
+                <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center">
                   <Link
                     href={primaryHref}
-                    className="rounded-2xl bg-emerald-300 px-6 py-3.5 text-center text-sm font-black text-zinc-950 shadow-[0_18px_60px_rgba(16,185,129,0.3)] transition hover:bg-emerald-200 sm:px-7 sm:py-4"
+                    className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-emerald-300 px-6 text-sm font-black text-zinc-950 shadow-[0_18px_60px_rgba(16,185,129,0.24)] transition hover:bg-emerald-200 sm:min-w-[180px]"
                   >
                     {primaryLabel}
                   </Link>
 
                   <Link
                     href={secondaryHref}
-                    className="rounded-2xl border border-white/15 bg-white/5 px-6 py-3.5 text-center text-sm font-black text-white backdrop-blur transition hover:bg-white/10 sm:px-7 sm:py-4"
+                    className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.06] px-6 text-sm font-black text-white backdrop-blur transition hover:border-white/25 hover:bg-white/10 sm:min-w-[160px]"
                   >
                     {secondaryLabel}
                   </Link>
                 </div>
 
-                <div className="mt-5 flex flex-wrap gap-2 text-xs text-zinc-400 sm:mt-7 sm:gap-3 sm:text-sm">
+                <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-zinc-400 sm:mt-6 sm:text-sm">
                   {t.chips.map((chip) => (
-                    <span
-                      key={chip}
-                      className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 sm:px-4 sm:py-2"
-                    >
-                      {chip}
-                    </span>
+                    <div key={chip} className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                      <span>{chip}</span>
+                    </div>
                   ))}
                 </div>
               </div>

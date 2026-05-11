@@ -38,9 +38,7 @@ type DashboardPool = {
   name: string;
   gameType: string;
   gameTypeLabel: string;
-  gameTypeShortLabel: string;
   inviteCode: string;
-  createdAt: string;
   role: string;
   status: string | null;
   paymentStatus: string | null;
@@ -53,98 +51,63 @@ const copy = {
   en: {
     playerFallback: "Player",
     dashboard: "Dashboard",
-    welcome: "Welcome",
-    intro:
-      "Manage your pools, join private competitions and keep track of every leaderboard from one place.",
+    welcome: "Welcome back",
+    intro: "Manage your pools and continue where you left off.",
     createPool: "Create pool",
-    joinPool: "Join pool",
-    activePool: "Active pool",
-    activePools: "Active pools",
-    adminTools: "Admin tools",
-    manageWorldCup: "Manage World Cup content",
-    adminIntro:
-      "Enter official results and manage bonus questions for all World Cup pools.",
-    results: "Results",
-    bonusQuestions: "Bonus questions",
+    joinPool: "Join with code",
     yourPools: "Your pools",
-    continuePlaying: "Continue playing",
-    memberOfStart: "You are currently a member of",
-    pool: "pool",
-    pools: "pools",
     noPoolsYet: "No pools yet",
     noPoolsIntro:
-      "Create your first Poolr competition or join an existing pool with a private invite code.",
+      "Create your first pool or join an existing one with a private code.",
     createFirstPool: "Create first pool",
-    inviteCode: "Invite code",
-    backHome: "← Back to home",
+    openPool: "Open pool",
+    inviteCode: "Code",
     profile: "Profile",
-    owner: "Owner",
     admin: "Admin",
+    owner: "Owner",
     member: "Member",
-    worldCupPool: "World Cup pool",
+    active: "Active",
+    pending: "Pending",
+    paymentRequired: "Payment required",
+    needsAttention: "Needs attention",
+    paymentRequiredDescription: "This pool still needs to be paid and activated.",
+    attentionEmpty: "Nothing needs your attention right now.",
+    manageAdmin: "Manage admin tools",
+    worldCupPool: "World Cup",
     officeBingo: "Office Bingo",
     f1Pool: "F1 Pool",
-    wkShort: "WC",
-    paymentRequired: "Payment required",
-    paymentRequiredDescription:
-      "This pool has been created, but still needs to be paid and activated.",
   },
   nl: {
     playerFallback: "Speler",
     dashboard: "Dashboard",
-    welcome: "Welkom",
-    intro:
-      "Beheer je poules, doe mee aan privécompetities en volg al je ranglijsten vanaf één plek.",
+    welcome: "Welkom terug",
+    intro: "Beheer je poules en ga verder waar je gebleven was.",
     createPool: "Poule maken",
-    joinPool: "Poule joinen",
-    activePool: "Actieve poule",
-    activePools: "Actieve poules",
-    adminTools: "Admin tools",
-    manageWorldCup: "WK-content beheren",
-    adminIntro:
-      "Vul officiële uitslagen in en beheer bonusvragen voor alle WK-poules.",
-    results: "Uitslagen",
-    bonusQuestions: "Bonusvragen",
+    joinPool: "Join met code",
     yourPools: "Jouw poules",
-    continuePlaying: "Verder spelen",
-    memberOfStart: "Je bent momenteel lid van",
-    pool: "poule",
-    pools: "poules",
     noPoolsYet: "Nog geen poules",
     noPoolsIntro:
-      "Maak je eerste Poolr-competitie of doe mee met een bestaande poule via een privé invite code.",
+      "Maak je eerste poule of doe mee met een bestaande poule via een privécode.",
     createFirstPool: "Eerste poule maken",
-    inviteCode: "Invite code",
-    backHome: "← Terug naar home",
+    openPool: "Open poule",
+    inviteCode: "Code",
     profile: "Profiel",
-    owner: "Eigenaar",
     admin: "Admin",
+    owner: "Eigenaar",
     member: "Lid",
+    active: "Actief",
+    pending: "In afwachting",
+    paymentRequired: "Betaling vereist",
+    needsAttention: "Aandacht nodig",
+    paymentRequiredDescription:
+      "Deze poule moet nog betaald en geactiveerd worden.",
+    attentionEmpty: "Er is nu niets dat je aandacht nodig heeft.",
+    manageAdmin: "Admin tools beheren",
     worldCupPool: "WK-poule",
     officeBingo: "Office Bingo",
     f1Pool: "F1-poule",
-    wkShort: "WK",
-    paymentRequired: "Betaling vereist",
-    paymentRequiredDescription:
-      "Deze poule is aangemaakt, maar nog niet betaald/geactiveerd.",
   },
 };
-
-function getPoolCardClasses(gameType: string) {
-  if (gameType === "world_cup") {
-    return "border-emerald-300/25 bg-emerald-300/10 hover:border-emerald-300/50";
-  }
-
-  return "border-white/10 bg-white/5 hover:border-white/20";
-}
-
-function getPoolTypeBadgeClasses(gameType: string) {
-  if (gameType === "world_cup") {
-    return "border-emerald-300/30 bg-emerald-300/10 text-emerald-200";
-  }
-
-  return "border-white/10 bg-white/5 text-zinc-300";
-}
 
 function getRoleLabel(role: string, language: "en" | "nl") {
   const t = copy[language];
@@ -184,18 +147,13 @@ function getPoolTypeLabel(
   return fallback;
 }
 
-function getPoolTypeShortLabel(
-  gameType: string,
-  fallback: string,
-  language: "en" | "nl"
-) {
+function getStatusLabel(pool: DashboardPool, language: "en" | "nl") {
   const t = copy[language];
 
-  if (gameType === "world_cup") return t.wkShort;
-  if (gameType === "office_bingo") return "Bingo";
-  if (gameType === "f1") return "F1";
+  if (pool.needsPayment) return t.paymentRequired;
+  if (pool.isActive) return t.active;
 
-  return fallback;
+  return t.pending;
 }
 
 export default async function DashboardPage() {
@@ -247,6 +205,7 @@ export default async function DashboardPage() {
       if (!pool) return null;
 
       const typeMeta = getPoolTypeMeta(pool.game_type);
+
       const active = isActivePool({
         status: pool.status,
         paymentStatus: pool.payment_status,
@@ -262,13 +221,7 @@ export default async function DashboardPage() {
         name: pool.name,
         gameType: pool.game_type,
         gameTypeLabel: getPoolTypeLabel(pool.game_type, typeMeta.label, language),
-        gameTypeShortLabel: getPoolTypeShortLabel(
-          pool.game_type,
-          typeMeta.shortLabel,
-          language
-        ),
         inviteCode: pool.invite_code,
-        createdAt: pool.created_at,
         role: membership.role,
         status: pool.status,
         paymentStatus: pool.payment_status,
@@ -279,16 +232,16 @@ export default async function DashboardPage() {
     })
     .filter(Boolean) as DashboardPool[];
 
-  const activePools = myPools.filter((pool) => pool.isActive);
+  const attentionPools = myPools.filter((pool) => pool.needsPayment);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#030706] text-white">
       <section className="relative min-h-screen">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,255,160,0.12),transparent_34%),linear-gradient(180deg,#04100c_0%,#030706_52%,#020403_100%)]" />
-        <div className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
+        <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:64px_64px]" />
 
         <Container>
-          <div className="relative z-10 py-4 sm:py-5">
+          <div className="relative z-10 py-4 sm:py-6">
             <header className="flex min-w-0 items-center justify-between gap-3">
               <Link href="/" className="flex min-w-0 items-center">
                 <Image
@@ -314,7 +267,7 @@ export default async function DashboardPage() {
                     href="/admin"
                     className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-xs font-bold text-emerald-100 transition hover:bg-emerald-300/15 sm:text-sm"
                   >
-                    Admin
+                    {t.admin}
                   </Link>
                 ) : null}
 
@@ -322,8 +275,8 @@ export default async function DashboardPage() {
               </div>
             </header>
 
-            <div className="mx-auto mt-4 flex max-w-6xl flex-col gap-4">
-              <section className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+            <div className="mx-auto mt-5 flex max-w-5xl flex-col gap-4 sm:mt-7">
+              <section className="rounded-3xl border border-white/10 bg-white/[0.06] p-4 shadow-2xl backdrop-blur-xl sm:p-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                   <div className="min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300 sm:text-xs">
@@ -339,7 +292,7 @@ export default async function DashboardPage() {
                     </p>
                   </div>
 
-                  <div className="grid gap-2 sm:grid-cols-2 lg:shrink-0">
+                  <div className="grid gap-2 sm:grid-cols-2 lg:w-[320px] lg:shrink-0">
                     <Link
                       href="/pools/new"
                       className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
@@ -355,94 +308,24 @@ export default async function DashboardPage() {
                     </Link>
                   </div>
                 </div>
-
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <p className="text-2xl font-black">{activePools.length}</p>
-                    <p className="mt-1 text-sm text-zinc-400">
-                      {activePools.length === 1 ? t.activePool : t.activePools}
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4">
-                    <p className="text-2xl font-black text-emerald-200">WK</p>
-                    <p className="mt-1 text-sm text-zinc-400">
-                      WK-poule klaar voor gebruik
-                    </p>
-                  </div>
-                </div>
               </section>
 
-              {appAdmin ? (
-                <section className="rounded-3xl border border-emerald-300/20 bg-emerald-300/10 p-4 sm:p-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300 sm:text-xs">
-                        {t.adminTools}
-                      </p>
-                      <h2 className="mt-1 text-xl font-black tracking-tight sm:text-2xl">
-                        {t.manageWorldCup}
-                      </h2>
-                      <p className="mt-2 text-sm leading-6 text-zinc-400">
-                        {t.adminIntro}
-                      </p>
-                    </div>
+              <section className="rounded-3xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-xl sm:p-6">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300 sm:text-xs">
+                    {t.yourPools}
+                  </p>
 
-                    <div className="grid gap-2 sm:grid-cols-2 lg:shrink-0">
-                      <Link
-                        href="/admin/world-cup/results"
-                        className="rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
-                      >
-                        {t.results}
-                      </Link>
-
-                      <Link
-                        href="/admin/world-cup/bonus"
-                        className="rounded-2xl border border-white/15 bg-white/5 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-white/10"
-                      >
-                        {t.bonusQuestions}
-                      </Link>
-                    </div>
-                  </div>
-                </section>
-              ) : null}
-
-              <section className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl sm:p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300 sm:text-xs">
-                      {t.yourPools}
-                    </p>
-                    <h2 className="mt-1 text-xl font-black tracking-tight sm:text-3xl">
-                      {t.continuePlaying}
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-zinc-400">
-                      {t.memberOfStart} {myPools.length}{" "}
-                      {myPools.length === 1 ? t.pool : t.pools}.
-                    </p>
-                  </div>
-
-                  <div className="grid gap-2 sm:flex">
-                    <Link
-                      href="/join"
-                      className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-white/10"
-                    >
-                      {t.joinPool}
-                    </Link>
-
-                    <Link
-                      href="/pools/new"
-                      className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-white/10"
-                    >
-                      {t.createPool}
-                    </Link>
-                  </div>
+                  <h2 className="mt-1 text-xl font-black tracking-tight sm:text-3xl">
+                    {myPools.length === 0
+                      ? t.noPoolsYet
+                      : `${myPools.length} ${t.yourPools.toLowerCase()}`}
+                  </h2>
                 </div>
 
                 {myPools.length === 0 ? (
                   <div className="mt-4 rounded-2xl border border-dashed border-white/15 bg-black/20 p-4 sm:p-5">
-                    <h3 className="text-lg font-black">{t.noPoolsYet}</h3>
-                    <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-400">
+                    <p className="max-w-xl text-sm leading-6 text-zinc-400">
                       {t.noPoolsIntro}
                     </p>
 
@@ -465,54 +348,86 @@ export default async function DashboardPage() {
                 ) : (
                   <div className="mt-4 grid gap-3">
                     {myPools.map((pool) => (
-                      <Link
+                      <div
                         key={pool.id}
-                        href={pool.href}
-                        className={`rounded-2xl border p-4 transition ${
-                          pool.needsPayment
-                            ? "border-amber-300/30 bg-amber-300/10 hover:border-amber-300/50"
-                            : getPoolCardClasses(pool.gameType)
-                        }`}
+                        className="rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:border-white/20 hover:bg-black/25"
                       >
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                           <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="min-w-0 break-words text-lg font-black sm:text-xl">
-                                {pool.name}
-                              </h3>
+                            <h3 className="break-words text-lg font-black tracking-tight text-white sm:text-xl">
+                              {pool.name}
+                            </h3>
 
-                              <span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-zinc-300">
-                                {getRoleLabel(pool.role, language)}
-                              </span>
-
+                            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-zinc-400">
+                              <span>{pool.gameTypeLabel}</span>
+                              <span className="text-zinc-600">•</span>
+                              <span>{getRoleLabel(pool.role, language)}</span>
+                              <span className="text-zinc-600">•</span>
                               <span
-                                className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${getPoolTypeBadgeClasses(
-                                  pool.gameType
-                                )}`}
+                                className={
+                                  pool.needsPayment
+                                    ? "text-amber-200"
+                                    : pool.isActive
+                                      ? "text-emerald-200"
+                                      : "text-zinc-300"
+                                }
                               >
-                                {pool.gameTypeShortLabel}
+                                {getStatusLabel(pool, language)}
                               </span>
-
-                              {pool.needsPayment ? (
-                                <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-200">
-                                  {t.paymentRequired}
-                                </span>
-                              ) : null}
                             </div>
 
-                            <p className="mt-2 text-sm leading-6 text-zinc-400">
-                              {pool.needsPayment
-                                ? t.paymentRequiredDescription
-                                : pool.gameTypeLabel}
+                            <p className="mt-2 text-xs text-zinc-500">
+                              {t.inviteCode}: {pool.inviteCode}
                             </p>
                           </div>
 
-                          <div className="min-w-0 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-400">
-                            {t.inviteCode}{" "}
-                            <span className="break-all font-black text-white">
-                              {pool.inviteCode}
-                            </span>
+                          <Link
+                            href={pool.href}
+                            className={
+                              pool.needsPayment
+                                ? "rounded-2xl bg-amber-300 px-5 py-3 text-center text-sm font-black text-zinc-950 transition hover:bg-amber-200 sm:w-[150px]"
+                                : "rounded-2xl bg-emerald-300 px-5 py-3 text-center text-sm font-black text-zinc-950 transition hover:bg-emerald-200 sm:w-[150px]"
+                            }
+                          >
+                            {pool.needsPayment ? t.paymentRequired : t.openPool}
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <section className="rounded-3xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-xl sm:p-6">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300 sm:text-xs">
+                  {t.needsAttention}
+                </p>
+
+                {attentionPools.length === 0 ? (
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">
+                    {t.attentionEmpty}
+                  </p>
+                ) : (
+                  <div className="mt-4 grid gap-3">
+                    {attentionPools.map((pool) => (
+                      <Link
+                        key={pool.id}
+                        href={pool.href}
+                        className="rounded-2xl border border-amber-300/25 bg-amber-300/10 p-4 transition hover:border-amber-300/45"
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <h3 className="font-black text-white">
+                              {pool.name}
+                            </h3>
+                            <p className="mt-1 text-sm text-zinc-400">
+                              {t.paymentRequiredDescription}
+                            </p>
                           </div>
+
+                          <span className="text-sm font-black text-amber-200">
+                            {t.paymentRequired}
+                          </span>
                         </div>
                       </Link>
                     ))}
@@ -520,12 +435,14 @@ export default async function DashboardPage() {
                 )}
               </section>
 
-              <Link
-                href="/"
-                className="inline-flex text-sm font-semibold text-zinc-400 transition hover:text-white"
-              >
-                {t.backHome}
-              </Link>
+              {appAdmin ? (
+                <Link
+                  href="/admin"
+                  className="rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4 text-sm font-black text-emerald-100 transition hover:bg-emerald-300/15 sm:p-5"
+                >
+                  {t.manageAdmin}
+                </Link>
+              ) : null}
             </div>
           </div>
         </Container>
