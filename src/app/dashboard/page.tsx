@@ -77,6 +77,7 @@ const copy = {
     createFirstPool: "Create first pool",
     inviteCode: "Invite code",
     backHome: "← Back to home",
+    profile: "Profile",
     owner: "Owner",
     admin: "Admin",
     member: "Member",
@@ -115,6 +116,7 @@ const copy = {
     createFirstPool: "Eerste poule maken",
     inviteCode: "Invite code",
     backHome: "← Terug naar home",
+    profile: "Profiel",
     owner: "Eigenaar",
     admin: "Admin",
     member: "Lid",
@@ -300,6 +302,13 @@ export default async function DashboardPage() {
               </Link>
 
               <div className="flex shrink-0 items-center gap-2">
+                <Link
+                  href="/profile"
+                  className="rounded-full border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-white/90 transition hover:bg-white/10 sm:text-sm"
+                >
+                  {t.profile}
+                </Link>
+
                 {appAdmin ? (
                   <Link
                     href="/admin"
@@ -308,6 +317,7 @@ export default async function DashboardPage() {
                     Admin
                   </Link>
                 ) : null}
+
                 <SignOutButton />
               </div>
             </header>
