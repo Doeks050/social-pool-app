@@ -153,14 +153,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
             <div className="mx-auto mt-5 max-w-2xl">
               <section className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur-xl sm:p-6">
-                <Link
-                  href="/dashboard"
-                  className="inline-flex text-sm font-semibold text-zinc-400 transition hover:text-white"
-                >
-                  ← Back to dashboard
-                </Link>
-
-                <p className="mt-8 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300 sm:text-xs">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300 sm:text-xs">
                   Profile
                 </p>
 

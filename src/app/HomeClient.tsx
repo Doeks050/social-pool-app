@@ -4,6 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Container from "@/components/Container";
+import {
+  LANGUAGE_COOKIE_KEY,
+  LANGUAGE_STORAGE_KEY,
+  detectBrowserLanguage,
+} from "@/lib/i18n";
 
 type Language = "en" | "nl";
 
@@ -87,14 +92,14 @@ const copy = {
       },
       {
         label: "Office Bingo",
-        status: "Coming soon",
+        status: "Under construction",
         kicker: "Social game",
         description:
           "Create social bingo games for work, parties, events and group challenges.",
       },
       {
         label: "F1 Pool",
-        status: "Coming soon",
+        status: "Under construction",
         kicker: "Race predictions",
         description:
           "Predict race weekends, sessions and season outcomes in private pools.",
@@ -204,14 +209,14 @@ const copy = {
       },
       {
         label: "Office Bingo",
-        status: "Binnenkort",
+        status: "In ontwikkeling",
         kicker: "Sociaal spel",
         description:
           "Maak sociale bingospellen voor werk, feestjes, evenementen en groepschallenges.",
       },
       {
         label: "F1-poule",
-        status: "Binnenkort",
+        status: "In ontwikkeling",
         kicker: "Racevoorspellingen",
         description:
           "Voorspel raceweekenden, sessies en seizoensuitslagen in privé-poules.",
@@ -259,6 +264,10 @@ const copy = {
 };
 
 type Translation = typeof copy.en;
+
+function setLanguageCookie(language: Language) {
+  document.cookie = `${LANGUAGE_COOKIE_KEY}=${language}; path=/; max-age=31536000; SameSite=Lax`;
+}
 
 function getStatusLabel(t: Translation, status: PredictionStatus) {
   if (status === "open") return t.stillOpen;
@@ -438,28 +447,25 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
   const [language, setLanguage] = useState<Language>("en");
 
   useEffect(() => {
-    const savedLanguage = window.localStorage.getItem("poolr-language");
+    const savedLanguage = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
 
     if (savedLanguage === "nl" || savedLanguage === "en") {
       setLanguage(savedLanguage);
+      setLanguageCookie(savedLanguage);
       return;
     }
 
-    const browserLanguage = window.navigator.language.toLowerCase();
-    const browserLanguages = window.navigator.languages.map((lang) =>
-      lang.toLowerCase()
-    );
+    const detectedLanguage = detectBrowserLanguage();
 
-    const prefersDutch =
-      browserLanguage.startsWith("nl") ||
-      browserLanguages.some((lang) => lang.startsWith("nl"));
-
-    setLanguage(prefersDutch ? "nl" : "en");
+    setLanguage(detectedLanguage);
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, detectedLanguage);
+    setLanguageCookie(detectedLanguage);
   }, []);
 
   function changeLanguage(nextLanguage: Language) {
     setLanguage(nextLanguage);
-    window.localStorage.setItem("poolr-language", nextLanguage);
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
+    setLanguageCookie(nextLanguage);
   }
 
   const t = copy[language];

@@ -19,10 +19,24 @@ import {
   getPoolPlans,
 } from "@/lib/plans";
 
+type CreateStep = "type" | "package" | "details";
+
+function isUnderConstructionPoolType(poolType: PoolType) {
+  return poolType === "office_bingo" || poolType === "f1_pool";
+}
+
+function isSelectablePoolType(poolType: PoolType, isAppAdmin: boolean) {
+  if (poolType === "world_cup") return true;
+  if (poolType === "office_bingo") return isAppAdmin;
+
+  return false;
+}
+
 export default function NewPoolPage() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
 
+  const [step, setStep] = useState<CreateStep>("type");
   const [name, setName] = useState("");
   const [gameType, setGameType] = useState<PoolType>("world_cup");
   const [planCode, setPlanCode] = useState<PoolPlanCode>("starter");
@@ -79,11 +93,33 @@ export default function NewPoolPage() {
     };
   }, [supabase]);
 
+  function choosePoolType(nextGameType: PoolType) {
+    if (!isSelectablePoolType(nextGameType, isAppAdmin)) {
+      return;
+    }
+
+    setGameType(nextGameType);
+    setError(null);
+    setStep("package");
+  }
+
+  function choosePlan(nextPlanCode: PoolPlanCode) {
+    setPlanCode(nextPlanCode);
+    setError(null);
+    setStep("details");
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const trimmedName = name.trim();
     const plan = getPoolPlan(planCode);
+
+    if (!isSelectablePoolType(gameType, isAppAdmin)) {
+      setError("This pool type is still under construction.");
+      setStep("type");
+      return;
+    }
 
     if (!trimmedName) {
       setError("Enter a pool name.");
@@ -92,6 +128,7 @@ export default function NewPoolPage() {
 
     if (!plan) {
       setError("Choose a valid package.");
+      setStep("package");
       return;
     }
 
@@ -195,16 +232,9 @@ export default function NewPoolPage() {
               </Link>
             </header>
 
-            <div className="mx-auto mt-8 grid max-w-5xl gap-5 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+            <div className="mx-auto mt-8 max-w-4xl">
               <section className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-5 shadow-2xl backdrop-blur-xl sm:p-7">
-                <Link
-                  href="/dashboard"
-                  className="inline-flex text-sm font-semibold text-zinc-400 transition hover:text-white"
-                >
-                  ← Back to dashboard
-                </Link>
-
-                <p className="mt-8 text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
                   Create pool
                 </p>
 
@@ -213,100 +243,185 @@ export default function NewPoolPage() {
                 </h1>
 
                 <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
-                  Choose a pool type and package. The pool admin pays once per
-                  pool. Members can join without paying.
+                  First choose the pool type, then select a package and finish
+                  the setup.
                 </p>
 
-                <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-                  <div>
-                    <label
-                      htmlFor="name"
-                      className="mb-2 block text-sm font-black text-white"
-                    >
-                      Pool name
-                    </label>
+                <div className="mt-6 grid gap-2 sm:grid-cols-3">
+                  <button
+                    type="button"
+                    onClick={() => setStep("type")}
+                    className={`rounded-2xl border px-4 py-3 text-left transition ${
+                      step === "type"
+                        ? "border-emerald-300/60 bg-emerald-300/10"
+                        : "border-white/10 bg-black/20 hover:bg-white/[0.04]"
+                    }`}
+                  >
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">
+                      Step 1
+                    </p>
+                    <p className="mt-1 text-sm font-black">Pool type</p>
+                  </button>
 
-                    <input
-                      id="name"
-                      name="name"
-                      type="text"
-                      required
-                      value={name}
-                      onChange={(event) => setName(event.target.value)}
-                      placeholder="Office World Cup Pool"
-                      className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-sm font-semibold text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/70"
-                    />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setStep("package")}
+                    className={`rounded-2xl border px-4 py-3 text-left transition ${
+                      step === "package"
+                        ? "border-emerald-300/60 bg-emerald-300/10"
+                        : "border-white/10 bg-black/20 hover:bg-white/[0.04]"
+                    }`}
+                  >
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">
+                      Step 2
+                    </p>
+                    <p className="mt-1 text-sm font-black">Package</p>
+                  </button>
 
-                  <div>
-                    <p className="mb-3 block text-sm font-black text-white">
-                      Pool type
+                  <button
+                    type="button"
+                    onClick={() => setStep("details")}
+                    className={`rounded-2xl border px-4 py-3 text-left transition ${
+                      step === "details"
+                        ? "border-emerald-300/60 bg-emerald-300/10"
+                        : "border-white/10 bg-black/20 hover:bg-white/[0.04]"
+                    }`}
+                  >
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">
+                      Step 3
+                    </p>
+                    <p className="mt-1 text-sm font-black">Details</p>
+                  </button>
+                </div>
+
+                {step === "type" ? (
+                  <div className="mt-8">
+                    <h2 className="text-2xl font-black tracking-tight">
+                      Choose pool type
+                    </h2>
+
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      Select what kind of pool you want to create.
                     </p>
 
-                    <div className="grid gap-3">
+                    <div className="mt-5 grid gap-3">
                       {POOL_TYPE_OPTIONS.map((option) => {
                         const isSelected = gameType === option.value;
+                        const isUnderConstruction =
+                          isUnderConstructionPoolType(option.value);
+                        const isSelectable = isSelectablePoolType(
+                          option.value,
+                          isAppAdmin
+                        );
 
                         return (
-                          <label
+                          <button
                             key={option.value}
-                            className={`cursor-pointer rounded-[1.5rem] border p-4 transition ${
-                              isSelected
+                            type="button"
+                            disabled={!isSelectable}
+                            onClick={() => choosePoolType(option.value)}
+                            className={`w-full rounded-[1.5rem] border p-4 text-left transition ${
+                              isSelected && isSelectable
                                 ? "border-emerald-300/60 bg-emerald-300/10"
-                                : "border-white/10 bg-black/20 hover:border-emerald-300/25 hover:bg-white/[0.04]"
+                                : "border-white/10 bg-black/20"
+                            } ${
+                              isSelectable
+                                ? "cursor-pointer hover:border-emerald-300/25 hover:bg-white/[0.04]"
+                                : "cursor-not-allowed opacity-60"
                             }`}
                           >
                             <div className="flex items-start gap-3">
-                              <input
-                                type="radio"
-                                name="gameType"
-                                value={option.value}
-                                checked={isSelected}
-                                onChange={() => setGameType(option.value)}
-                                className="mt-1 accent-emerald-300"
+                              <span
+                                className={`mt-1 h-4 w-4 rounded-full border ${
+                                  isSelected && isSelectable
+                                    ? "border-emerald-300 bg-emerald-300"
+                                    : "border-white/30"
+                                }`}
                               />
 
                               <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <h2 className="text-base font-black text-white sm:text-lg">
+                                  <h3 className="text-base font-black text-white sm:text-lg">
                                     {option.label}
-                                  </h2>
+                                  </h3>
 
                                   <span
                                     className={`rounded-full border px-2.5 py-1 text-xs font-black uppercase tracking-wide ${
-                                      isSelected
+                                      isSelected && isSelectable
                                         ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-200"
                                         : "border-white/10 bg-white/[0.04] text-zinc-300"
                                     }`}
                                   >
                                     {option.shortLabel}
                                   </span>
+
+                                  {isUnderConstruction ? (
+                                    <span className="rounded-full border border-amber-300/30 bg-amber-300/10 px-2.5 py-1 text-xs font-black uppercase tracking-wide text-amber-200">
+                                      Under construction
+                                    </span>
+                                  ) : null}
                                 </div>
 
                                 <p className="mt-2 text-sm leading-6 text-zinc-400">
                                   {option.description}
                                 </p>
+
+                                {!isSelectable ? (
+                                  <p className="mt-2 text-xs font-bold text-amber-200">
+                                    This pool type is not available yet.
+                                  </p>
+                                ) : null}
+
+                                {option.value === "office_bingo" &&
+                                isAppAdmin ? (
+                                  <p className="mt-2 text-xs font-bold text-emerald-200">
+                                    App admin preview enabled.
+                                  </p>
+                                ) : null}
                               </div>
                             </div>
-                          </label>
+                          </button>
                         );
                       })}
                     </div>
                   </div>
+                ) : null}
 
-                  <div>
-                    <p className="mb-3 block text-sm font-black text-white">
-                      Package
-                    </p>
+                {step === "package" ? (
+                  <div className="mt-8">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <h2 className="text-2xl font-black tracking-tight">
+                          Choose package
+                        </h2>
 
-                    <div className="grid gap-3 sm:grid-cols-2">
+                        <p className="mt-2 text-sm leading-6 text-zinc-400">
+                          Selected pool type:{" "}
+                          <span className="font-black text-white">
+                            {selectedType.label}
+                          </span>
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setStep("type")}
+                        className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+                      >
+                        Change type
+                      </button>
+                    </div>
+
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
                       {plans.map((plan) => {
                         const isSelected = planCode === plan.code;
 
                         return (
-                          <label
+                          <button
                             key={plan.code}
-                            className={`relative cursor-pointer rounded-[1.5rem] border p-4 transition ${
+                            type="button"
+                            onClick={() => choosePlan(plan.code)}
+                            className={`relative cursor-pointer rounded-[1.5rem] border p-4 text-left transition ${
                               isSelected
                                 ? "border-emerald-300/60 bg-emerald-300/10"
                                 : "border-white/10 bg-black/20 hover:border-emerald-300/25 hover:bg-white/[0.04]"
@@ -319,19 +434,18 @@ export default function NewPoolPage() {
                             ) : null}
 
                             <div className="flex items-start gap-3">
-                              <input
-                                type="radio"
-                                name="planCode"
-                                value={plan.code}
-                                checked={isSelected}
-                                onChange={() => setPlanCode(plan.code)}
-                                className="mt-1 accent-emerald-300"
+                              <span
+                                className={`mt-1 h-4 w-4 rounded-full border ${
+                                  isSelected
+                                    ? "border-emerald-300 bg-emerald-300"
+                                    : "border-white/30"
+                                }`}
                               />
 
                               <div className="min-w-0 pr-8">
-                                <h2 className="text-base font-black text-white sm:text-lg">
+                                <h3 className="text-base font-black text-white sm:text-lg">
                                   {plan.name}
-                                </h2>
+                                </h3>
 
                                 <p className="mt-2 text-2xl font-black text-emerald-200">
                                   {formatPlanPrice(plan.priceCents)}
@@ -346,7 +460,7 @@ export default function NewPoolPage() {
                                 </p>
                               </div>
                             </div>
-                          </label>
+                          </button>
                         );
                       })}
                     </div>
@@ -356,87 +470,131 @@ export default function NewPoolPage() {
                       later and only pay the difference.
                     </p>
                   </div>
+                ) : null}
 
-                  {isAppAdmin ? (
-                    <div className="rounded-[1.5rem] border border-amber-300/20 bg-amber-300/10 p-4">
-                      <label className="flex cursor-pointer items-start gap-3">
-                        <input
-                          type="checkbox"
-                          checked={activateFreeAsAdmin}
-                          onChange={(event) =>
-                            setActivateFreeAsAdmin(event.target.checked)
-                          }
-                          className="mt-1 accent-amber-300"
-                        />
+                {step === "details" ? (
+                  <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <h2 className="text-2xl font-black tracking-tight">
+                          Pool details
+                        </h2>
 
-                        <span>
-                          <span className="block text-sm font-black text-amber-100">
-                            App admin: activate this pool for free
-                          </span>
+                        <p className="mt-2 text-sm leading-6 text-zinc-400">
+                          {selectedType.label} ·{" "}
+                          {selectedPlan?.name ?? "Starter"} ·{" "}
+                          {selectedPlan
+                            ? getPlanMemberLabel(selectedPlan)
+                            : "Tot 10 deelnemers"}
+                        </p>
+                      </div>
 
-                          <span className="mt-1 block text-sm leading-6 text-amber-100/75">
-                            Use this for your own pools, colleagues, test groups
-                            or demos. Normal users will not see this option.
-                          </span>
-                        </span>
+                      <button
+                        type="button"
+                        onClick={() => setStep("package")}
+                        className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+                      >
+                        Change package
+                      </button>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="name"
+                        className="mb-2 block text-sm font-black text-white"
+                      >
+                        Pool name
                       </label>
+
+                      <input
+                        id="name"
+                        name="name"
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        placeholder="Office World Cup Pool"
+                        className="w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-sm font-semibold text-white outline-none transition placeholder:text-zinc-600 focus:border-emerald-300/70"
+                      />
                     </div>
-                  ) : null}
 
-                  <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4">
-                    <p className="text-sm font-black text-white">
-                      What happens next
-                    </p>
+                    {isAppAdmin ? (
+                      <div className="rounded-[1.5rem] border border-amber-300/20 bg-amber-300/10 p-4">
+                        <label className="flex cursor-pointer items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={activateFreeAsAdmin}
+                            onChange={(event) =>
+                              setActivateFreeAsAdmin(event.target.checked)
+                            }
+                            className="mt-1 accent-amber-300"
+                          />
 
-                    <div className="mt-3 grid gap-2 text-sm leading-6 text-zinc-400">
-                      <p>• A new {selectedType.label} pool is created</p>
-                      <p>• You become the owner automatically</p>
-                      <p>
-                        • Package: {selectedPlan?.name ?? "Starter"} —{" "}
-                        {selectedPlan
-                          ? getPlanMemberLabel(selectedPlan)
-                          : "Tot 10 deelnemers"}
+                          <span>
+                            <span className="block text-sm font-black text-amber-100">
+                              App admin: activate this pool for free
+                            </span>
+
+                            <span className="mt-1 block text-sm leading-6 text-amber-100/75">
+                              Use this for your own pools, colleagues, test
+                              groups or demos. Normal users will not see this
+                              option.
+                            </span>
+                          </span>
+                        </label>
+                      </div>
+                    ) : null}
+
+                    <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4">
+                      <p className="text-sm font-black text-white">
+                        What happens next
                       </p>
-                      {activateFreeAsAdmin && isAppAdmin ? (
-                        <p>• App admin mode: pool is activated immediately</p>
-                      ) : (
-                        <p>• After payment, the pool becomes active</p>
-                      )}
-                    </div>
-                  </div>
 
-                  {error ? (
-                    <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                      {error}
+                      <div className="mt-3 grid gap-2 text-sm leading-6 text-zinc-400">
+                        <p>• A new {selectedType.label} pool is created</p>
+                        <p>• You become the owner automatically</p>
+                        <p>
+                          • Package: {selectedPlan?.name ?? "Starter"} —{" "}
+                          {selectedPlan
+                            ? getPlanMemberLabel(selectedPlan)
+                            : "Tot 10 deelnemers"}
+                        </p>
+                        {activateFreeAsAdmin && isAppAdmin ? (
+                          <p>• App admin mode: pool is activated immediately</p>
+                        ) : (
+                          <p>• After payment, the pool becomes active</p>
+                        )}
+                      </div>
                     </div>
-                  ) : null}
 
-                  <button
-                    type="submit"
-                    disabled={loading || checkingAdmin}
-                    className="w-full rounded-2xl bg-emerald-300 px-5 py-4 text-sm font-black text-zinc-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {loading
-                      ? "Creating pool..."
-                      : activateFreeAsAdmin && isAppAdmin
-                        ? "Create free admin pool"
-                        : "Create pool and continue to payment"}
-                  </button>
-                </form>
+                    {error ? (
+                      <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                        {error}
+                      </div>
+                    ) : null}
+
+                    <button
+                      type="submit"
+                      disabled={loading || checkingAdmin}
+                      className="w-full rounded-2xl bg-emerald-300 px-5 py-4 text-sm font-black text-zinc-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {loading
+                        ? "Creating pool..."
+                        : activateFreeAsAdmin && isAppAdmin
+                          ? "Create free admin pool"
+                          : "Create pool and continue to payment"}
+                    </button>
+                  </form>
+                ) : null}
               </section>
 
-              <aside className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur sm:p-6">
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">
-                  Paid per pool
-                </p>
-
-                <div className="mt-5 grid gap-3">
+              <div className="mt-5 rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur sm:p-6">
+                <div className="grid gap-3 sm:grid-cols-3">
                   <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                     <p className="text-sm font-black text-white">
                       Admin pays once
                     </p>
                     <p className="mt-1 text-sm leading-6 text-zinc-400">
-                      The pool owner pays one time for the selected package.
                       Members can join without paying.
                     </p>
                   </div>
@@ -446,29 +604,23 @@ export default function NewPoolPage() {
                       Upgrade later
                     </p>
                     <p className="mt-1 text-sm leading-6 text-zinc-400">
-                      Need more members later? Upgrade the pool and only pay the
-                      price difference.
+                      Need more members? Upgrade later.
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <Link
+                    href="/join"
+                    className="rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:bg-white/[0.06]"
+                  >
                     <p className="text-sm font-black text-white">
-                      App admin exception
+                      Already invited?
                     </p>
                     <p className="mt-1 text-sm leading-6 text-zinc-400">
-                      App admins can activate pools for free for internal use,
-                      colleagues, demos or testing.
+                      Join an existing pool.
                     </p>
-                  </div>
+                  </Link>
                 </div>
-
-                <Link
-                  href="/join"
-                  className="mt-5 inline-flex w-full justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-black text-white transition hover:bg-white/[0.08]"
-                >
-                  Join an existing pool
-                </Link>
-              </aside>
+              </div>
             </div>
           </div>
         </Container>

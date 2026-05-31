@@ -107,13 +107,13 @@ type OfficeBingoCardCellRow = {
   item_id: string;
   position_index: number;
   office_bingo_items:
-    | {
-        label: string;
-      }
-    | {
-        label: string;
-      }[]
-    | null;
+  | {
+    label: string;
+  }
+  | {
+    label: string;
+  }[]
+  | null;
 };
 
 const copy = {
@@ -290,16 +290,14 @@ function ActionCard({
   return (
     <Link
       href={href}
-      className={`group flex min-h-24 flex-col justify-center rounded-2xl border p-3 text-left transition active:scale-[0.99] sm:min-h-32 sm:p-4 ${
-        primary
+      className={`group flex min-h-24 flex-col justify-center rounded-2xl border p-3 text-left transition active:scale-[0.99] sm:min-h-32 sm:p-4 ${primary
           ? "border-emerald-300/30 bg-emerald-300/10 hover:border-emerald-200/50"
           : "border-white/10 bg-black/20 hover:border-emerald-300/30"
-      }`}
+        }`}
     >
       <p
-        className={`text-[9px] font-black uppercase tracking-[0.18em] sm:text-[10px] ${
-          primary ? "text-emerald-200" : "text-zinc-500"
-        }`}
+        className={`text-[9px] font-black uppercase tracking-[0.18em] sm:text-[10px] ${primary ? "text-emerald-200" : "text-zinc-500"
+          }`}
       >
         {label}
       </p>
@@ -330,19 +328,17 @@ function MemberCard({
 
   return (
     <div
-      className={`rounded-2xl border p-3 sm:p-4 ${
-        isCurrentUser
+      className={`rounded-2xl border p-3 sm:p-4 ${isCurrentUser
           ? "border-emerald-300/30 bg-emerald-300/10"
           : "border-white/10 bg-black/20"
-      }`}
+        }`}
     >
       <div className="flex min-w-0 items-center gap-3">
         <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border text-sm font-black sm:h-11 sm:w-11 ${
-            isCurrentUser
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border text-sm font-black sm:h-11 sm:w-11 ${isCurrentUser
               ? "border-emerald-200/30 bg-emerald-300/15 text-emerald-100"
               : "border-white/10 bg-white/5 text-zinc-200"
-          }`}
+            }`}
         >
           {getInitials(displayName)}
         </div>
@@ -366,13 +362,12 @@ function MemberCard({
         </div>
 
         <span
-          className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
-            member.role === "owner"
+          className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${member.role === "owner"
               ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-200"
               : member.role === "admin"
-              ? "border-sky-300/25 bg-sky-300/10 text-sky-200"
-              : "border-white/10 bg-white/5 text-zinc-400"
-          }`}
+                ? "border-sky-300/25 bg-sky-300/10 text-sky-200"
+                : "border-white/10 bg-white/5 text-zinc-400"
+            }`}
         >
           {getRoleLabel(member.role, language)}
         </span>
@@ -699,19 +694,10 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                         {t.joinCode}
                       </p>
 
-                      <div className="mt-1 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                      <div className="mt-1">
                         <p className="min-w-0 break-all text-xl font-black tracking-[0.18em] text-white sm:text-2xl sm:tracking-widest">
                           {pool.invite_code}
                         </p>
-
-                        {isWorldCup ? (
-                          <Link
-                            href={`/pools/${pool.id}/matches`}
-                            className="inline-flex w-full justify-center rounded-xl bg-emerald-300 px-3 py-2 text-xs font-black text-zinc-950 transition hover:bg-emerald-200 sm:w-auto"
-                          >
-                            {t.predict}
-                          </Link>
-                        ) : null}
                       </div>
                     </div>
 
@@ -739,22 +725,22 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                   event={
                     officeBingoEvent
                       ? {
-                          id: officeBingoEvent.id,
-                          plan: officeBingoEvent.plan,
-                          status: officeBingoEvent.status,
-                          target_name: officeBingoEvent.target_name,
-                          expires_at: officeBingoEvent.expires_at,
-                        }
+                        id: officeBingoEvent.id,
+                        plan: officeBingoEvent.plan,
+                        status: officeBingoEvent.status,
+                        target_name: officeBingoEvent.target_name,
+                        expires_at: officeBingoEvent.expires_at,
+                      }
                       : null
                   }
                   round={
                     officeBingoRound
                       ? {
-                          id: officeBingoRound.id,
-                          title: officeBingoRound.title,
-                          status: officeBingoRound.status,
-                          grid_size: officeBingoRound.grid_size,
-                        }
+                        id: officeBingoRound.id,
+                        title: officeBingoRound.title,
+                        status: officeBingoRound.status,
+                        grid_size: officeBingoRound.grid_size,
+                      }
                       : null
                   }
                   calledItemIds={[...officeBingoCalledItemIds]}

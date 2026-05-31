@@ -312,14 +312,8 @@ export default async function DashboardPage() {
 
               <section className="rounded-3xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-xl sm:p-6">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300 sm:text-xs">
+                  <h2 className="text-xl font-black tracking-tight sm:text-3xl">
                     {t.yourPools}
-                  </p>
-
-                  <h2 className="mt-1 text-xl font-black tracking-tight sm:text-3xl">
-                    {myPools.length === 0
-                      ? t.noPoolsYet
-                      : `${myPools.length} ${t.yourPools.toLowerCase()}`}
                   </h2>
                 </div>
 
