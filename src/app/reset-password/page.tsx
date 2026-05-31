@@ -2,10 +2,10 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase-browser";
+import { createImplicitClient } from "@/lib/supabase-implicit-browser";
 
 export default function ResetPasswordPage() {
-  const supabase = useMemo(() => createClient(), []);
+  const supabase = useMemo(() => createImplicitClient(), []);
 
   const [password, setPassword] = useState("");
   const [passwordRepeat, setPasswordRepeat] = useState("");
@@ -19,9 +19,6 @@ export default function ResetPasswordPage() {
     async function prepareRecoverySession() {
       setCheckingSession(true);
       setErrorMessage("");
-
-      const currentUrl = new URL(window.location.href);
-      const code = currentUrl.searchParams.get("code");
 
       const hashParams = new URLSearchParams(
         window.location.hash.startsWith("#")
@@ -40,20 +37,6 @@ export default function ResetPasswordPage() {
 
         if (error) {
           setErrorMessage(error.message);
-          setCheckingSession(false);
-          return;
-        }
-
-        window.history.replaceState({}, document.title, "/reset-password");
-      }
-
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-
-        if (error) {
-          setErrorMessage(
-            "Recovery session could not be opened. Please request a new password reset email from the login page and use the newest email."
-          );
           setCheckingSession(false);
           return;
         }

@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase-browser";
+import { createImplicitClient } from "@/lib/supabase-implicit-browser";
 import { useLanguage } from "@/hooks/useLanguage";
 
 type Mode = "login" | "register";
@@ -132,7 +133,10 @@ const copy = {
 function AuthPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
   const supabase = useMemo(() => createClient(), []);
+  const implicitSupabase = useMemo(() => createImplicitClient(), []);
+
   const { language, setLanguage } = useLanguage();
 
   const t = copy[language];
@@ -175,9 +179,12 @@ function AuthPageContent() {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+    const { error } = await implicitSupabase.auth.resetPasswordForEmail(
+      email.trim(),
+      {
+        redirectTo: `${window.location.origin}/reset-password`,
+      }
+    );
 
     if (error) {
       setError(error.message);
