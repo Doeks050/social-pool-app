@@ -56,6 +56,10 @@ const copy = {
     pleaseWait: "Please wait...",
     createAccountButton: "Create account",
     loginButton: "Log in",
+    forgotPassword: "Forgot password?",
+    forgotPasswordNoEmail: "Enter your email address first.",
+    forgotPasswordSent:
+      "Password reset email sent. Check your inbox and follow the link.",
     accountCreated:
       "Account created. You can now log in and start your first pool.",
     genericError: "Something went wrong. Please try again.",
@@ -110,6 +114,10 @@ const copy = {
     pleaseWait: "Even wachten...",
     createAccountButton: "Account maken",
     loginButton: "Inloggen",
+    forgotPassword: "Wachtwoord vergeten?",
+    forgotPasswordNoEmail: "Vul eerst je e-mailadres in.",
+    forgotPasswordSent:
+      "Wachtwoord-resetmail verstuurd. Check je inbox en volg de link.",
     accountCreated:
       "Account aangemaakt. Je kunt nu inloggen en je eerste poule starten.",
     genericError: "Er ging iets mis. Probeer het opnieuw.",
@@ -154,6 +162,31 @@ function AuthPageContent() {
     setMode(nextMode);
     setError(null);
     setMessage(null);
+  }
+
+  async function handleForgotPassword() {
+    setMessage(null);
+    setError(null);
+
+    if (!email.trim()) {
+      setError(t.forgotPasswordNoEmail);
+      return;
+    }
+
+    setLoading(true);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    setMessage(t.forgotPasswordSent);
+    setLoading(false);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -395,12 +428,25 @@ function AuthPageContent() {
                       </div>
 
                       <div>
-                        <label
-                          htmlFor="password"
-                          className="mb-2 block text-sm font-semibold text-zinc-200"
-                        >
-                          {t.password}
-                        </label>
+                        <div className="mb-2 flex items-center justify-between gap-3">
+                          <label
+                            htmlFor="password"
+                            className="block text-sm font-semibold text-zinc-200"
+                          >
+                            {t.password}
+                          </label>
+
+                          {!isRegister && (
+                            <button
+                              type="button"
+                              onClick={handleForgotPassword}
+                              disabled={loading}
+                              className="text-xs font-black text-emerald-300 transition hover:text-emerald-200 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {t.forgotPassword}
+                            </button>
+                          )}
+                        </div>
 
                         <input
                           id="password"
