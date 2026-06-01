@@ -48,10 +48,6 @@ type PredictionCountRow = {
   pool_id: string;
 };
 
-type BonusAnswerCountRow = {
-  pool_id: string;
-};
-
 function getPoolTypeDisplay(poolType: string) {
   switch (poolType) {
     case "world_cup":
@@ -159,7 +155,6 @@ export default async function DashboardPage() {
   let appPools: AppPoolRow[] = [];
   let memberCounts = new Map<string, number>();
   let predictionCounts = new Map<string, number>();
-  let bonusAnswerCounts = new Map<string, number>();
 
   if (appAdmin) {
     const adminSupabase = createAdminClient();
@@ -186,17 +181,9 @@ export default async function DashboardPage() {
         .select("pool_id")
         .in("pool_id", appPoolIds);
 
-      const { data: bonusAnswers } = await adminSupabase
-        .from("bonus_question_answers")
-        .select("pool_id")
-        .in("pool_id", appPoolIds);
-
       memberCounts = countByPoolId((poolMembers ?? []) as PoolMemberCountRow[]);
       predictionCounts = countByPoolId(
         (predictions ?? []) as PredictionCountRow[]
-      );
-      bonusAnswerCounts = countByPoolId(
-        (bonusAnswers ?? []) as BonusAnswerCountRow[]
       );
     }
   }
@@ -238,8 +225,7 @@ export default async function DashboardPage() {
                     App admin tools
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    Centraal beheer voor WK-uitslagen, bonusvragen en
-                    wedstrijdstructuur.
+                    Centraal beheer voor WK-uitslagen en wedstrijdstructuur.
                   </p>
                 </div>
 
@@ -252,9 +238,6 @@ export default async function DashboardPage() {
                   </AppButton>
                   <AppButton href="/admin/world-cup/results">
                     WK resultaten
-                  </AppButton>
-                  <AppButton href="/admin/world-cup/bonus">
-                    WK bonusvragen
                   </AppButton>
                 </div>
               </div>
@@ -340,11 +323,6 @@ export default async function DashboardPage() {
                               <span className="hidden sm:inline">·</span>
                               <span>
                                 Predictions: {predictionCounts.get(pool.id) ?? 0}
-                              </span>
-                              <span className="hidden sm:inline">·</span>
-                              <span>
-                                Bonus answers:{" "}
-                                {bonusAnswerCounts.get(pool.id) ?? 0}
                               </span>
                             </div>
                           </div>
