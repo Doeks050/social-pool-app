@@ -20,22 +20,21 @@ const copy = {
   en: {
     login: "Login",
     dashboard: "Dashboard",
-    heroEyebrow: "Private prediction pools",
-    heroTitle: "Create your pool. Invite your people. Compete together.",
+    heroEyebrow: "World Cup 2026 pools",
+    heroTitle: "Create a private pool for your group.",
     heroText:
-      "Poolr is a simple platform for private prediction games with friends, colleagues and communities. Start with World Cup 2026 pools, with more game formats coming next.",
+      "Predict World Cup matches with friends, colleagues or your office team. Create a pool, share the invite code and follow the leaderboard together.",
     primaryGuest: "Create a pool",
     primaryUser: "Open dashboard",
     secondaryGuest: "Log in",
     secondaryUser: "Create pool",
-    trustOne: "Private pools",
-    trustTwo: "Mobile friendly",
-    trustThree: "Built for groups",
-    previewKicker: "World Cup 2026",
+    trustOne: "Private groups",
+    trustTwo: "Match predictions",
+    trustThree: "Live leaderboard",
+    previewKicker: "WK 2026",
     previewTitle: "Office pool",
     previewSubtitle: "Match predictions",
     previewOpen: "Open",
-    previewLocked: "Locked",
     previewSaved: "Saved",
     previewCta: "Predict now",
     matchOne: "Netherlands",
@@ -47,14 +46,14 @@ const copy = {
     rankingText: "#3 of 24 players",
     points: "35 pts",
     modulesEyebrow: "Game formats",
-    modulesTitle: "One platform. Multiple pool types.",
+    modulesTitle: "Start simple. Expand later.",
     modulesText:
-      "Start with a football prediction pool. Expand later with social games and racing formats without rebuilding the whole platform.",
+      "Poolr starts with World Cup prediction pools and is built to support more group games over time.",
     modules: [
       {
         title: "World Cup 2026",
-        status: "Launching first",
-        text: "Predict match scores, follow standings and compete in private groups.",
+        status: "Live first",
+        text: "Predict match scores, follow standings and compete in a private group.",
       },
       {
         title: "Office Bingo",
@@ -64,21 +63,21 @@ const copy = {
       {
         title: "F1 Pool",
         status: "Coming soon",
-        text: "Predict race weekends, sessions and season outcomes.",
+        text: "Predict race weekends, sessions and season results.",
       },
     ],
     stepsEyebrow: "How it works",
-    stepsTitle: "Simple setup. Clear competition.",
+    stepsTitle: "Three steps to start playing.",
     steps: [
       {
         number: "01",
         title: "Create or join",
-        text: "Start your own pool or join one with an invite link.",
+        text: "Start your own pool or join one with an invite code.",
       },
       {
         number: "02",
         title: "Predict",
-        text: "Make your picks before the deadline closes.",
+        text: "Enter your match scores before the deadline closes.",
       },
       {
         number: "03",
@@ -105,22 +104,21 @@ const copy = {
   nl: {
     login: "Inloggen",
     dashboard: "Dashboard",
-    heroEyebrow: "Privé voorspelling-poules",
-    heroTitle: "Maak je poule. Nodig je groep uit. Speel samen.",
+    heroEyebrow: "WK 2026-poules",
+    heroTitle: "Maak een privé poule voor jouw groep.",
     heroText:
-      "Poolr is een simpel platform voor privé voorspellingsspellen met vrienden, collega’s en communities. Start met WK 2026-poules, later volgen meer spelvormen.",
+      "Voorspel WK-wedstrijden met vrienden, collega’s of je kantoor. Maak een poule, deel de invite code en volg samen de ranglijst.",
     primaryGuest: "Maak een poule",
     primaryUser: "Open dashboard",
     secondaryGuest: "Inloggen",
     secondaryUser: "Poule maken",
-    trustOne: "Privé poules",
-    trustTwo: "Mobiel vriendelijk",
-    trustThree: "Voor groepen",
+    trustOne: "Privé groepen",
+    trustTwo: "Wedstrijden voorspellen",
+    trustThree: "Live ranglijst",
     previewKicker: "WK 2026",
     previewTitle: "Kantoor poule",
     previewSubtitle: "Wedstrijden voorspellen",
     previewOpen: "Open",
-    previewLocked: "Gesloten",
     previewSaved: "Opgeslagen",
     previewCta: "Voorspel nu",
     matchOne: "Nederland",
@@ -132,14 +130,14 @@ const copy = {
     rankingText: "#3 van 24 spelers",
     points: "35 pnt",
     modulesEyebrow: "Spelvormen",
-    modulesTitle: "Één platform. Meerdere soorten poules.",
+    modulesTitle: "Begin simpel. Breid later uit.",
     modulesText:
-      "Start met een voetbalpoule. Breid later uit met sociale spellen en raceformats zonder het hele platform opnieuw te bouwen.",
+      "Poolr start met WK-voorspellingpoules en is gebouwd om later meer groepsspellen te ondersteunen.",
     modules: [
       {
         title: "WK 2026",
         status: "Als eerste live",
-        text: "Voorspel wedstrijduitslagen, volg standen en speel in privé groepen.",
+        text: "Voorspel wedstrijduitslagen, volg standen en speel in een privé groep.",
       },
       {
         title: "Office Bingo",
@@ -153,17 +151,17 @@ const copy = {
       },
     ],
     stepsEyebrow: "Hoe het werkt",
-    stepsTitle: "Snel opgezet. Duidelijke competitie.",
+    stepsTitle: "In drie stappen klaar om te spelen.",
     steps: [
       {
         number: "01",
         title: "Maak of join",
-        text: "Start je eigen poule of doe mee via een uitnodigingslink.",
+        text: "Start je eigen poule of doe mee via een invite code.",
       },
       {
         number: "02",
         title: "Voorspel",
-        text: "Vul je voorspellingen in voordat de deadline sluit.",
+        text: "Vul je wedstrijduitslagen in voordat de deadline sluit.",
       },
       {
         number: "03",
@@ -189,29 +187,31 @@ const copy = {
   },
 };
 
+type HomeCopy = typeof copy.en;
+
 function setLanguageCookie(language: Language) {
   document.cookie = `${LANGUAGE_COOKIE_KEY}=${language}; path=/; max-age=31536000; SameSite=Lax`;
 }
 
-function PreviewCard({ t }: { t: typeof copy.en }) {
+function PreviewCard({ t }: { t: HomeCopy }) {
   return (
-    <div className="relative mx-auto w-full max-w-md">
-      <div className="absolute -inset-6 rounded-[2.5rem] bg-emerald-400/10 blur-3xl" />
+    <div className="relative mx-auto w-full max-w-[430px] lg:ml-auto">
+      <div className="absolute -inset-5 rounded-[2.5rem] bg-emerald-400/10 blur-3xl" />
 
-      <div className="relative overflow-hidden rounded-[2rem] border border-white/12 bg-white/[0.06] p-3 shadow-2xl backdrop-blur-xl">
-        <div className="rounded-[1.45rem] border border-white/10 bg-[#06110d] p-4 sm:p-5">
+      <div className="relative overflow-hidden rounded-[2rem] border border-white/12 bg-white/[0.06] p-2.5 shadow-2xl backdrop-blur-xl sm:p-3">
+        <div className="rounded-[1.55rem] border border-white/10 bg-[#06110d] p-4 sm:p-5">
           <div className="mb-5 flex items-start justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">
                 {t.previewKicker}
               </p>
-              <h2 className="mt-1 text-2xl font-black tracking-tight text-white">
+              <h2 className="mt-1 truncate text-2xl font-black tracking-tight text-white">
                 {t.previewTitle}
               </h2>
               <p className="mt-1 text-sm text-zinc-400">{t.previewSubtitle}</p>
             </div>
 
-            <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1 text-[10px] font-black text-emerald-200">
+            <span className="shrink-0 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1 text-[10px] font-black text-emerald-200">
               LIVE
             </span>
           </div>
@@ -327,12 +327,12 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
   return (
     <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
       <section className="relative border-b border-white/10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(110,231,183,0.2),transparent_32%),radial-gradient(circle_at_85%_30%,rgba(20,184,166,0.12),transparent_28%),linear-gradient(180deg,#06110d_0%,#030706_58%,#020403_100%)]" />
-        <div className="absolute inset-0 opacity-[0.12] [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:54px_54px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_5%,rgba(110,231,183,0.16),transparent_30%),radial-gradient(circle_at_85%_25%,rgba(20,184,166,0.12),transparent_28%),linear-gradient(180deg,#06110d_0%,#030706_60%,#020403_100%)]" />
+        <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.14)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.14)_1px,transparent_1px)] [background-size:56px_56px]" />
 
         <Container>
-          <div className="relative z-10 flex min-h-screen flex-col">
-            <header className="flex items-center justify-between gap-3 py-3 sm:py-5">
+          <div className="relative z-10 flex min-h-[760px] flex-col sm:min-h-screen">
+            <header className="flex items-center justify-between gap-3 py-4 sm:py-5">
               <Link href="/" className="flex min-w-0 items-center">
                 <Image
                   src="/brand/poolr-logo-dark.png"
@@ -340,7 +340,7 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
                   width={300}
                   height={88}
                   priority
-                  className="h-11 w-auto sm:h-16 lg:h-20"
+                  className="h-12 w-auto sm:h-16 lg:h-[72px]"
                 />
               </Link>
 
@@ -382,18 +382,18 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
               </div>
             </header>
 
-            <div className="grid flex-1 items-center gap-9 pb-12 pt-6 lg:grid-cols-[0.96fr_1.04fr] lg:gap-14 lg:pb-16 lg:pt-8">
-              <div className="max-w-3xl">
-                <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-xs font-black uppercase tracking-[0.16em] text-emerald-200 sm:px-4">
+            <div className="grid flex-1 items-center gap-8 pb-12 pt-8 lg:grid-cols-[minmax(0,0.98fr)_minmax(360px,0.82fr)] lg:gap-12 lg:pb-16 lg:pt-4">
+              <div className="max-w-2xl">
+                <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-emerald-200 sm:px-4 sm:text-xs">
                   <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_18px_rgba(110,231,183,0.9)]" />
                   {t.heroEyebrow}
                 </div>
 
-                <h1 className="text-[2.7rem] font-black leading-[0.98] tracking-tight text-white sm:text-6xl lg:text-7xl">
+                <h1 className="max-w-[11ch] text-[clamp(2.7rem,7vw,5.6rem)] font-black leading-[0.95] tracking-[-0.055em] text-white sm:max-w-[12ch] lg:max-w-[11ch]">
                   {t.heroTitle}
                 </h1>
 
-                <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-300 sm:mt-6 sm:text-xl sm:leading-8">
+                <p className="mt-5 max-w-xl text-base leading-7 text-zinc-300 sm:mt-6 sm:text-lg sm:leading-8">
                   {t.heroText}
                 </p>
 
@@ -413,11 +413,11 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
                   </Link>
                 </div>
 
-                <div className="mt-6 grid grid-cols-3 gap-2 text-center sm:max-w-xl sm:gap-3">
+                <div className="mt-6 grid max-w-xl grid-cols-1 gap-2 text-center sm:grid-cols-3 sm:gap-3">
                   {[t.trustOne, t.trustTwo, t.trustThree].map((item) => (
                     <div
                       key={item}
-                      className="rounded-2xl border border-white/10 bg-white/[0.045] px-2 py-3 text-[11px] font-bold text-zinc-300 sm:text-sm"
+                      className="rounded-2xl border border-white/10 bg-white/[0.045] px-3 py-3 text-xs font-bold text-zinc-300 sm:text-sm"
                     >
                       {item}
                     </div>
