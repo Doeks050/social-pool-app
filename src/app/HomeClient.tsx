@@ -440,11 +440,7 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
               {t.modulesEyebrow}
             </p>
 
-            <h2 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-5xl">
-              {t.modulesTitle}
-            </h2>
-
-            <p className="mt-4 text-sm leading-7 text-zinc-400 sm:text-base">
+            <p className="mt-3 text-sm leading-7 text-zinc-400 sm:text-base">
               {t.modulesText}
             </p>
           </div>
