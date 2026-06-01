@@ -21,7 +21,7 @@ const copy = {
     login: "Login",
     dashboard: "Dashboard",
     heroEyebrow: "World Cup 2026 pools",
-    heroTitle: "Create a private pool for your group.",
+    heroTitle: "Private prediction pools made easy.",
     heroText:
       "Predict World Cup matches with friends, colleagues or your office team. Create a pool, share the invite code and follow the leaderboard together.",
     primaryGuest: "Create a pool",
@@ -105,7 +105,7 @@ const copy = {
     login: "Inloggen",
     dashboard: "Dashboard",
     heroEyebrow: "WK 2026-poules",
-    heroTitle: "Maak een privé poule voor jouw groep.",
+    heroTitle: "Privé poules eenvoudig geregeld.",
     heroText:
       "Voorspel WK-wedstrijden met vrienden, collega’s of je kantoor. Maak een poule, deel de invite code en volg samen de ranglijst.",
     primaryGuest: "Maak een poule",
