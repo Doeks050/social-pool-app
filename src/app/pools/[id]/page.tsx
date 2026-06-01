@@ -138,9 +138,6 @@ const copy = {
     predictLabel: "Predict",
     matchesTitle: "Matches",
     matchesDescription: "Submit and review match predictions.",
-    bonusLabel: "Bonus",
-    questionsTitle: "Questions",
-    questionsDescription: "Extra predictions for bonus points.",
     groupsLabel: "Groups",
     standingsTitle: "Standings",
     standingsDescription: "View group tables and progress.",
@@ -178,9 +175,6 @@ const copy = {
     predictLabel: "Voorspel",
     matchesTitle: "Wedstrijden",
     matchesDescription: "Vul voorspellingen in en bekijk ze terug.",
-    bonusLabel: "Bonus",
-    questionsTitle: "Vragen",
-    questionsDescription: "Extra voorspellingen voor bonuspunten.",
     groupsLabel: "Groepen",
     standingsTitle: "Standen",
     standingsDescription: "Bekijk poulestanden en voortgang.",
@@ -798,7 +792,7 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                     </p>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {pool.game_type === "world_cup" ? (
                       <>
                         <ActionCard
@@ -807,12 +801,6 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                           title={t.matchesTitle}
                           description={t.matchesDescription}
                           primary
-                        />
-                        <ActionCard
-                          href={`/pools/${pool.id}/bonus`}
-                          label={t.bonusLabel}
-                          title={t.questionsTitle}
-                          description={t.questionsDescription}
                         />
                         <ActionCard
                           href={`/pools/${pool.id}/standings`}
