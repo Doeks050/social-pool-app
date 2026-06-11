@@ -20,45 +20,50 @@ const copy = {
   en: {
     login: "Login",
     dashboard: "Dashboard",
+
     heroEyebrow: "World Cup 2026 pools",
-    heroTitle: "Private prediction pools made easy.",
+    heroTitle: "Run your private pool in minutes.",
     heroText:
-      "Predict World Cup matches with friends, colleagues or your office team. Create a pool, share the invite code and follow the leaderboard together.",
+      "Create a prediction pool, invite your group and follow the leaderboard together. Built for friends, colleagues and office teams.",
+
     primaryGuest: "Create a pool",
     primaryUser: "Open dashboard",
     secondaryGuest: "Log in",
     secondaryUser: "Create pool",
+
     trustOne: "Private groups",
-    trustTwo: "Match predictions",
-    trustThree: "Live leaderboard",
+    trustTwo: "Easy predictions",
+    trustThree: "Clear leaderboard",
+
     previewKicker: "WK 2026",
     previewTitle: "Office pool",
-    previewSubtitle: "Match predictions",
+    previewSubtitle: "Next prediction",
     previewOpen: "Open",
     previewSaved: "Saved",
-    previewCta: "Predict now",
+    previewCta: "Predict",
     matchOne: "Netherlands",
     matchTwo: "France",
     matchThree: "Brazil",
     matchFour: "Germany",
-    scoreLabel: "Your score",
-    ranking: "Live ranking",
+    scoreLabel: "Score",
+    ranking: "Ranking",
     rankingText: "#3 of 24 players",
     points: "35 pts",
+
     modulesEyebrow: "Game formats",
-    modulesTitle: "Start simple. Expand later.",
+    modulesTitle: "Start with the World Cup. Add more later.",
     modulesText:
       "Poolr starts with World Cup prediction pools and is built to support more group games over time.",
     modules: [
       {
         title: "World Cup 2026",
-        status: "Live first",
+        status: "Available first",
         text: "Predict match scores, follow standings and compete in a private group.",
       },
       {
         title: "Office Bingo",
         status: "Coming soon",
-        text: "Create social bingo games for work, parties and group challenges.",
+        text: "Create light social bingo games for work, parties and group challenges.",
       },
       {
         title: "F1 Pool",
@@ -66,8 +71,9 @@ const copy = {
         text: "Predict race weekends, sessions and season results.",
       },
     ],
+
     stepsEyebrow: "How it works",
-    stepsTitle: "Three steps to start playing.",
+    stepsTitle: "Simple from the first click.",
     steps: [
       {
         number: "01",
@@ -77,18 +83,19 @@ const copy = {
       {
         number: "02",
         title: "Predict",
-        text: "Enter your match scores before the deadline closes.",
+        text: "Enter your predictions before the deadline closes.",
       },
       {
         number: "03",
         title: "Compete",
-        text: "Follow the leaderboard and climb above your friends.",
+        text: "Follow the leaderboard and see who wins.",
       },
     ],
+
     finalTitle: "Ready to start your first Poolr?",
-    finalText:
-      "Create your first World Cup pool and invite your group in minutes.",
+    finalText: "Create your first World Cup pool and invite your group.",
     finalButton: "Get started",
+
     footerSmall:
       "Poolr is independent and is not affiliated with FIFA, UEFA, Formula 1, FIA or other rights holders.",
     footerLinks: [
@@ -101,36 +108,42 @@ const copy = {
       { label: "Contact", href: "/contact" },
     ],
   },
+
   nl: {
     login: "Inloggen",
     dashboard: "Dashboard",
+
     heroEyebrow: "WK 2026-poules",
-    heroTitle: "Privé poules eenvoudig geregeld.",
+    heroTitle: "Start je privé poule in een paar minuten.",
     heroText:
-      "Voorspel WK-wedstrijden met vrienden, collega’s of je kantoor. Maak een poule, deel de invite code en volg samen de ranglijst.",
+      "Maak een voorspellingpoule, nodig je groep uit en volg samen de ranglijst. Ideaal voor vrienden, collega’s en kantoor-teams.",
+
     primaryGuest: "Maak een poule",
     primaryUser: "Open dashboard",
     secondaryGuest: "Inloggen",
     secondaryUser: "Poule maken",
+
     trustOne: "Privé groepen",
-    trustTwo: "Wedstrijden voorspellen",
-    trustThree: "Live ranglijst",
+    trustTwo: "Simpel voorspellen",
+    trustThree: "Duidelijke ranglijst",
+
     previewKicker: "WK 2026",
     previewTitle: "Kantoor poule",
-    previewSubtitle: "Wedstrijden voorspellen",
+    previewSubtitle: "Volgende voorspelling",
     previewOpen: "Open",
     previewSaved: "Opgeslagen",
-    previewCta: "Voorspel nu",
+    previewCta: "Voorspel",
     matchOne: "Nederland",
     matchTwo: "Frankrijk",
     matchThree: "Brazilië",
     matchFour: "Duitsland",
-    scoreLabel: "Jouw score",
-    ranking: "Live stand",
+    scoreLabel: "Score",
+    ranking: "Stand",
     rankingText: "#3 van 24 spelers",
     points: "35 pnt",
+
     modulesEyebrow: "Spelvormen",
-    modulesTitle: "Begin simpel. Breid later uit.",
+    modulesTitle: "Begin met het WK. Breid later uit.",
     modulesText:
       "Poolr start met WK-voorspellingpoules en is gebouwd om later meer groepsspellen te ondersteunen.",
     modules: [
@@ -142,7 +155,7 @@ const copy = {
       {
         title: "Office Bingo",
         status: "Binnenkort",
-        text: "Maak sociale bingo’s voor werk, feestjes en groepschallenges.",
+        text: "Maak eenvoudige sociale bingo’s voor werk, feestjes en groepschallenges.",
       },
       {
         title: "F1-poule",
@@ -150,8 +163,9 @@ const copy = {
         text: "Voorspel raceweekenden, sessies en seizoensuitslagen.",
       },
     ],
+
     stepsEyebrow: "Hoe het werkt",
-    stepsTitle: "In drie stappen klaar om te spelen.",
+    stepsTitle: "Simpel vanaf de eerste klik.",
     steps: [
       {
         number: "01",
@@ -161,18 +175,19 @@ const copy = {
       {
         number: "02",
         title: "Voorspel",
-        text: "Vul je wedstrijduitslagen in voordat de deadline sluit.",
+        text: "Vul je voorspellingen in voordat de deadline sluit.",
       },
       {
         number: "03",
         title: "Strijd mee",
-        text: "Volg de ranglijst en klim boven je vrienden uit.",
+        text: "Volg de ranglijst en kijk wie wint.",
       },
     ],
+
     finalTitle: "Klaar om je eerste Poolr te starten?",
-    finalText:
-      "Maak je eerste WK-poule en nodig je groep binnen een paar minuten uit.",
+    finalText: "Maak je eerste WK-poule en nodig je groep uit.",
     finalButton: "Begin nu",
+
     footerSmall:
       "Poolr is onafhankelijk en is niet verbonden aan FIFA, UEFA, Formula 1, FIA of andere rechthebbenden.",
     footerLinks: [
@@ -195,97 +210,83 @@ function setLanguageCookie(language: Language) {
 
 function PreviewCard({ t }: { t: HomeCopy }) {
   return (
-    <div className="relative mx-auto w-full max-w-[430px] lg:ml-auto">
-      <div className="absolute -inset-5 rounded-[2.5rem] bg-emerald-400/10 blur-3xl" />
+    <div className="w-full rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-4 shadow-2xl shadow-black/20 sm:p-5">
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">
+            {t.previewKicker}
+          </p>
+          <h2 className="mt-1 truncate text-2xl font-black tracking-tight text-white">
+            {t.previewTitle}
+          </h2>
+          <p className="mt-1 text-sm text-zinc-400">{t.previewSubtitle}</p>
+        </div>
 
-      <div className="relative overflow-hidden rounded-[2rem] border border-white/12 bg-white/[0.06] p-2.5 shadow-2xl backdrop-blur-xl sm:p-3">
-        <div className="rounded-[1.55rem] border border-white/10 bg-[#06110d] p-4 sm:p-5">
-          <div className="mb-5 flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">
-                {t.previewKicker}
+        <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-black text-emerald-200">
+          LIVE
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        <div className="rounded-2xl border border-white/10 bg-[#07110d] p-4">
+          <div className="mb-3 flex items-center justify-between text-xs font-bold">
+            <span className="text-emerald-300">{t.previewOpen}</span>
+            <span className="text-zinc-500">21:00</span>
+          </div>
+
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+            <p className="truncate text-sm font-black">{t.matchOne}</p>
+
+            <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-center">
+              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-500">
+                {t.scoreLabel}
               </p>
-              <h2 className="mt-1 truncate text-2xl font-black tracking-tight text-white">
-                {t.previewTitle}
-              </h2>
-              <p className="mt-1 text-sm text-zinc-400">{t.previewSubtitle}</p>
+              <p className="mt-1 text-lg font-black text-zinc-300">— - —</p>
             </div>
 
-            <span className="shrink-0 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1 text-[10px] font-black text-emerald-200">
-              LIVE
-            </span>
+            <p className="truncate text-right text-sm font-black">
+              {t.matchTwo}
+            </p>
           </div>
 
-          <div className="space-y-3">
-            <div className="rounded-2xl border border-emerald-300/25 bg-emerald-300/[0.08] p-3">
-              <div className="mb-3 flex items-center justify-between text-[10px] font-black">
-                <span className="rounded-full bg-black/25 px-2.5 py-1 text-emerald-200">
-                  {t.previewOpen}
-                </span>
-                <span className="text-zinc-400">Today 21:00</span>
-              </div>
+          <div className="mt-4 rounded-xl bg-emerald-300 px-3 py-2 text-center text-xs font-black text-zinc-950">
+            {t.previewCta}
+          </div>
+        </div>
 
-              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                <p className="truncate text-sm font-black">{t.matchOne}</p>
-
-                <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-2 text-center">
-                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500">
-                    {t.scoreLabel}
-                  </p>
-                  <p className="mt-1 text-lg font-black text-zinc-400">— - —</p>
-                </div>
-
-                <p className="truncate text-right text-sm font-black">
-                  {t.matchTwo}
-                </p>
-              </div>
-
-              <div className="mt-3 rounded-xl bg-emerald-300 px-3 py-2 text-center text-xs font-black text-zinc-950">
-                + {t.previewCta}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-              <div className="mb-3 flex items-center justify-between text-[10px] font-black">
-                <span className="rounded-full bg-black/25 px-2.5 py-1 text-zinc-300">
-                  {t.previewSaved}
-                </span>
-                <span className="text-zinc-500">Tomorrow 18:00</span>
-              </div>
-
-              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                <p className="truncate text-sm font-black">{t.matchThree}</p>
-
-                <div className="rounded-xl border border-white/10 bg-black/25 px-3 py-2 text-center">
-                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500">
-                    {t.scoreLabel}
-                  </p>
-                  <p className="mt-1 text-lg font-black text-white">2 - 1</p>
-                </div>
-
-                <p className="truncate text-right text-sm font-black">
-                  {t.matchFour}
-                </p>
-              </div>
-            </div>
+        <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+          <div className="mb-3 flex items-center justify-between text-xs font-bold">
+            <span className="text-zinc-300">{t.previewSaved}</span>
+            <span className="text-zinc-500">18:00</span>
           </div>
 
-          <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-300">
-                  {t.ranking}
-                </p>
-                <p className="mt-1 text-sm font-black text-white">
-                  {t.rankingText}
-                </p>
-              </div>
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+            <p className="truncate text-sm font-black">{t.matchThree}</p>
 
-              <div className="rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-3 py-2 text-sm font-black text-emerald-100">
-                {t.points}
-              </div>
+            <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-center">
+              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-500">
+                {t.scoreLabel}
+              </p>
+              <p className="mt-1 text-lg font-black text-white">2 - 1</p>
             </div>
+
+            <p className="truncate text-right text-sm font-black">
+              {t.matchFour}
+            </p>
           </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
+            {t.ranking}
+          </p>
+          <p className="mt-1 text-sm font-black text-white">{t.rankingText}</p>
+        </div>
+
+        <div className="rounded-xl border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-sm font-black text-emerald-100">
+          {t.points}
         </div>
       </div>
     </div>
@@ -325,139 +326,136 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
   const secondaryLabel = isLoggedIn ? t.secondaryUser : t.secondaryGuest;
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#030706] text-white">
-      <section className="relative border-b border-white/10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_5%,rgba(110,231,183,0.16),transparent_30%),radial-gradient(circle_at_85%_25%,rgba(20,184,166,0.12),transparent_28%),linear-gradient(180deg,#06110d_0%,#030706_60%,#020403_100%)]" />
-        <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.14)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.14)_1px,transparent_1px)] [background-size:56px_56px]" />
-
+    <main className="min-h-screen bg-[#030706] text-white">
+      <section className="border-b border-white/10 bg-[linear-gradient(180deg,#06110d_0%,#030706_72%)]">
         <Container>
-          <div className="relative z-10 flex min-h-[760px] flex-col sm:min-h-screen">
-            <header className="flex items-center justify-between gap-3 py-4 sm:py-5">
-              <Link href="/" className="flex min-w-0 items-center">
-                <Image
-                  src="/brand/poolr-logo-dark.png"
-                  alt="Poolr"
-                  width={300}
-                  height={88}
-                  priority
-                  className="h-12 w-auto sm:h-16 lg:h-[72px]"
-                />
+          <header className="flex items-center justify-between gap-3 py-4 sm:py-5">
+            <Link href="/" className="flex min-w-0 items-center">
+              <Image
+                src="/brand/poolr-logo-dark.png"
+                alt="Poolr"
+                width={300}
+                height={88}
+                priority
+                className="h-11 w-auto sm:h-14"
+              />
+            </Link>
+
+            <div className="flex shrink-0 items-center gap-2">
+              <div className="flex rounded-full border border-white/10 bg-white/[0.04] p-1">
+                <button
+                  type="button"
+                  onClick={() => changeLanguage("en")}
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-black transition sm:px-3 sm:py-1.5 sm:text-xs ${
+                    language === "en"
+                      ? "bg-emerald-300 text-zinc-950"
+                      : "text-white/60 hover:text-white"
+                  }`}
+                  aria-pressed={language === "en"}
+                >
+                  EN
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => changeLanguage("nl")}
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-black transition sm:px-3 sm:py-1.5 sm:text-xs ${
+                    language === "nl"
+                      ? "bg-emerald-300 text-zinc-950"
+                      : "text-white/60 hover:text-white"
+                  }`}
+                  aria-pressed={language === "nl"}
+                >
+                  NL
+                </button>
+              </div>
+
+              <Link
+                href={isLoggedIn ? "/dashboard" : "/auth"}
+                className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-bold text-white/85 transition hover:bg-white/[0.08] sm:px-4 sm:py-2 sm:text-sm"
+              >
+                {isLoggedIn ? t.dashboard : t.login}
               </Link>
+            </div>
+          </header>
 
-              <div className="flex shrink-0 items-center gap-2">
-                <div className="flex rounded-full border border-white/15 bg-white/5 p-1 backdrop-blur">
-                  <button
-                    type="button"
-                    onClick={() => changeLanguage("en")}
-                    className={`rounded-full px-2.5 py-1 text-[10px] font-black transition sm:px-3 sm:py-1.5 sm:text-xs ${
-                      language === "en"
-                        ? "bg-emerald-300 text-zinc-950"
-                        : "text-white/70 hover:text-white"
-                    }`}
-                    aria-pressed={language === "en"}
-                  >
-                    EN
-                  </button>
+          <div className="grid items-center gap-10 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(340px,440px)] lg:py-20">
+            <div className="max-w-2xl">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/8 px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-emerald-200 sm:px-4 sm:text-xs">
+                <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                {t.heroEyebrow}
+              </div>
 
-                  <button
-                    type="button"
-                    onClick={() => changeLanguage("nl")}
-                    className={`rounded-full px-2.5 py-1 text-[10px] font-black transition sm:px-3 sm:py-1.5 sm:text-xs ${
-                      language === "nl"
-                        ? "bg-emerald-300 text-zinc-950"
-                        : "text-white/70 hover:text-white"
-                    }`}
-                    aria-pressed={language === "nl"}
-                  >
-                    NL
-                  </button>
-                </div>
+              <h1 className="max-w-3xl text-4xl font-black leading-[1.02] tracking-[-0.04em] text-white sm:text-5xl lg:text-6xl">
+                {t.heroTitle}
+              </h1>
+
+              <p className="mt-5 max-w-xl text-base leading-7 text-zinc-300 sm:text-lg sm:leading-8">
+                {t.heroText}
+              </p>
+
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Link
+                  href={primaryHref}
+                  className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-emerald-300 px-6 text-sm font-black text-zinc-950 transition hover:bg-emerald-200 sm:min-w-[175px]"
+                >
+                  {primaryLabel}
+                </Link>
 
                 <Link
-                  href={isLoggedIn ? "/dashboard" : "/auth"}
-                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[11px] font-bold text-white/90 backdrop-blur transition hover:bg-white/10 sm:px-4 sm:py-2 sm:text-sm"
+                  href={secondaryHref}
+                  className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-6 text-sm font-black text-white transition hover:bg-white/[0.08] sm:min-w-[150px]"
                 >
-                  {isLoggedIn ? t.dashboard : t.login}
+                  {secondaryLabel}
                 </Link>
               </div>
-            </header>
 
-            <div className="grid flex-1 items-center gap-8 pb-12 pt-8 lg:grid-cols-[minmax(0,0.98fr)_minmax(360px,0.82fr)] lg:gap-12 lg:pb-16 lg:pt-4">
-              <div className="max-w-2xl">
-                <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-emerald-200 sm:px-4 sm:text-xs">
-                  <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_18px_rgba(110,231,183,0.9)]" />
-                  {t.heroEyebrow}
-                </div>
-
-                <h1 className="max-w-[11ch] text-[clamp(2.7rem,7vw,5.6rem)] font-black leading-[0.95] tracking-[-0.055em] text-white sm:max-w-[12ch] lg:max-w-[11ch]">
-                  {t.heroTitle}
-                </h1>
-
-                <p className="mt-5 max-w-xl text-base leading-7 text-zinc-300 sm:mt-6 sm:text-lg sm:leading-8">
-                  {t.heroText}
-                </p>
-
-                <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <Link
-                    href={primaryHref}
-                    className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-emerald-300 px-6 text-sm font-black text-zinc-950 shadow-[0_18px_60px_rgba(16,185,129,0.22)] transition hover:bg-emerald-200 sm:min-w-[180px]"
+              <div className="mt-7 flex flex-wrap gap-2">
+                {[t.trustOne, t.trustTwo, t.trustThree].map((item) => (
+                  <div
+                    key={item}
+                    className="rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 text-xs font-bold text-zinc-300"
                   >
-                    {primaryLabel}
-                  </Link>
-
-                  <Link
-                    href={secondaryHref}
-                    className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.06] px-6 text-sm font-black text-white backdrop-blur transition hover:border-white/25 hover:bg-white/10 sm:min-w-[160px]"
-                  >
-                    {secondaryLabel}
-                  </Link>
-                </div>
-
-                <div className="mt-6 grid max-w-xl grid-cols-1 gap-2 text-center sm:grid-cols-3 sm:gap-3">
-                  {[t.trustOne, t.trustTwo, t.trustThree].map((item) => (
-                    <div
-                      key={item}
-                      className="rounded-2xl border border-white/10 bg-white/[0.045] px-3 py-3 text-xs font-bold text-zinc-300 sm:text-sm"
-                    >
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="lg:pl-2">
-                <PreviewCard t={t} />
+                    {item}
+                  </div>
+                ))}
               </div>
             </div>
+
+            <PreviewCard t={t} />
           </div>
         </Container>
       </section>
 
-      <section className="relative py-14 sm:py-20">
+      <section className="py-14 sm:py-18">
         <Container>
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-300">
-              {t.modulesEyebrow}
-            </p>
+          <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-300">
+                {t.modulesEyebrow}
+              </p>
 
-            <p className="mt-3 text-sm leading-7 text-zinc-400 sm:text-base">
+              <h2 className="mt-3 max-w-xl text-3xl font-black tracking-tight text-white sm:text-4xl">
+                {t.modulesTitle}
+              </h2>
+            </div>
+
+            <p className="max-w-2xl text-sm leading-7 text-zinc-400 sm:text-base lg:ml-auto">
               {t.modulesText}
             </p>
           </div>
 
-          <div className="mt-9 grid gap-4 md:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
             {t.modules.map((module) => (
               <div
                 key={module.title}
-                className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 backdrop-blur transition hover:border-emerald-300/30 hover:bg-white/[0.065] sm:p-6"
+                className="rounded-[1.5rem] border border-white/10 bg-white/[0.035] p-5 sm:p-6"
               >
-                <div className="mb-5 flex items-center justify-between gap-3">
-                  <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-200">
-                    {module.status}
-                  </span>
-                </div>
+                <span className="rounded-full border border-emerald-300/15 bg-emerald-300/8 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-200">
+                  {module.status}
+                </span>
 
-                <h3 className="text-2xl font-black tracking-tight text-white">
+                <h3 className="mt-5 text-xl font-black tracking-tight text-white">
                   {module.title}
                 </h3>
 
@@ -470,29 +468,29 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
         </Container>
       </section>
 
-      <section className="border-y border-white/10 bg-white/[0.03] py-14 sm:py-20">
+      <section className="border-y border-white/10 bg-white/[0.025] py-14 sm:py-18">
         <Container>
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-300">
               {t.stepsEyebrow}
             </p>
 
-            <h2 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-5xl">
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">
               {t.stepsTitle}
             </h2>
           </div>
 
-          <div className="mt-9 grid gap-4 md:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
             {t.steps.map((step) => (
               <div
                 key={step.number}
-                className="rounded-[1.75rem] border border-white/10 bg-[#06110d] p-5 sm:p-6"
+                className="rounded-[1.5rem] border border-white/10 bg-[#06110d] p-5 sm:p-6"
               >
                 <p className="text-sm font-black text-emerald-300">
                   {step.number}
                 </p>
 
-                <h3 className="mt-5 text-xl font-black text-white">
+                <h3 className="mt-4 text-xl font-black text-white">
                   {step.title}
                 </h3>
 
@@ -505,10 +503,10 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
         </Container>
       </section>
 
-      <section className="py-14 sm:py-20">
+      <section className="py-14 sm:py-18">
         <Container>
-          <div className="rounded-[2rem] border border-emerald-300/20 bg-gradient-to-br from-emerald-300/15 via-white/[0.05] to-transparent p-6 text-center sm:p-12">
-            <h2 className="text-3xl font-black tracking-tight text-white sm:text-5xl">
+          <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-6 text-center sm:p-10">
+            <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
               {t.finalTitle}
             </h2>
 
@@ -516,7 +514,7 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
               {t.finalText}
             </p>
 
-            <div className="mt-8 flex justify-center">
+            <div className="mt-7 flex justify-center">
               <Link
                 href={primaryHref}
                 className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-emerald-300 px-8 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
@@ -538,7 +536,7 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
                   alt="Poolr"
                   width={260}
                   height={76}
-                  className="h-14 w-auto sm:h-16"
+                  className="h-12 w-auto sm:h-14"
                 />
               </Link>
 

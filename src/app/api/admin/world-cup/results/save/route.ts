@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase-admin";
 import { syncKnockoutTeams } from "@/lib/world-cup/syncKnockoutTeams";
 import { getPredictionPoints } from "@/lib/world-cup-scoring";
 
@@ -22,9 +23,9 @@ async function scorePredictionsForMatch(
   actualHomeScore: number,
   actualAwayScore: number
 ) {
-  const supabase = await createClient();
+  const supabaseAdmin = createAdminClient();
 
-  const { data: predictions, error: predictionsError } = await supabase
+  const { data: predictions, error: predictionsError } = await supabaseAdmin
     .from("predictions")
     .select("id, pool_id, predicted_home_score, predicted_away_score")
     .eq("match_id", matchId);
@@ -47,7 +48,7 @@ async function scorePredictionsForMatch(
       }
     );
 
-    const { error: updatePredictionError } = await supabase
+    const { error: updatePredictionError } = await supabaseAdmin
       .from("predictions")
       .update({
         points_awarded: points,
@@ -74,6 +75,7 @@ async function scorePredictionsForMatch(
 
 export async function POST(request: Request) {
   const supabase = await createClient();
+  const supabaseAdmin = createAdminClient();
 
   const {
     data: { user },
@@ -91,7 +93,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Niet ingelogd." }, { status: 401 });
   }
 
-  const { data: appAdmin, error: adminError } = await supabase
+  const { data: appAdmin, error: adminError } = await supabaseAdmin
     .from("app_admins")
     .select("user_id")
     .eq("user_id", user.id)
@@ -145,7 +147,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await supabaseAdmin
     .from("matches")
     .update({
       home_score: homeScore,
@@ -163,7 +165,7 @@ export async function POST(request: Request) {
 
   try {
     await scorePredictionsForMatch(matchId, homeScore, awayScore);
-    await syncKnockoutTeams(supabase);
+    await syncKnockoutTeams(supabaseAdmin);
   } catch (error) {
     return NextResponse.json(
       {

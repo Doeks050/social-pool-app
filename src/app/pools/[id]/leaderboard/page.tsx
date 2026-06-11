@@ -1,8 +1,12 @@
 import Image from "next/image";
+import { unstable_noStore as noStore } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import Container from "@/components/Container";
 import { createClient } from "@/lib/supabase";
+import { createAdminClient } from "@/lib/supabase-admin";
+
+export const dynamic = "force-dynamic";
 
 type LeaderboardPageProps = {
   params: Promise<{
@@ -107,9 +111,12 @@ function getRankLabel(index: number) {
 export default async function PoolLeaderboardPage({
   params,
 }: LeaderboardPageProps) {
+  noStore();
+
   const { id } = await params;
 
   const supabase = await createClient();
+  const supabaseAdmin = createAdminClient();
 
   const {
     data: { user },
@@ -130,7 +137,7 @@ export default async function PoolLeaderboardPage({
     notFound();
   }
 
-  const { data: pool } = await supabase
+  const { data: pool } = await supabaseAdmin
     .from("pools")
     .select("id, name, game_type, status, payment_status")
     .eq("id", id)
@@ -149,7 +156,7 @@ export default async function PoolLeaderboardPage({
     redirect(`/pools/${pool.id}/payment`);
   }
 
-  const { data: members } = await supabase
+  const { data: members } = await supabaseAdmin
     .from("pool_members")
     .select("user_id, role, joined_at")
     .eq("pool_id", pool.id)
@@ -157,7 +164,7 @@ export default async function PoolLeaderboardPage({
 
   const typedMembers = (members ?? []) as PoolMemberRow[];
 
-  const { data: predictions } = await supabase
+  const { data: predictions } = await supabaseAdmin
     .from("predictions")
     .select("user_id, points_awarded")
     .eq("pool_id", pool.id);
@@ -176,6 +183,7 @@ export default async function PoolLeaderboardPage({
 
   for (const prediction of typedPredictions) {
     const current = matchPointsMap.get(prediction.user_id) ?? 0;
+
     matchPointsMap.set(
       prediction.user_id,
       current + (prediction.points_awarded ?? 0)
@@ -208,7 +216,7 @@ export default async function PoolLeaderboardPage({
   let profilesMap = new Map<string, string>();
 
   if (userIds.length > 0) {
-    const { data: profiles } = await supabase
+    const { data: profiles } = await supabaseAdmin
       .from("profiles")
       .select("id, display_name")
       .in("id", userIds);
@@ -327,7 +335,7 @@ export default async function PoolLeaderboardPage({
 
                   <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center backdrop-blur">
                     <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
-                      Match pts
+                      Total pts
                     </p>
                     <p className="mt-1 text-xl font-black text-white">
                       {totalMatchPoints}
@@ -380,9 +388,9 @@ export default async function PoolLeaderboardPage({
                               {getRankLabel(index)}
                             </p>
 
-                            <div className="mt-4 rounded-xl border border-white/10 bg-black/20 px-3 py-2">
-                              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
-                                Total points
+                            <div className="mt-4 rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-3 py-2">
+                              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-200">
+                                Total
                               </p>
                               <p className="mt-1 text-2xl font-black text-white">
                                 {entry.total_points}
@@ -429,7 +437,7 @@ export default async function PoolLeaderboardPage({
                               isCurrentUser
                             )}`}
                           >
-                            <div className="grid grid-cols-[auto_1fr] gap-3 sm:grid-cols-[auto_1fr_220px] sm:items-center">
+                            <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
                               <div
                                 className={`flex h-10 w-10 items-center justify-center rounded-xl border text-xs font-black ${getRankBadgeClasses(
                                   index,
@@ -449,24 +457,13 @@ export default async function PoolLeaderboardPage({
                                 </p>
                               </div>
 
-                              <div className="col-span-2 grid grid-cols-2 gap-2 sm:col-span-1">
-                                <div className="rounded-xl border border-white/10 bg-black/20 px-2 py-2 text-center">
-                                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-500">
-                                    Match
-                                  </p>
-                                  <p className="mt-1 text-sm font-black text-white">
-                                    {entry.match_points}
-                                  </p>
-                                </div>
-
-                                <div className="rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-2 py-2 text-center">
-                                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-200">
-                                    Total
-                                  </p>
-                                  <p className="mt-1 text-sm font-black text-white">
-                                    {entry.total_points}
-                                  </p>
-                                </div>
+                              <div className="min-w-[92px] rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-3 py-2 text-center sm:min-w-[120px]">
+                                <p className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-200">
+                                  Total
+                                </p>
+                                <p className="mt-1 text-sm font-black text-white">
+                                  {entry.total_points}
+                                </p>
                               </div>
                             </div>
                           </div>
