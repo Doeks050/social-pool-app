@@ -74,6 +74,13 @@ function getStatusClasses(status: string) {
   return "border-zinc-700 bg-zinc-950 text-zinc-300";
 }
 
+function isKnockoutLike(match: MatchResultAdminCardProps["match"]) {
+  return (
+    (match.stage_type ?? "").toLowerCase() !== "group" ||
+    match.is_knockout === true
+  );
+}
+
 export default function MatchResultAdminCard({
   match,
 }: MatchResultAdminCardProps) {
@@ -87,10 +94,32 @@ export default function MatchResultAdminCard({
   const [awayScore, setAwayScore] = useState(
     match.away_score === null ? "" : String(match.away_score)
   );
+  const [advancingTeam, setAdvancingTeam] = useState("");
   const [status, setStatus] = useState(match.status);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const parsedHomeScore = homeScore === "" ? null : Number(homeScore);
+  const parsedAwayScore = awayScore === "" ? null : Number(awayScore);
+
+  const isKnockoutMatch = isKnockoutLike(match);
+  const isDrawScore =
+    parsedHomeScore !== null &&
+    parsedAwayScore !== null &&
+    Number.isInteger(parsedHomeScore) &&
+    Number.isInteger(parsedAwayScore) &&
+    parsedHomeScore === parsedAwayScore;
+
+  const advancingOptions = [match.home_team, match.away_team].filter(
+    (team): team is string => Boolean(team && team.trim())
+  );
+
+  const showAdvancingTeamSelect =
+    isKnockoutMatch &&
+    isDrawScore &&
+    Boolean(match.bracket_code?.trim()) &&
+    advancingOptions.length === 2;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -98,6 +127,12 @@ export default function MatchResultAdminCard({
     setLoading(true);
     setMessage(null);
     setError(null);
+
+    if (showAdvancingTeamSelect && !advancingTeam) {
+      setError("Kies welk team doorgaat na verlenging/penalties.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/admin/world-cup/results/save", {
@@ -109,6 +144,7 @@ export default function MatchResultAdminCard({
           matchId: match.id,
           homeScore: Number(homeScore),
           awayScore: Number(awayScore),
+          advancingTeam: showAdvancingTeamSelect ? advancingTeam : undefined,
         }),
       });
 
@@ -169,6 +205,13 @@ export default function MatchResultAdminCard({
 
       <form onSubmit={handleSubmit} className="mt-2.5">
         <div className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-2.5">
+          {isKnockoutMatch ? (
+            <div className="mb-2 rounded-md border border-amber-500/25 bg-amber-500/10 px-2.5 py-2 text-[11px] leading-5 text-amber-100">
+              <span className="font-bold">Let op:</span> vul hier alleen de
+              score na 90 minuten in. Verlenging en penalties tellen niet mee.
+            </div>
+          ) : null}
+
           <div className="grid grid-cols-[1fr_42px_1fr] items-end gap-2">
             <div className="min-w-0">
               <p className="mb-1 truncate text-sm font-semibold text-white">
@@ -210,6 +253,36 @@ export default function MatchResultAdminCard({
               />
             </div>
           </div>
+
+          {isKnockoutMatch && isDrawScore ? (
+            <div className="mt-2 rounded-md border border-amber-500/30 bg-amber-500/10 p-2.5">
+              <label className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-200">
+                Wie ging door na verlenging/penalties?
+              </label>
+
+              {showAdvancingTeamSelect ? (
+                <select
+                  value={advancingTeam}
+                  onChange={(event) => setAdvancingTeam(event.target.value)}
+                  disabled={loading}
+                  className="mt-2 h-9 w-full rounded-md border border-amber-500/30 bg-zinc-950 px-3 text-xs font-semibold text-white outline-none transition focus:border-amber-200 disabled:opacity-60"
+                  required
+                >
+                  <option value="">Kies doorganger</option>
+                  {advancingOptions.map((team) => (
+                    <option key={`${match.id}-advancing-${team}`} value={team}>
+                      {team}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p className="mt-2 text-[11px] leading-5 text-amber-100">
+                  Doorganger kiezen is pas mogelijk wanneer beide teams en de
+                  bracket code bekend zijn.
+                </p>
+              )}
+            </div>
+          ) : null}
 
           <div className="mt-2 flex items-center justify-between gap-2">
             <p className="text-[10px] text-zinc-500">

@@ -9,6 +9,7 @@ import { getLanguageFromCookieValue, type Language } from "@/lib/i18n";
 import { getPoolTypeMeta } from "@/lib/pool-types";
 import { getDefaultPoolPlan, getPoolPlan } from "@/lib/plans";
 import NextMatchHighlight from "@/components/world-cup/NextMatchHighlight";
+import WorldCupScoreNoticeModal from "@/components/world-cup/WorldCupScoreNoticeModal";
 import OfficeBingoDashboard from "@/components/office-bingo/OfficeBingoDashboard";
 
 type PoolPageProps = {
@@ -706,9 +707,31 @@ export default async function PoolDetailPage({ params }: PoolPageProps) {
                   </div>
                 </div>
               </section>
-
               {isWorldCup ? (
-                <NextMatchHighlight poolId={pool.id} match={nextMatch} />
+                <>
+                  <NextMatchHighlight poolId={pool.id} match={nextMatch} />
+                  <WorldCupScoreNoticeModal language={language} />
+
+                  <div className="rounded-2xl border border-amber-300/30 bg-amber-300/10 p-4 shadow-[0_14px_35px_rgba(251,191,36,0.08)] backdrop-blur-xl">
+                    <div className="flex gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-300/30 bg-amber-300/15 text-lg font-black text-amber-200">
+                        !
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="text-sm font-black uppercase tracking-[0.16em] text-amber-200">
+                          {language === "nl" ? "Let op!" : "Important!"}
+                        </p>
+
+                        <p className="mt-1 text-sm leading-6 text-amber-50/90">
+                          {language === "nl"
+                            ? "Scores die je invult gelden voor de 90 minuten speeltijd van de wedstrijd. Verlenging en penalties tellen niet mee."
+                            : "Submitted scores count for the 90 minutes of regular match time only. Extra time and penalties do not count."}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </>
               ) : null}
 
               {isOfficeBingo ? (
