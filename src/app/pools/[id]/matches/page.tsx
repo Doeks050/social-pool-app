@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import { unstable_noStore as noStore } from "next/cache";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
@@ -16,6 +16,7 @@ type PoolMatchesPageProps = {
   }>;
   searchParams: Promise<{
     filter?: string;
+    phase?: string;
   }>;
 };
 
@@ -55,6 +56,27 @@ type DateGroup = {
 
 type MatchFilter = "all" | "open" | "locked" | "finished";
 
+type PhaseFilter =
+  | "all"
+  | "group"
+  | "round_of_32"
+  | "round_of_16"
+  | "quarterfinal"
+  | "semifinal"
+  | "third_place"
+  | "final";
+
+const PHASE_OPTIONS: PhaseFilter[] = [
+  "all",
+  "group",
+  "round_of_32",
+  "round_of_16",
+  "quarterfinal",
+  "semifinal",
+  "third_place",
+  "final",
+];
+
 const copy = {
   en: {
     pool: "Pool",
@@ -75,6 +97,16 @@ const copy = {
     open: "Open",
     locked: "Locked",
     finished: "Finished",
+    statusFilters: "Status",
+    roundFilters: "Round",
+    allRounds: "All rounds",
+    groupStage: "Group stage",
+    roundOf32: "Round of 32",
+    roundOf16: "Round of 16",
+    quarterfinals: "Quarterfinals",
+    semifinals: "Semifinals",
+    thirdPlace: "Third place",
+    final: "Final",
   },
   nl: {
     pool: "Poule",
@@ -95,6 +127,16 @@ const copy = {
     open: "Open",
     locked: "Gesloten",
     finished: "Afgelopen",
+    statusFilters: "Status",
+    roundFilters: "Ronde",
+    allRounds: "Alle rondes",
+    groupStage: "Groepsfase",
+    roundOf32: "Round of 32",
+    roundOf16: "Round of 16",
+    quarterfinals: "Kwartfinales",
+    semifinals: "Halve finales",
+    thirdPlace: "Troostfinale",
+    final: "Finale",
   },
 } satisfies Record<Language, Record<string, string>>;
 
@@ -160,15 +202,61 @@ function normalizeFilter(filter?: string): MatchFilter {
   return "all";
 }
 
+function normalizePhase(phase?: string): PhaseFilter {
+  if (phase === "group") return "group";
+  if (phase === "round_of_32") return "round_of_32";
+  if (phase === "round_of_16") return "round_of_16";
+  if (phase === "quarterfinal") return "quarterfinal";
+  if (phase === "semifinal") return "semifinal";
+  if (phase === "third_place") return "third_place";
+  if (phase === "final") return "final";
+  return "all";
+}
+
 function matchesFilter(match: MatchRow, activeFilter: MatchFilter) {
   if (activeFilter === "all") return true;
   return getMatchState(match) === activeFilter;
 }
 
-function getFilterHref(poolId: string, filter: MatchFilter) {
-  if (filter === "all") return `/pools/${poolId}/matches`;
+function matchesPhase(match: MatchRow, activePhase: PhaseFilter) {
+  if (activePhase === "all") return true;
+  return (match.stage_type ?? "").toLowerCase() === activePhase;
+}
 
-  return `/pools/${poolId}/matches?filter=${filter}`;
+function getMatchesHref(
+  poolId: string,
+  filter: MatchFilter,
+  phase: PhaseFilter
+) {
+  const params = new URLSearchParams();
+
+  if (filter !== "all") {
+    params.set("filter", filter);
+  }
+
+  if (phase !== "all") {
+    params.set("phase", phase);
+  }
+
+  const query = params.toString();
+
+  return query ? `/pools/${poolId}/matches?${query}` : `/pools/${poolId}/matches`;
+}
+
+function getFilterHref(
+  poolId: string,
+  filter: MatchFilter,
+  activePhase: PhaseFilter
+) {
+  return getMatchesHref(poolId, filter, activePhase);
+}
+
+function getPhaseHref(
+  poolId: string,
+  activeFilter: MatchFilter,
+  phase: PhaseFilter
+) {
+  return getMatchesHref(poolId, activeFilter, phase);
 }
 
 function getFilterButtonClasses(isActive: boolean) {
@@ -194,6 +282,29 @@ function getFilterLabel(filter: MatchFilter, language: Language) {
   }
 }
 
+function getPhaseLabel(phase: PhaseFilter, language: Language) {
+  const t = copy[language];
+
+  switch (phase) {
+    case "group":
+      return t.groupStage;
+    case "round_of_32":
+      return t.roundOf32;
+    case "round_of_16":
+      return t.roundOf16;
+    case "quarterfinal":
+      return t.quarterfinals;
+    case "semifinal":
+      return t.semifinals;
+    case "third_place":
+      return t.thirdPlace;
+    case "final":
+      return t.final;
+    default:
+      return t.allRounds;
+  }
+}
+
 export default async function PoolMatchesPage({
   params,
   searchParams,
@@ -203,6 +314,7 @@ export default async function PoolMatchesPage({
   const { id } = await params;
   const resolvedSearchParams = await searchParams;
   const activeFilter = normalizeFilter(resolvedSearchParams.filter);
+  const activePhase = normalizePhase(resolvedSearchParams.phase);
 
   const cookieStore = await cookies();
   const language = getLanguageFromCookieValue(
@@ -271,7 +383,11 @@ export default async function PoolMatchesPage({
       ])
     );
 
-  const filteredMatches = typedMatches.filter((match) =>
+  const phaseMatches = typedMatches.filter((match) =>
+    matchesPhase(match, activePhase)
+  );
+
+  const filteredMatches = phaseMatches.filter((match) =>
     matchesFilter(match, activeFilter)
   );
 
@@ -299,16 +415,16 @@ export default async function PoolMatchesPage({
     }))
     .sort((a, b) => a.key.localeCompare(b.key));
 
-  const totalOpen = typedMatches.filter(
+  const totalOpen = phaseMatches.filter(
     (match) => getMatchState(match) === "open"
   ).length;
-  const totalLocked = typedMatches.filter(
+  const totalLocked = phaseMatches.filter(
     (match) => getMatchState(match) === "locked"
   ).length;
-  const totalFinished = typedMatches.filter(
+  const totalFinished = phaseMatches.filter(
     (match) => getMatchState(match) === "finished"
   ).length;
-  const totalAll = typedMatches.length;
+  const totalAll = phaseMatches.length;
 
   const filterOptions: { value: MatchFilter; count: number }[] = [
     { value: "all", count: totalAll },
@@ -316,6 +432,17 @@ export default async function PoolMatchesPage({
     { value: "locked", count: totalLocked },
     { value: "finished", count: totalFinished },
   ];
+
+  const statusFilteredMatches = typedMatches.filter((match) =>
+    matchesFilter(match, activeFilter)
+  );
+
+  const phaseOptions: { value: PhaseFilter; count: number }[] =
+    PHASE_OPTIONS.map((phase) => ({
+      value: phase,
+      count: statusFilteredMatches.filter((match) => matchesPhase(match, phase))
+        .length,
+    }));
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#030706] text-white">
@@ -376,6 +503,8 @@ export default async function PoolMatchesPage({
                       </p>
                       <p className="mt-1 text-xl font-black text-white sm:text-2xl">
                         {getFilterLabel(activeFilter, language)}
+                        {" · "}
+                        {getPhaseLabel(activePhase, language)}
                       </p>
                       <p className="mt-1 text-sm font-semibold text-zinc-400">
                         {filteredMatches.length} {t.matches}
@@ -386,7 +515,7 @@ export default async function PoolMatchesPage({
 
                 <details
                   className="group rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl"
-                  open={activeFilter !== "all"}
+                  open={activeFilter !== "all" || activePhase !== "all"}
                 >
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-white/5 sm:px-5 [&::-webkit-details-marker]:hidden">
                     <div className="min-w-0">
@@ -395,6 +524,7 @@ export default async function PoolMatchesPage({
                       </h2>
                       <p className="mt-0.5 text-xs font-semibold text-zinc-500">
                         {t.current}: {getFilterLabel(activeFilter, language)} ·{" "}
+                        {getPhaseLabel(activePhase, language)} ·{" "}
                         {filteredMatches.length} {t.matches}
                       </p>
                     </div>
@@ -410,19 +540,56 @@ export default async function PoolMatchesPage({
                       {t.filterIntro}
                     </p>
 
-                    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center">
-                      {filterOptions.map((option) => (
-                        <Link
-                          key={option.value}
-                          href={getFilterHref(pool.id, option.value)}
-                          className={`rounded-full border px-3 py-2 text-center text-xs font-black transition sm:px-4 sm:text-sm ${getFilterButtonClasses(
-                            activeFilter === option.value
-                          )}`}
-                        >
-                          {getFilterLabel(option.value, language)} (
-                          {option.count})
-                        </Link>
-                      ))}
+                    <div className="grid gap-4">
+                      <div>
+                        <p className="mb-2 text-center text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                          {t.statusFilters}
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center">
+                          {filterOptions.map((option) => (
+                            <Link
+                              key={option.value}
+                              href={getFilterHref(
+                                pool.id,
+                                option.value,
+                                activePhase
+                              )}
+                              className={`rounded-full border px-3 py-2 text-center text-xs font-black transition sm:px-4 sm:text-sm ${getFilterButtonClasses(
+                                activeFilter === option.value
+                              )}`}
+                            >
+                              {getFilterLabel(option.value, language)} (
+                              {option.count})
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="mb-2 text-center text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                          {t.roundFilters}
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center">
+                          {phaseOptions.map((option) => (
+                            <Link
+                              key={option.value}
+                              href={getPhaseHref(
+                                pool.id,
+                                activeFilter,
+                                option.value
+                              )}
+                              className={`rounded-full border px-3 py-2 text-center text-xs font-black transition sm:px-4 sm:text-sm ${getFilterButtonClasses(
+                                activePhase === option.value
+                              )}`}
+                            >
+                              {getPhaseLabel(option.value, language)} (
+                              {option.count})
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </details>
@@ -451,7 +618,7 @@ export default async function PoolMatchesPage({
                     </p>
 
                     <Link
-                      href={getFilterHref(pool.id, "all")}
+                      href={getMatchesHref(pool.id, "all", "all")}
                       className="mt-5 inline-flex w-full justify-center rounded-2xl bg-emerald-300 px-5 py-3 text-sm font-black text-zinc-950 transition hover:bg-emerald-200 sm:w-auto"
                     >
                       {t.viewAllMatches}
