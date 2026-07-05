@@ -1,4 +1,4 @@
-﻿import Image from "next/image";
+import Image from "next/image";
 import { unstable_noStore as noStore } from "next/cache";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
@@ -107,6 +107,9 @@ const copy = {
     semifinals: "Semifinals",
     thirdPlace: "Third place",
     final: "Final",
+    nextMatch: "Next match",
+    goToNextMatch: "Go to match",
+    noUpcomingMatch: "No upcoming match in this filter",
   },
   nl: {
     pool: "Poule",
@@ -137,6 +140,9 @@ const copy = {
     semifinals: "Halve finales",
     thirdPlace: "Troostfinale",
     final: "Finale",
+    nextMatch: "Eerstvolgende wedstrijd",
+    goToNextMatch: "Ga naar wedstrijd",
+    noUpcomingMatch: "Geen aankomende wedstrijd binnen deze filter",
   },
 } satisfies Record<Language, Record<string, string>>;
 
@@ -182,6 +188,18 @@ function getDateLabel(value: string, language: Language) {
   }).format(new Date(value));
 }
 
+function formatMatchDate(value: string, language: Language) {
+  return new Intl.DateTimeFormat(language === "nl" ? "nl-NL" : "en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Europe/Amsterdam",
+  }).format(new Date(value));
+}
+
 function getMatchState(match: MatchRow): "open" | "locked" | "finished" {
   const hasResult =
     match.status === "finished" &&
@@ -189,7 +207,6 @@ function getMatchState(match: MatchRow): "open" | "locked" | "finished" {
     match.away_score !== null;
 
   if (hasResult) return "finished";
-
   if (new Date(match.starts_at).getTime() <= Date.now()) return "locked";
 
   return "open";
@@ -305,6 +322,25 @@ function getPhaseLabel(phase: PhaseFilter, language: Language) {
   }
 }
 
+function getTeamDisplay(team: string | null, slot: string | null) {
+  if (team?.trim()) return team.trim();
+  if (slot?.trim()) return slot.trim();
+  return "TBD";
+}
+
+function getMatchTitle(match: MatchRow) {
+  const home = getTeamDisplay(match.home_team, match.home_slot);
+  const away = getTeamDisplay(match.away_team, match.away_slot);
+
+  return `${home} - ${away}`;
+}
+
+function getNextMatch(matches: MatchRow[]) {
+  const now = Date.now();
+
+  return matches.find((match) => new Date(match.starts_at).getTime() > now) ?? null;
+}
+
 export default async function PoolMatchesPage({
   params,
   searchParams,
@@ -390,6 +426,9 @@ export default async function PoolMatchesPage({
   const filteredMatches = phaseMatches.filter((match) =>
     matchesFilter(match, activeFilter)
   );
+
+  const nextMatch = getNextMatch(filteredMatches);
+  const nextMatchDateKey = nextMatch ? getDateKey(nextMatch.starts_at) : null;
 
   const dateGroupMap = new Map<string, MatchRow[]>();
 
@@ -513,6 +552,35 @@ export default async function PoolMatchesPage({
                   </div>
                 </section>
 
+                {nextMatch ? (
+                  <section className="rounded-3xl border border-emerald-300/20 bg-emerald-300/[0.08] p-4 backdrop-blur-xl sm:p-5">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-200">
+                          {t.nextMatch}
+                        </p>
+                        <h2 className="mt-1 truncate text-xl font-black text-white sm:text-2xl">
+                          {getMatchTitle(nextMatch)}
+                        </h2>
+                        <p className="mt-1 text-sm font-semibold text-zinc-400">
+                          {formatMatchDate(nextMatch.starts_at, language)}
+                        </p>
+                      </div>
+
+                      <a
+                        href={`#match-${nextMatch.id}`}
+                        className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-emerald-300 px-5 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
+                      >
+                        {t.goToNextMatch}
+                      </a>
+                    </div>
+                  </section>
+                ) : filteredMatches.length > 0 ? (
+                  <section className="rounded-3xl border border-white/10 bg-white/5 p-4 text-sm font-semibold text-zinc-400 backdrop-blur-xl sm:p-5">
+                    {t.noUpcomingMatch}
+                  </section>
+                ) : null}
+
                 <details
                   className="group rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl"
                   open={activeFilter !== "all" || activePhase !== "all"}
@@ -596,17 +664,24 @@ export default async function PoolMatchesPage({
 
                 {groupedMatches.length > 0 ? (
                   <div className="space-y-3">
-                    {groupedMatches.map((group, index) => (
-                      <PoolMatchesDateGroup
-                        key={group.key}
-                        label={group.label}
-                        poolId={pool.id}
-                        matches={group.matches}
-                        predictions={predictionsByMatchId}
-                        defaultOpen={index === 0}
-                        language={language}
-                      />
-                    ))}
+                    {groupedMatches.map((group, index) => {
+                      const containsNextMatch = group.key === nextMatchDateKey;
+
+                      return (
+                        <PoolMatchesDateGroup
+                          key={group.key}
+                          label={group.label}
+                          poolId={pool.id}
+                          matches={group.matches}
+                          predictions={predictionsByMatchId}
+                          defaultOpen={
+                            containsNextMatch || (!nextMatch && index === 0)
+                          }
+                          nextMatchId={nextMatch?.id ?? null}
+                          language={language}
+                        />
+                      );
+                    })}
                   </div>
                 ) : (
                   <section className="rounded-3xl border border-dashed border-white/15 bg-white/5 p-5 text-center backdrop-blur sm:p-6">
