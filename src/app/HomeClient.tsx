@@ -19,278 +19,50 @@ type HomeClientProps = {
 const copy = {
   en: {
     login: "Login",
-    dashboard: "Dashboard",
-
-    heroEyebrow: "World Cup 2026 pools",
-    heroTitle: "Run your private pool in minutes.",
-    heroText:
-      "Create a prediction pool, invite your group and follow the leaderboard together. Built for friends, colleagues and office teams.",
-
-    primaryGuest: "Create a pool",
-    primaryUser: "Open dashboard",
-    secondaryGuest: "Log in",
-    secondaryUser: "Create pool",
-
-    trustOne: "Private groups",
-    trustTwo: "Easy predictions",
-    trustThree: "Clear leaderboard",
-
-    previewKicker: "WK 2026",
-    previewTitle: "Office pool",
-    previewSubtitle: "Next prediction",
-    previewOpen: "Open",
-    previewSaved: "Saved",
-    previewCta: "Predict",
-    matchOne: "Netherlands",
-    matchTwo: "France",
-    matchThree: "Brazil",
-    matchFour: "Germany",
-    scoreLabel: "Score",
-    ranking: "Ranking",
-    rankingText: "#3 of 24 players",
-    points: "35 pts",
-
-    modulesEyebrow: "Game formats",
-    modulesTitle: "Start with the World Cup. Add more later.",
-    modulesText:
-      "Poolr starts with World Cup prediction pools and is built to support more group games over time.",
-    modules: [
-      {
-        title: "World Cup 2026",
-        status: "Available first",
-        text: "Predict match scores, follow standings and compete in a private group.",
-      },
-      {
-        title: "Office Bingo",
-        status: "Coming soon",
-        text: "Create light social bingo games for work, parties and group challenges.",
-      },
-      {
-        title: "F1 Pool",
-        status: "Coming soon",
-        text: "Predict race weekends, sessions and season results.",
-      },
-    ],
-
-    stepsEyebrow: "How it works",
-    stepsTitle: "Simple from the first click.",
-    steps: [
-      {
-        number: "01",
-        title: "Create or join",
-        text: "Start your own pool or join one with an invite code.",
-      },
-      {
-        number: "02",
-        title: "Predict",
-        text: "Enter your predictions before the deadline closes.",
-      },
-      {
-        number: "03",
-        title: "Compete",
-        text: "Follow the leaderboard and see who wins.",
-      },
-    ],
-
-    finalTitle: "Ready to start your first Poolr?",
-    finalText: "Create your first World Cup pool and invite your group.",
-    finalButton: "Get started",
-
-    footerSmall:
+    dashboard: "Open dashboard",
+    createPool: "Create a pool",
+    eyebrow: "World Cup 2026 pools",
+    title: "Your pool starts here.",
+    text: "Log in to create or manage a private prediction pool for friends, colleagues or your office team.",
+    smallInfo: "Private invite code · Match predictions · Leaderboard",
+    helpTitle: "New to Poolr?",
+    helpText:
+      "Create a pool, share the invite code and let your group fill in their predictions before the match deadline.",
+    footer:
       "Poolr is independent and is not affiliated with FIFA, UEFA, Formula 1, FIA or other rights holders.",
     footerLinks: [
       { label: "How it works", href: "/how-it-works" },
       { label: "World Cup rules", href: "/wk-poule/spelregels" },
       { label: "Privacy", href: "/privacy" },
       { label: "Terms", href: "/terms" },
-      { label: "Billing", href: "/billing" },
-      { label: "Disclaimer", href: "/disclaimer" },
       { label: "Contact", href: "/contact" },
     ],
   },
-
   nl: {
     login: "Inloggen",
-    dashboard: "Dashboard",
-
-    heroEyebrow: "WK 2026-poules",
-    heroTitle: "Start je privé poule in een paar minuten.",
-    heroText:
-      "Maak een voorspellingpoule, nodig je groep uit en volg samen de ranglijst. Ideaal voor vrienden, collega’s en kantoor-teams.",
-
-    primaryGuest: "Maak een poule",
-    primaryUser: "Open dashboard",
-    secondaryGuest: "Inloggen",
-    secondaryUser: "Poule maken",
-
-    trustOne: "Privé groepen",
-    trustTwo: "Simpel voorspellen",
-    trustThree: "Duidelijke ranglijst",
-
-    previewKicker: "WK 2026",
-    previewTitle: "Kantoor poule",
-    previewSubtitle: "Volgende voorspelling",
-    previewOpen: "Open",
-    previewSaved: "Opgeslagen",
-    previewCta: "Voorspel",
-    matchOne: "Nederland",
-    matchTwo: "Frankrijk",
-    matchThree: "Brazilië",
-    matchFour: "Duitsland",
-    scoreLabel: "Score",
-    ranking: "Stand",
-    rankingText: "#3 van 24 spelers",
-    points: "35 pnt",
-
-    modulesEyebrow: "Spelvormen",
-    modulesTitle: "Begin met het WK. Breid later uit.",
-    modulesText:
-      "Poolr start met WK-voorspellingpoules en is gebouwd om later meer groepsspellen te ondersteunen.",
-    modules: [
-      {
-        title: "WK 2026",
-        status: "Als eerste live",
-        text: "Voorspel wedstrijduitslagen, volg standen en speel in een privé groep.",
-      },
-      {
-        title: "Office Bingo",
-        status: "Binnenkort",
-        text: "Maak eenvoudige sociale bingo’s voor werk, feestjes en groepschallenges.",
-      },
-      {
-        title: "F1-poule",
-        status: "Binnenkort",
-        text: "Voorspel raceweekenden, sessies en seizoensuitslagen.",
-      },
-    ],
-
-    stepsEyebrow: "Hoe het werkt",
-    stepsTitle: "Simpel vanaf de eerste klik.",
-    steps: [
-      {
-        number: "01",
-        title: "Maak of join",
-        text: "Start je eigen poule of doe mee via een invite code.",
-      },
-      {
-        number: "02",
-        title: "Voorspel",
-        text: "Vul je voorspellingen in voordat de deadline sluit.",
-      },
-      {
-        number: "03",
-        title: "Strijd mee",
-        text: "Volg de ranglijst en kijk wie wint.",
-      },
-    ],
-
-    finalTitle: "Klaar om je eerste Poolr te starten?",
-    finalText: "Maak je eerste WK-poule en nodig je groep uit.",
-    finalButton: "Begin nu",
-
-    footerSmall:
+    dashboard: "Open dashboard",
+    createPool: "Poule maken",
+    eyebrow: "WK 2026-poules",
+    title: "Je poule start hier.",
+    text: "Log in om een privé voorspellingpoule te maken of te beheren voor vrienden, collega’s of je kantoor.",
+    smallInfo: "Privé invite code · Wedstrijden voorspellen · Ranglijst",
+    helpTitle: "Nieuw bij Poolr?",
+    helpText:
+      "Maak een poule, deel de invite code en laat je groep voorspellingen invullen voor de wedstrijddeadline.",
+    footer:
       "Poolr is onafhankelijk en is niet verbonden aan FIFA, UEFA, Formula 1, FIA of andere rechthebbenden.",
     footerLinks: [
       { label: "Hoe werkt het", href: "/how-it-works" },
       { label: "WK-spelregels", href: "/wk-poule/spelregels" },
       { label: "Privacy", href: "/privacy" },
       { label: "Voorwaarden", href: "/terms" },
-      { label: "Betalingen", href: "/billing" },
-      { label: "Disclaimer", href: "/disclaimer" },
       { label: "Contact", href: "/contact" },
     ],
   },
 };
 
-type HomeCopy = typeof copy.en;
-
 function setLanguageCookie(language: Language) {
   document.cookie = `${LANGUAGE_COOKIE_KEY}=${language}; path=/; max-age=31536000; SameSite=Lax`;
-}
-
-function PreviewCard({ t }: { t: HomeCopy }) {
-  return (
-    <div className="w-full rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-4 shadow-2xl shadow-black/20 sm:p-5">
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-300">
-            {t.previewKicker}
-          </p>
-          <h2 className="mt-1 truncate text-2xl font-black tracking-tight text-white">
-            {t.previewTitle}
-          </h2>
-          <p className="mt-1 text-sm text-zinc-400">{t.previewSubtitle}</p>
-        </div>
-
-        <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-black text-emerald-200">
-          LIVE
-        </span>
-      </div>
-
-      <div className="space-y-3">
-        <div className="rounded-2xl border border-white/10 bg-[#07110d] p-4">
-          <div className="mb-3 flex items-center justify-between text-xs font-bold">
-            <span className="text-emerald-300">{t.previewOpen}</span>
-            <span className="text-zinc-500">21:00</span>
-          </div>
-
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-            <p className="truncate text-sm font-black">{t.matchOne}</p>
-
-            <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-center">
-              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-500">
-                {t.scoreLabel}
-              </p>
-              <p className="mt-1 text-lg font-black text-zinc-300">— - —</p>
-            </div>
-
-            <p className="truncate text-right text-sm font-black">
-              {t.matchTwo}
-            </p>
-          </div>
-
-          <div className="mt-4 rounded-xl bg-emerald-300 px-3 py-2 text-center text-xs font-black text-zinc-950">
-            {t.previewCta}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-          <div className="mb-3 flex items-center justify-between text-xs font-bold">
-            <span className="text-zinc-300">{t.previewSaved}</span>
-            <span className="text-zinc-500">18:00</span>
-          </div>
-
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-            <p className="truncate text-sm font-black">{t.matchThree}</p>
-
-            <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-center">
-              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-500">
-                {t.scoreLabel}
-              </p>
-              <p className="mt-1 text-lg font-black text-white">2 - 1</p>
-            </div>
-
-            <p className="truncate text-right text-sm font-black">
-              {t.matchFour}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
-            {t.ranking}
-          </p>
-          <p className="mt-1 text-sm font-black text-white">{t.rankingText}</p>
-        </div>
-
-        <div className="rounded-xl border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-sm font-black text-emerald-100">
-          {t.points}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export default function HomeClient({ isLoggedIn }: HomeClientProps) {
@@ -306,7 +78,6 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
     }
 
     const detectedLanguage = detectBrowserLanguage();
-
     setLanguage(detectedLanguage);
     window.localStorage.setItem(LANGUAGE_STORAGE_KEY, detectedLanguage);
     setLanguageCookie(detectedLanguage);
@@ -319,23 +90,20 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
   }
 
   const t = copy[language];
-
-  const primaryHref = isLoggedIn ? "/dashboard" : "/auth?mode=register";
-  const primaryLabel = isLoggedIn ? t.primaryUser : t.primaryGuest;
-  const secondaryHref = isLoggedIn ? "/pools/new" : "/auth";
-  const secondaryLabel = isLoggedIn ? t.secondaryUser : t.secondaryGuest;
+  const loginHref = isLoggedIn ? "/dashboard" : "/auth";
+  const loginLabel = isLoggedIn ? t.dashboard : t.login;
 
   return (
-    <main className="min-h-screen bg-[#030706] text-white">
-      <section className="border-b border-white/10 bg-[linear-gradient(180deg,#06110d_0%,#030706_72%)]">
+    <main className="flex min-h-screen flex-col bg-[#030706] text-white">
+      <section className="flex flex-1 flex-col border-b border-white/10 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.12),transparent_38%),linear-gradient(180deg,#06110d_0%,#030706_72%)]">
         <Container>
           <header className="flex items-center justify-between gap-3 py-4 sm:py-5">
             <Link href="/" className="flex min-w-0 items-center">
               <Image
                 src="/brand/poolr-logo-dark.png"
                 alt="Poolr"
-                width={300}
-                height={88}
+                width={260}
+                height={76}
                 priority
                 className="h-11 w-auto sm:h-14"
               />
@@ -369,164 +137,57 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
                   NL
                 </button>
               </div>
-
-              <Link
-                href={isLoggedIn ? "/dashboard" : "/auth"}
-                className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-bold text-white/85 transition hover:bg-white/[0.08] sm:px-4 sm:py-2 sm:text-sm"
-              >
-                {isLoggedIn ? t.dashboard : t.login}
-              </Link>
             </div>
           </header>
 
-          <div className="grid items-center gap-10 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(340px,440px)] lg:py-20">
-            <div className="max-w-2xl">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/8 px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-emerald-200 sm:px-4 sm:text-xs">
-                <span className="h-2 w-2 rounded-full bg-emerald-300" />
-                {t.heroEyebrow}
-              </div>
-
-              <h1 className="max-w-3xl text-4xl font-black leading-[1.02] tracking-[-0.04em] text-white sm:text-5xl lg:text-6xl">
-                {t.heroTitle}
-              </h1>
-
-              <p className="mt-5 max-w-xl text-base leading-7 text-zinc-300 sm:text-lg sm:leading-8">
-                {t.heroText}
-              </p>
-
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Link
-                  href={primaryHref}
-                  className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-emerald-300 px-6 text-sm font-black text-zinc-950 transition hover:bg-emerald-200 sm:min-w-[175px]"
-                >
-                  {primaryLabel}
-                </Link>
-
-                <Link
-                  href={secondaryHref}
-                  className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-6 text-sm font-black text-white transition hover:bg-white/[0.08] sm:min-w-[150px]"
-                >
-                  {secondaryLabel}
-                </Link>
-              </div>
-
-              <div className="mt-7 flex flex-wrap gap-2">
-                {[t.trustOne, t.trustTwo, t.trustThree].map((item) => (
-                  <div
-                    key={item}
-                    className="rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 text-xs font-bold text-zinc-300"
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <PreviewCard t={t} />
-          </div>
-        </Container>
-      </section>
-
-      <section className="py-14 sm:py-18">
-        <Container>
-          <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-300">
-                {t.modulesEyebrow}
-              </p>
-
-              <h2 className="mt-3 max-w-xl text-3xl font-black tracking-tight text-white sm:text-4xl">
-                {t.modulesTitle}
-              </h2>
-            </div>
-
-            <p className="max-w-2xl text-sm leading-7 text-zinc-400 sm:text-base lg:ml-auto">
-              {t.modulesText}
-            </p>
-          </div>
-
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {t.modules.map((module) => (
-              <div
-                key={module.title}
-                className="rounded-[1.5rem] border border-white/10 bg-white/[0.035] p-5 sm:p-6"
-              >
-                <span className="rounded-full border border-emerald-300/15 bg-emerald-300/8 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-emerald-200">
-                  {module.status}
-                </span>
-
-                <h3 className="mt-5 text-xl font-black tracking-tight text-white">
-                  {module.title}
-                </h3>
-
-                <p className="mt-3 text-sm leading-6 text-zinc-400">
-                  {module.text}
-                </p>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      <section className="border-y border-white/10 bg-white/[0.025] py-14 sm:py-18">
-        <Container>
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-300">
-              {t.stepsEyebrow}
+          <div className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-2xl flex-col items-center justify-center py-14 text-center sm:py-20">
+            <p className="rounded-full border border-emerald-300/15 bg-emerald-300/10 px-4 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-emerald-200 sm:text-xs">
+              {t.eyebrow}
             </p>
 
-            <h2 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">
-              {t.stepsTitle}
-            </h2>
-          </div>
+            <h1 className="mt-6 text-4xl font-black leading-[1.04] tracking-[-0.04em] text-white sm:text-6xl">
+              {t.title}
+            </h1>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {t.steps.map((step) => (
-              <div
-                key={step.number}
-                className="rounded-[1.5rem] border border-white/10 bg-[#06110d] p-5 sm:p-6"
-              >
-                <p className="text-sm font-black text-emerald-300">
-                  {step.number}
-                </p>
-
-                <h3 className="mt-4 text-xl font-black text-white">
-                  {step.title}
-                </h3>
-
-                <p className="mt-3 text-sm leading-6 text-zinc-400">
-                  {step.text}
-                </p>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      <section className="py-14 sm:py-18">
-        <Container>
-          <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-6 text-center sm:p-10">
-            <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
-              {t.finalTitle}
-            </h2>
-
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-300 sm:text-base">
-              {t.finalText}
+            <p className="mt-5 max-w-xl text-base leading-7 text-zinc-300 sm:text-lg sm:leading-8">
+              {t.text}
             </p>
 
-            <div className="mt-7 flex justify-center">
+            <div className="mt-8 w-full max-w-sm rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-4 shadow-2xl shadow-black/25 sm:p-5">
               <Link
-                href={primaryHref}
-                className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-emerald-300 px-8 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
+                href={loginHref}
+                className="flex min-h-13 w-full items-center justify-center rounded-2xl bg-emerald-300 px-7 text-sm font-black text-zinc-950 transition hover:bg-emerald-200"
               >
-                {isLoggedIn ? t.primaryUser : t.finalButton}
+                {loginLabel}
+              </Link>
+
+              <Link
+                href="/auth?mode=register"
+                className="mt-3 flex min-h-13 w-full items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-7 text-sm font-black text-white transition hover:bg-white/[0.08]"
+              >
+                {t.createPool}
               </Link>
             </div>
+
+            <p className="mt-5 text-sm font-medium text-zinc-500">{t.smallInfo}</p>
           </div>
         </Container>
       </section>
 
-      <footer className="border-t border-white/10 bg-[#020403] py-6">
+      <section className="py-12 sm:py-14">
+        <Container>
+          <div className="mx-auto max-w-2xl rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-6 text-center sm:p-8">
+            <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+              {t.helpTitle}
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-zinc-400 sm:text-base">
+              {t.helpText}
+            </p>
+          </div>
+        </Container>
+      </section>
+
+      <footer className="mt-auto border-t border-white/10 bg-[#020403] py-6">
         <Container>
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -534,9 +195,9 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
                 <Image
                   src="/brand/poolr-logo-dark.png"
                   alt="Poolr"
-                  width={260}
-                  height={76}
-                  className="h-12 w-auto sm:h-14"
+                  width={220}
+                  height={64}
+                  className="h-10 w-auto sm:h-11"
                 />
               </Link>
 
@@ -558,7 +219,7 @@ export default function HomeClient({ isLoggedIn }: HomeClientProps) {
 
             <div className="flex flex-col gap-2 border-t border-white/10 pt-4 text-xs leading-5 text-zinc-600 sm:flex-row sm:items-center sm:justify-between">
               <p>© {new Date().getFullYear()} Poolr. All rights reserved.</p>
-              <p className="max-w-2xl sm:text-right">{t.footerSmall}</p>
+              <p className="max-w-2xl sm:text-right">{t.footer}</p>
             </div>
           </div>
         </Container>
