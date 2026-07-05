@@ -38,6 +38,7 @@ type PoolMatchesDateGroupProps = {
   matches: MatchRow[];
   predictions: Record<string, PredictionRow>;
   defaultOpen?: boolean;
+  nextMatchId?: string | null;
   language: Language;
 };
 
@@ -98,6 +99,7 @@ export default function PoolMatchesDateGroup({
   matches,
   predictions,
   defaultOpen = false,
+  nextMatchId = null,
   language,
 }: PoolMatchesDateGroupProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -156,15 +158,28 @@ export default function PoolMatchesDateGroup({
       {isOpen ? (
         <div className="border-t border-white/10 p-2.5 sm:p-3">
           <div className="grid gap-2.5 md:grid-cols-2 2xl:grid-cols-3">
-            {matches.map((match) => (
-              <MatchPredictionCard
-                key={match.id}
-                match={match}
-                poolId={poolId}
-                prediction={predictions[match.id] ?? null}
-                language={language}
-              />
-            ))}
+            {matches.map((match) => {
+              const isNextMatch = match.id === nextMatchId;
+
+              return (
+                <div
+                  key={match.id}
+                  id={`match-${match.id}`}
+                  className={`scroll-mt-28 rounded-[1.15rem] transition ${
+                    isNextMatch
+                      ? "ring-2 ring-emerald-300/70 ring-offset-2 ring-offset-[#030706]"
+                      : ""
+                  }`}
+                >
+                  <MatchPredictionCard
+                    match={match}
+                    poolId={poolId}
+                    prediction={predictions[match.id] ?? null}
+                    language={language}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : null}
