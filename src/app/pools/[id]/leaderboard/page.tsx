@@ -164,12 +164,28 @@ export default async function PoolLeaderboardPage({
 
   const typedMembers = (members ?? []) as PoolMemberRow[];
 
-  const { data: predictions } = await supabaseAdmin
-    .from("predictions")
-    .select("user_id, points_awarded")
-    .eq("pool_id", pool.id);
+  const typedPredictions: PredictionRow[] = [];
+  const predictionPageSize = 1000;
 
-  const typedPredictions = (predictions ?? []) as PredictionRow[];
+  for (let from = 0; ; from += predictionPageSize) {
+    const { data: predictionsPage, error: predictionsError } =
+      await supabaseAdmin
+        .from("predictions")
+        .select("user_id, points_awarded")
+        .eq("pool_id", pool.id)
+        .range(from, from + predictionPageSize - 1);
+
+    if (predictionsError) {
+      throw new Error("Predictions ophalen mislukt: " + predictionsError.message);
+    }
+
+    const rows = (predictionsPage ?? []) as PredictionRow[];
+    typedPredictions.push(...rows);
+
+    if (rows.length < predictionPageSize) {
+      break;
+    }
+  }
 
   const memberJoinedAtMap = new Map(
     typedMembers.map((member) => [member.user_id, member.joined_at])
