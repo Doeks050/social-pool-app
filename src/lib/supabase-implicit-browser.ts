@@ -1,7 +1,13 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
+let implicitClient: ReturnType<typeof createSupabaseClient> | null = null;
+
 export function createImplicitClient() {
-  return createSupabaseClient(
+  if (implicitClient) {
+    return implicitClient;
+  }
+
+  implicitClient = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -10,7 +16,10 @@ export function createImplicitClient() {
         detectSessionInUrl: true,
         persistSession: true,
         autoRefreshToken: true,
+        storageKey: "poolr-implicit-session",
       },
     }
   );
+
+  return implicitClient;
 }
