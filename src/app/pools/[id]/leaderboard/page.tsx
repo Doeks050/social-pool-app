@@ -34,6 +34,8 @@ type LeaderboardRow = {
   user_id: string;
   match_points: number;
   total_points: number;
+  exact_score_predictions: number;
+  correct_outcome_predictions: number;
 };
 
 function isPoolActiveAndPaid(input: {
@@ -192,18 +194,29 @@ export default async function PoolLeaderboardPage({
   );
 
   const matchPointsMap = new Map<string, number>();
+  const exactScoreMap = new Map<string, number>();
+  const correctOutcomeMap = new Map<string, number>();
 
   for (const member of typedMembers) {
     matchPointsMap.set(member.user_id, 0);
+    exactScoreMap.set(member.user_id, 0);
+    correctOutcomeMap.set(member.user_id, 0);
   }
 
   for (const prediction of typedPredictions) {
-    const current = matchPointsMap.get(prediction.user_id) ?? 0;
+    const userId = prediction.user_id;
+    const pointsAwarded = prediction.points_awarded ?? 0;
+    const current = matchPointsMap.get(userId) ?? 0;
 
-    matchPointsMap.set(
-      prediction.user_id,
-      current + (prediction.points_awarded ?? 0)
-    );
+    matchPointsMap.set(userId, current + pointsAwarded);
+
+    if (pointsAwarded === 3) {
+      exactScoreMap.set(userId, (exactScoreMap.get(userId) ?? 0) + 1);
+    }
+
+    if (pointsAwarded === 1) {
+      correctOutcomeMap.set(userId, (correctOutcomeMap.get(userId) ?? 0) + 1);
+    }
   }
 
   const leaderboard: LeaderboardRow[] = typedMembers
@@ -214,6 +227,8 @@ export default async function PoolLeaderboardPage({
         user_id: member.user_id,
         match_points: matchPoints,
         total_points: matchPoints,
+        exact_score_predictions: exactScoreMap.get(member.user_id) ?? 0,
+        correct_outcome_predictions: correctOutcomeMap.get(member.user_id) ?? 0,
       };
     })
     .sort((a, b) => {
@@ -404,13 +419,33 @@ export default async function PoolLeaderboardPage({
                               {getRankLabel(index)}
                             </p>
 
-                            <div className="mt-4 rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-3 py-2">
-                              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-200">
-                                Total
-                              </p>
-                              <p className="mt-1 text-2xl font-black text-white">
-                                {entry.total_points}
-                              </p>
+                            <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-xl border border-emerald-300/25 bg-emerald-300/10 text-center">
+                              <div className="border-r border-emerald-300/15 px-2 py-2">
+                                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-200">
+                                  +3
+                                </p>
+                                <p className="mt-1 text-2xl font-black text-white">
+                                  {entry.exact_score_predictions}
+                                </p>
+                              </div>
+
+                              <div className="border-r border-emerald-300/15 px-2 py-2">
+                                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-200">
+                                  +1
+                                </p>
+                                <p className="mt-1 text-2xl font-black text-white">
+                                  {entry.correct_outcome_predictions}
+                                </p>
+                              </div>
+
+                              <div className="px-2 py-2">
+                                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-200">
+                                  Total
+                                </p>
+                                <p className="mt-1 text-2xl font-black text-white">
+                                  {entry.total_points}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         );
@@ -473,13 +508,35 @@ export default async function PoolLeaderboardPage({
                                 </p>
                               </div>
 
-                              <div className="min-w-[92px] rounded-xl border border-emerald-300/25 bg-emerald-300/10 px-3 py-2 text-center sm:min-w-[120px]">
-                                <p className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-200">
-                                  Total
-                                </p>
-                                <p className="mt-1 text-sm font-black text-white">
-                                  {entry.total_points}
-                                </p>
+                              <div className="min-w-[178px] overflow-hidden rounded-xl border border-emerald-300/25 bg-emerald-300/10 text-center sm:min-w-[230px]">
+                                <div className="grid grid-cols-3">
+                                  <div className="border-r border-emerald-300/15 px-2 py-2">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-200">
+                                      +3
+                                    </p>
+                                    <p className="mt-1 text-sm font-black text-white">
+                                      {entry.exact_score_predictions}
+                                    </p>
+                                  </div>
+
+                                  <div className="border-r border-emerald-300/15 px-2 py-2">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-200">
+                                      +1
+                                    </p>
+                                    <p className="mt-1 text-sm font-black text-white">
+                                      {entry.correct_outcome_predictions}
+                                    </p>
+                                  </div>
+
+                                  <div className="px-2 py-2">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-200">
+                                      Total
+                                    </p>
+                                    <p className="mt-1 text-sm font-black text-white">
+                                      {entry.total_points}
+                                    </p>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
